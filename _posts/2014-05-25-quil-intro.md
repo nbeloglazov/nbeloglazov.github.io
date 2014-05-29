@@ -130,5 +130,5 @@ That's it for today. Quil is based on Processing programming language. Here is s
   * Quil API [docs](http://quil.info).
   * Processing [website](http://processing.org).
 
-Any coments are welcome!
+Any comments are welcome!
 

@@ -1,2 +1,6 @@
 markdown: redcarpet
-pygments: true 
+pygments: true
+
+name: nbeloglazov blog
+description: Quil, clojure and programming in general
+url: http://nbeloglazov.com
