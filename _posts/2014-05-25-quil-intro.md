@@ -4,8 +4,7 @@ title: Quil Intro
 images: /images/quil-intro
 ---
 
-#### Start
-Hi. Today I'll show how to use Quil. Quil is an interactive animation library for clojure. It is based on Processing, but provides nice clojure API for most functions. Let's start with something simple: with trigonometry... Everyone loves trigonometry: sin, cos, tan, what can be better? Our first sketch will draw a spiral using sin and cos:
+This is an introductory post about nice clojure library called Quil. Quil is an interactive animation library for clojure. Basically it allows you to draw on a rectangular window. Quil provides tons of useful functions for drawing in 2D and 3D. In this post I will show how to create and run Quil sketch. Let's start with something simple: with trigonometry... Everyone loves trigonometry: sine, cosine, tangent, what can be better? Our first sketch will draw a spiral using sin and cos functions:
 
 ```clojure
 (ns quil-intro
@@ -66,8 +65,8 @@ Cool, now we can experiment with `f` by changing it in any way we'd like. And he
 After we changed code we don't need to close sketch, recompile everything and start sketch again as we would do in most other languages. We can update all functions on the fly see results immediately. In fact we can program whole sketch from the beginning to the end without ever closing it. Of course there are some things we can't do on the fly. We can't add mouse and keyboard listeners on the fly, but you still can update existing. Now let's get back to work and update `f` function:
 
 ```clojure
-; you can get awesome plots randomly using trigonometric functions
-; here f plots a flower
+; you can get awesome plots using random combinations of trigonometric functions
+; here f which plots a flower
 (defn f [t]
   (let [r (* 200 (sin t) (cos t))]
     [(* r (sin (* t 0.2)))
@@ -120,14 +119,16 @@ Time for animation!
 
 ![Animation of leaf plot]({{page.images}}/animation.gif)
 
-Add some color! I'll leave it as exercise to reader to figure out how to add colors, or simply check repo in the end of this post.
+Add some color! I'll leave it as exercise to reader to figure out how to add colors, or, if you're too lazy, you can simply check GItHub repo in the end of this post. Here what we got:
 
 ![Colorful animation of flower plot]({{page.images}}/animation-color.gif)
 
-That's it for today. I hope you enjoyed this little journey to the world of Quil and Trigonometry. Some useful links:
+That's it for today. Quil is based on Processing programming language. Here is some useful links:
 
   * Code from this post is available on [GitHub](https://github.com/nbeloglazov/blog-projects/tree/master/quil-intro).
   * Official Quil [repo](https://github.com/quil/quil).
   * Quil API [docs](http://quil.info).
   * Processing [website](http://processing.org).
+
+Any coments are welcome!
 
