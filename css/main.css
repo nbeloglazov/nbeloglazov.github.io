@@ -272,6 +272,11 @@ a:hover {
   opacity: 0.7;
 }
 
+#social-buttons .fb-like, #social-buttons .twitter-tweet-button {
+    vertical-align: top;
+    width: 107px;
+}
+
 /*****************************************************************************/
 /*
 /* Colophon
@@ -288,4 +293,8 @@ a:hover {
   margin-top: 1.25em;
   font-size: 0.95em;
   color: #777;
+}
+
+.post pre {
+    overflow: auto;
 }
