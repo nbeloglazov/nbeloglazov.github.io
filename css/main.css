@@ -135,7 +135,7 @@ a:hover {
 #title {
   color: #494949;
   margin-bottom: 0.35em;
-  font-size: 3.5em;
+  font-size: 2em;
   text-transform: uppercase;
 }
 
@@ -143,6 +143,12 @@ a:hover {
   line-height: 24px;
   max-width: 725px;
   clear: both;
+}
+
+.content .highlight {
+  line-height: 18px;
+  font-size: 13px;
+  margin-bottom: 1em;
 }
 
 .post h2 {
