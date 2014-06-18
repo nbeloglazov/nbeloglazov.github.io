@@ -34,14 +34,23 @@
     <div class="site">
       <div class="sidebar" id="sidebar">
         <div class="header">
-          <h1 class="title"><a href="/"><img id="avatar" src="/images/avatar.jpg"></a></h1>
-          <span class="tagline">Quil, clojure and programming in general</span>
+          {% if site.version == '/ru' %}
+            <h1 class="title"><a href="/ru"><img id="avatar" src="/images/avatar.jpg"></a></h1>
+            <span class="tagline">
+              Блог о Quil, Clojure и программировании
+            </span>
+          {% else %}
+            <h1 class="title"><a href="/"><img id="avatar" src="/images/avatar.jpg"></a></h1>
+            <span class="tagline">
+              Quil, Сlojure and programming in general
+            </span>
+          {% endif %}
         </div>
         <div class="posts">
           <ul class="posts-list">
             {% for post in site.posts %}
               <li class="post-link">
-                <a class="post-title" href="{{ post.url }}">
+                <a class="post-title" href="{{ site.version }}{{ post.url }}">
                   <span class="post-date">{{ post.date | date_to_string }}</span>
                   {{ post.title }}
                 </a>

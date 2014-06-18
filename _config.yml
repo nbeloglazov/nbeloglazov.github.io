@@ -1,6 +1,8 @@
 markdown: redcarpet
-pygments: true
+highlighter: pygments
+exclude: [publish.sh, README.md, Gemfile, Gemfile.lock]
 
 name: nbeloglazov blog
-description: Quil, clojure and programming in general
+description: Quil, Clojure and programming in general
 url: http://nbeloglazov.com
+
