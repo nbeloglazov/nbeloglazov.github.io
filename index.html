@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>nbeloglazov blog</title>
+      <meta name="viewport" content="width=device-width">
+
+      <!-- syntax highlighting CSS -->
+      <link rel="stylesheet" href="/css/syntax.css">
+
+      <!-- Custom CSS -->
+      <link rel="stylesheet" href="/css/main.css">
+
+      <!-- Responsive CSS -->
+      <link rel="stylesheet" href="/css/responsive.css">
+
+      <!-- Google Fonts -->
+      <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700' rel='stylesheet' type='text/css'>
+      <link href='http://fonts.googleapis.com/css?family=Raleway:300,400,700' rel='stylesheet' type='text/css'>
+
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-51485241-1', 'nbeloglazov.com');
+        ga('send', 'pageview');
+      </script>
+      <script type="text/javascript" src="https://apis.google.com/js/plusone.js" async="true"></script>
+  </head>
+  <body>
+    <div class="site">
+      <div class="sidebar" id="sidebar">
+        <div class="header">
+          
+            <h1 class="title"><a href="/"><img id="avatar" src="/images/avatar.jpg"></a></h1>
+            <span class="tagline">
+              Quil, Сlojure and programming in general
+            </span>
+          
+        </div>
+        <div class="posts">
+          <ul class="posts-list">
+            
+              <li class="post-link">
+                <a class="post-title" href="/2014/05/29/quil-intro.html">
+                  <span class="post-date">29 May 2014</span>
+                  Quil Intro
+                </a>
+              </li>
+            
+          </ul>
+       </div>
+        <div class="footer">
+          <span id="footer-links">
+            <a href="https://github.com/nbeloglazov" class="footer-link">GitHub</a> <span class="separator">&bull;</span>
+            <a href="https://www.linkedin.com/in/nikitabeloglazov/" class="footer-link">LinkedIn</a>
+          </span>
+        </div>
+      </div>
+        
+
+<div class="content" id="home">
+  <div id="fb-root"></div>
+  <script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&appId=258381704207913&version=v2.0";
+    fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+  <div id="sidebar-button">
+    <img src="/images/sidebar-button.png">
+  </div>
+  <div id="post-info">
+    <div id="info-container">
+      
+        <a href="/ru/2014/05/29/quil-intro.html" class="lang-link">Ru</a>
+        <p class="lang-link">En</p>
+      
+      <h1 id="title">Quil Intro</h1>
+      <span id="date">29 May 2014</span>
+    </div>
+  </div>
+
+  <div class="post">
+    <p>This is an introductory post about Quil. Quil is an interactive animation library for clojure. Simply speaking it allows you to draw whatever you want on a rectangular window. Quil provides tons of useful functions for drawing in 2D and 3D. In this post I will show how to create and run Quil sketches. Let&#39;s start with something simple: with trigonometry... Everyone loves trigonometry: sine, cosine, tangent, what can be better? Our first sketch will draw a spiral using sin and cos functions:</p>
+
+<p>project.clj</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defproject </span><span class="nv">quil-intro</span> <span class="s">&quot;0.1.0-SNAPSHOT&quot;</span>
+  <span class="ss">:dependencies</span> <span class="p">[[</span><span class="nv">org.clojure/clojure</span> <span class="s">&quot;1.6.0&quot;</span><span class="p">]</span>
+                 <span class="p">[</span><span class="nv">quil</span> <span class="s">&quot;2.1.0&quot;</span><span class="p">]])</span>
+</code></pre></div>
+<p>quil_intro.clj:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">quil-intro</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">quil.core</span> <span class="ss">:as</span> <span class="nv">q</span><span class="p">]))</span>
+
+<span class="c1">; define function which draws spiral</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">draw</span> <span class="p">[]</span>
+  <span class="c1">; make background white</span>
+  <span class="p">(</span><span class="nf">q/background</span> <span class="mi">255</span><span class="p">)</span>
+
+  <span class="c1">; move origin point to centre of the sketch</span>
+  <span class="c1">; by default origin is in the left top corner</span>
+  <span class="p">(</span><span class="nf">q/with-translation</span> <span class="p">[(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/width</span><span class="p">)</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/height</span><span class="p">)</span> <span class="mi">2</span><span class="p">)]</span>
+   <span class="c1">; parameter t goes 0, 0.01, 0.02, ..., 99.99, 100</span>
+   <span class="p">(</span><span class="nb">doseq </span><span class="p">[</span><span class="nv">t</span> <span class="p">(</span><span class="nb">range </span><span class="mi">0</span> <span class="mi">100</span> <span class="mf">0.01</span><span class="p">)]</span>
+     <span class="c1">; draw a point with x = t * sin(t) and y = t * cos(t)</span>
+     <span class="p">(</span><span class="nf">q/point</span> <span class="p">(</span><span class="nb">* </span><span class="nv">t</span> <span class="p">(</span><span class="nf">q/sin</span> <span class="nv">t</span><span class="p">))</span>
+              <span class="p">(</span><span class="nb">* </span><span class="nv">t</span> <span class="p">(</span><span class="nf">q/cos</span> <span class="nv">t</span><span class="p">))))))</span>
+
+<span class="c1">; run sketch</span>
+<span class="p">(</span><span class="nf">q/defsketch</span> <span class="nv">trigonometry</span>
+  <span class="ss">:size</span> <span class="p">[</span><span class="mi">300</span> <span class="mi">300</span><span class="p">]</span>
+  <span class="ss">:draw</span> <span class="nv">draw</span><span class="p">)</span>
+</code></pre></div>
+<p>As you can see for basic sketch we need to define a <code>draw</code> function which, well, draws something. Then we call <code>defsketch</code> passing <code>draw</code> function to it. Here is the image drawn by our code:</p>
+
+<p><img src="/images/quil-intro/spiral.png" alt="Plot of spiral"></p>
+
+<p>Beautiful, isn&#39;t it?</p>
+
+<p>Now let&#39;s refactor <code>draw</code> function making plotting functions easier. To achieve this we&#39;ll define <code>draw-plot</code> function which takes a parametric function <em>f(t) = (x, y)</em> , ranges for parameter <em>t</em> and plots given function over given range. Here is refactored code:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; define f</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">f</span> <span class="p">[</span><span class="nv">t</span><span class="p">]</span>
+  <span class="p">[(</span><span class="nb">* </span><span class="nv">t</span> <span class="p">(</span><span class="nf">q/sin</span> <span class="nv">t</span><span class="p">))</span>
+   <span class="p">(</span><span class="nb">* </span><span class="nv">t</span> <span class="p">(</span><span class="nf">q/cos</span> <span class="nv">t</span><span class="p">))])</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">draw-plot</span> <span class="p">[</span><span class="nv">f</span> <span class="nv">from</span> <span class="nv">to</span> <span class="nv">step</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">doseq </span><span class="p">[</span><span class="nv">two-points</span> <span class="p">(</span><span class="nf">-&gt;&gt;</span> <span class="p">(</span><span class="nb">range </span><span class="nv">from</span> <span class="nv">to</span> <span class="nv">step</span><span class="p">)</span>
+                          <span class="p">(</span><span class="nb">map </span><span class="nv">f</span><span class="p">)</span>
+                          <span class="p">(</span><span class="nf">partition</span> <span class="mi">2</span> <span class="mi">1</span><span class="p">))]</span>
+    <span class="c1">; we could use &#39;point&#39; function to draw a point</span>
+    <span class="c1">; but let&#39;s rather draw a line which connects 2 points of the plot</span>
+    <span class="p">(</span><span class="nb">apply </span><span class="nv">q/line</span> <span class="nv">two-points</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">draw</span> <span class="p">[]</span>
+  <span class="p">(</span><span class="nf">q/background</span> <span class="mi">255</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">q/with-translation</span> <span class="p">[(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/width</span><span class="p">)</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/height</span><span class="p">)</span> <span class="mi">2</span><span class="p">)]</span>
+   <span class="p">(</span><span class="nf">draw-plot</span> <span class="nv">f</span> <span class="mi">0</span> <span class="mi">100</span> <span class="mf">0.01</span><span class="p">)))</span>
+</code></pre></div>
+<p>Cool, now we can experiment with <code>f</code> by changing it in any way we&#39;d like. And here comes real beauty of Quil: live reloading.</p>
+
+<h4>Live Reloading.</h4>
+
+<p>After we changed code we don&#39;t need to close sketch, recompile everything and start sketch again as we would do in most other languages. In quil we can update all functions on the fly and see results immediately. In fact we can program whole sketch from the beginning to the end without ever closing it. Of course there are some things we can&#39;t do on the fly. We can&#39;t register mouse and keyboard listeners on the fly, but we still can update already registered. Now let&#39;s get back to work and update <code>f</code> function:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; you can get awesome plots using random combinations of trigonometric functions</span>
+<span class="c1">; here f which plots a flower</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">f</span> <span class="p">[</span><span class="nv">t</span><span class="p">]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">r</span> <span class="p">(</span><span class="nb">* </span><span class="mi">200</span> <span class="p">(</span><span class="nf">q/sin</span> <span class="nv">t</span><span class="p">)</span> <span class="p">(</span><span class="nf">q/cos</span> <span class="nv">t</span><span class="p">))]</span>
+    <span class="p">[(</span><span class="nb">* </span><span class="nv">r</span> <span class="p">(</span><span class="nf">q/sin</span> <span class="p">(</span><span class="nb">* </span><span class="nv">t</span> <span class="mf">0.2</span><span class="p">)))</span>
+     <span class="p">(</span><span class="nb">* </span><span class="nv">r</span> <span class="p">(</span><span class="nf">q/cos</span> <span class="p">(</span><span class="nb">* </span><span class="nv">t</span> <span class="mf">0.2</span><span class="p">)))]))</span>
+</code></pre></div>
+<p>Now we need to reload updated <code>f</code>. Standard clojure techniques can be used to do it:</p>
+
+<ul>
+<li>Emacs: <code>C-x C-e</code> to reload <code>f</code>.</li>
+<li>LightTable: <code>Ctrl+Enter</code> to reload <code>f</code>.</li>
+<li>REPL: redefine <code>f</code> function.</li>
+</ul>
+
+<p>And here is the flower (together with some other plots of random functions):</p>
+
+<p><img src="/images/quil-intro/flower.png" alt="Plot of spiral">
+<img src="/images/quil-intro/water-drop.png" alt="Plot of water drop"><br>
+<img src="/images/quil-intro/leaf.png" alt="Plot of leaf">
+<img src="/images/quil-intro/crazy-lines.png" alt="Plot of crazy lines"></p>
+
+<h4>Animation</h4>
+
+<p>Now we&#39;ll look at another quil feature. Up to this point we drew static images which weren&#39;t changing over time. But in fact <code>draw</code> function is called repeatedly in short intervals. That means we can draw moving objects and do real animation! Let&#39;s modify our sketch so on each iteration only a part of a plot is drawn: line from <em>f(t)</em> to <em>f(t+1)</em>. The only problem is that <em>t</em> should change on each iteration, to solve it we&#39;ll use <a href="http://quil.info/environment.html#frame-count"><code>frame-count</code></a> which returns current iteration number and we can use this number as <em>t</em>. Here is implementation:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">draw</span> <span class="p">[]</span>
+  <span class="p">(</span><span class="nf">q/with-translation</span> <span class="p">[(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/width</span><span class="p">)</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/height</span><span class="p">)</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="c1">; note that we don&#39;t use draw-plot here as we need</span>
+    <span class="c1">; to draw only small part of a plot on each iteration</span>
+    <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">t</span> <span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/frame-count</span><span class="p">)</span> <span class="mi">10</span><span class="p">)]</span>
+      <span class="p">(</span><span class="nf">q/line</span> <span class="p">(</span><span class="nf">f</span> <span class="nv">t</span><span class="p">)</span>
+              <span class="p">(</span><span class="nf">f</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">t</span> <span class="mf">0.1</span><span class="p">))))))</span>
+
+<span class="c1">; &#39;setup&#39; is a cousin of &#39;draw&#39; function</span>
+<span class="c1">; setup initialises sketch and it is called only once</span>
+<span class="c1">; before draw called for the first time</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">setup</span> <span class="p">[]</span>
+  <span class="c1">; draw will be called 60 times per second</span>
+  <span class="p">(</span><span class="nf">q/frame-rate</span> <span class="mi">60</span><span class="p">)</span>
+  <span class="c1">; set background to white colour only in the setup</span>
+  <span class="c1">; otherwise each invocation of &#39;draw&#39; would clear sketch completely</span>
+  <span class="p">(</span><span class="nf">q/background</span> <span class="mi">255</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">q/defsketch</span> <span class="nv">trigonometry</span>
+  <span class="ss">:size</span> <span class="p">[</span><span class="mi">300</span> <span class="mi">300</span><span class="p">]</span>
+  <span class="ss">:setup</span> <span class="nv">setup</span>
+  <span class="ss">:draw</span> <span class="nv">draw</span><span class="p">)</span>
+</code></pre></div>
+<p>Time for animation!</p>
+
+<p><img src="/images/quil-intro/animation.gif" alt="Animation of leaf plot"></p>
+
+<p>All our sketches are black and white. It would be nice to add some colours. I&#39;ll leave it as exercise to reader, or, if you&#39;re too lazy, you can simply check GitHub repo in the end of this post. Here is what I came up with:</p>
+
+<p><img src="/images/quil-intro/animation-color.gif" alt="Colourful animation of flower plot"></p>
+
+<p>That&#39;s it for today. Some final notes: Quil is based on Processing programming language, which is itself wonderful language/program for creating visual arts, but Quil moves it to the next level with live reloading (the same could be said about general programming and clojure). It is <strong>very</strong> cool to be able to reload parts of your sketch on fly and get immediate feedback. It boosts your experimentation velocity so I would definitely encourage everyone to play with it. Here is some useful links related to this post:</p>
+
+<ul>
+<li>Code from this post is available on <a href="https://github.com/nbeloglazov/blog-projects/tree/master/quil-intro">GitHub</a>.</li>
+<li>Official Quil <a href="https://github.com/quil/quil">repo</a>.</li>
+<li>Quil API <a href="http://quil.info">docs</a>.</li>
+<li>Processing <a href="http://processing.org">website</a>.</li>
+</ul>
+
+<p>Any comments are welcome!</p>
+
+  </div>
+  <div class="colophon">
+    <p>
+      <span id="pub-date">
+        
+          Published on
+        
+        29 May 2014
+      </span>
+    </p>
+  </div>
+  <div id="social-buttons">
+    <g:plusone href="http://nbeloglazov.com/2014/05/29/quil-intro.html"></g:plusone>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/2014/05/29/quil-intro.html">Tweet</a>
+    <script>
+      !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
+    </script>
+    <div class="fb-like" data-href="http://nbeloglazov.com/2014/05/29/quil-intro.html" data-layout="button_count"
+         data-action="like" data-show-faces="true" data-share="false"></div>
+  </div>
+  <!-- AddThis Button END -->
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_shortname = 'nbeloglazovblog';
+    var disqus_identifier = '/2014/05/29/quil-intro';
+    var disqus_title = 'Quil Intro';
+    var disqus_url = 'http://nbeloglazov.com/2014/05/29/quil-intro.html';
+
+    (function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+
+    </div>
+    <script src="/scripts/responsive.js" type="text/javascript"></script>
+  </body>
+</html>
