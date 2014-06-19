@@ -11,31 +11,31 @@ project.clj
 ```clojure
 (defproject quil-intro "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [quil "2.0.0"]])
+                 [quil "2.1.0"]])
 ```
 
 quil_intro.clj:
 
 ```clojure
 (ns quil-intro
-  (:require [quil.core :refer :all]))
+  (:require [quil.core :as q]))
 
 ; define function which draws spiral
 (defn draw []
   ; make background white
-  (background 255)
+  (q/background 255)
 
   ; move origin point to centre of the sketch
   ; by default origin is in the left top corner
-  (with-translation [(/ (width) 2) (/ (height) 2)]
+  (q/with-translation [(/ (q/width) 2) (/ (q/height) 2)]
    ; parameter t goes 0, 0.01, 0.02, ..., 99.99, 100
    (doseq [t (range 0 100 0.01)]
      ; draw a point with x = t * sin(t) and y = t * cos(t)
-     (point (* t (sin t))
-            (* t (cos t))))))
+     (q/point (* t (q/sin t))
+              (* t (q/cos t))))))
 
 ; run sketch
-(defsketch trigonometry
+(q/defsketch trigonometry
   :size [300 300]
   :draw draw)
 ```
@@ -51,8 +51,8 @@ Now let's refactor `draw` function making plotting functions easier. To achieve 
 ```clojure
 ; define f
 (defn f [t]
-  [(* t (sin t))
-   (* t (cos t))])
+  [(* t (q/sin t))
+   (* t (q/cos t))])
 
 (defn draw-plot [f from to step]
   (doseq [two-points (->> (range from to step)
@@ -60,11 +60,11 @@ Now let's refactor `draw` function making plotting functions easier. To achieve 
                           (partition 2 1))]
     ; we could use 'point' function to draw a point
     ; but let's rather draw a line which connects 2 points of the plot
-    (apply line two-points)))
+    (apply q/line two-points)))
 
 (defn draw []
-  (background 255)
-  (with-translation [(/ (width) 2) (/ (height) 2)]
+  (q/background 255)
+  (q/with-translation [(/ (q/width) 2) (/ (q/height) 2)]
    (draw-plot f 0 100 0.01)))
 ```
 
@@ -77,9 +77,9 @@ After we changed code we don't need to close sketch, recompile everything and st
 ; you can get awesome plots using random combinations of trigonometric functions
 ; here f which plots a flower
 (defn f [t]
-  (let [r (* 200 (sin t) (cos t))]
-    [(* r (sin (* t 0.2)))
-     (* r (cos (* t 0.2)))]))
+  (let [r (* 200 (q/sin t) (q/cos t))]
+    [(* r (q/sin (* t 0.2)))
+     (* r (q/cos (* t 0.2)))]))
 ```
 
 Now we need to reload updated `f`. Standard clojure techniques can be used to do it:
@@ -102,24 +102,24 @@ Now we'll look at another quil feature. Up to this point we drew static images w
 
 ```clojure
 (defn draw []
-  (with-translation [(/ (width) 2) (/ (height) 2)]
+  (q/with-translation [(/ (q/width) 2) (/ (q/height) 2)]
     ; note that we don't use draw-plot here as we need
     ; to draw only small part of a plot on each iteration
-    (let [t (/ (frame-count) 10)]
-      (line (f t)
-            (f (+ t 0.1))))))
+    (let [t (/ (q/frame-count) 10)]
+      (q/line (f t)
+              (f (+ t 0.1))))))
 
 ; 'setup' is a cousin of 'draw' function
 ; setup initialises sketch and it is called only once
 ; before draw called for the first time
 (defn setup []
   ; draw will be called 60 times per second
-  (frame-rate 60)
+  (q/frame-rate 60)
   ; set background to white colour only in the setup
   ; otherwise each invocation of 'draw' would clear sketch completely
-  (background 255))
+  (q/background 255))
 
-(defsketch trigonometry
+(q/defsketch trigonometry
   :size [300 300]
   :setup setup
   :draw draw)

@@ -4,92 +4,90 @@ title: Введение в Quil
 images: /images/quil-intro
 ---
 
-Это бла-бла-бла.
-This is an introductory post about Quil. Quil is an interactive animation library for clojure. Simply speaking it allows you to draw whatever you want on a rectangular window. Quil provides tons of useful functions for drawing in 2D and 3D. In this post I will show how to create and run Quil sketches. Let's start with something simple: with trigonometry... Everyone loves trigonometry: sine, cosine, tangent, what can be better? Our first sketch will draw a spiral using sin and cos functions:
+Данный пост является введением в Quil. Quil - это библиотека для создания интерактивной анимации в Clojure. Попросту говоря она позволяет рисовать на экране всё, что душе угодно. Quil предоставляет множество полезных функций для рисования в 2D и 3D. В это посте я покажу, как создавать и запускать эскизы (скетчи). Начнём с чего-нибудь простого, например с тригонометрии... Все её любят: синусы, косинусы, тангенсы, что может быть лучше? Наш первый скетч будет просто рисовать спираль используя функции sin и cos.
 
 project.clj
 
 ```clojure
 (defproject quil-intro "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [quil "2.0.0"]])
+                 [quil "2.1.0"]])
 ```
 
-quil_intro.clj:
+И собственно сам код quil_intro.clj:
 
 ```clojure
 (ns quil-intro
-  (:require [quil.core :refer :all]))
+  (:require [quil.core :as q]))
 
-; define function which draws spiral
+; определяем функцию, которая рисует спираль
 (defn draw []
-  ; make background white
-  (background 255)
+  ; делаем фон белым
+  (q/background 255)
 
-  ; move origin point to centre of the sketch
-  ; by default origin is in the left top corner
-  (with-translation [(/ (width) 2) (/ (height) 2)]
-   ; parameter t goes 0, 0.01, 0.02, ..., 99.99, 100
-   (doseq [t (range 0 100 0.01)]
-     ; draw a point with x = t * sin(t) and y = t * cos(t)
-     (point (* t (sin t))
-            (* t (cos t))))))
+  ; перемещаем начало координат в центр экрана
+  ; по умолчанию оно находится в левом верхнем углоу
+  (q/with-translation [(/ (q/width) 2) (/ (q/height) 2)]
+    ; параметр t пробегает по значениям от 0 до 100 с шагом 0.01
+    (doseq [t (range 0 100 0.01)]
+      ; рисуем точку с координатами x=t*sin(t) и y=t*cos(t)
+      (q/point (* t (q/sin t))
+               (* t (q/cos t))))))
 
-; run sketch
-(defsketch trigonometry
+; запускаем скетч
+(q/defsketch trigonometry
   :size [300 300]
   :draw draw)
 ```
 
-As you can see for basic sketch we need to define a `draw` function which, well, draws something. Then we call `defsketch` passing `draw` function to it. Here is the image drawn by our code:
+Для базового скетча требуется задать `draw` функцию, которая будет что-нибудь рисовать. Затем вызвать макрос `defsketch` и передать ему `draw`. Вот что рисует наш скетч:
 
 ![Plot of spiral]({{page.images}}/spiral.png)
 
-Beautiful, isn't it?
-
-Now let's refactor `draw` function making plotting functions easier. To achieve this we'll define `draw-plot` function which takes a parametric function *f(t) = (x, y)* , ranges for parameter *t* and plots given function over given range. Here is refactored code:
+Теперь давайте немного порефакторим `draw`, чтобы сделать построение графиков функций чуть проще. Для этого мы зададим функцию `draw-plot`, которая принимает параметрическую функцию *f(t) = (x, y)* и границы параметра *t* на которых нужно построить график. Вот какой получился код:
 
 ```clojure
-; define f
+; задаём f
 (defn f [t]
-  [(* t (sin t))
-   (* t (cos t))])
+  [(* t (q/sin t))
+   (* t (q/cos t))])
 
 (defn draw-plot [f from to step]
   (doseq [two-points (->> (range from to step)
                           (map f)
                           (partition 2 1))]
-    ; we could use 'point' function to draw a point
-    ; but let's rather draw a line which connects 2 points of the plot
-    (apply line two-points)))
+    ; мы могли бы использовать функцию point для того, чтобы нарисовать точку
+    ; но будет лучше, если мы нарисуем линию, соединяющую соседние точки графика
+    (apply q/line two-points)))
 
 (defn draw []
-  (background 255)
-  (with-translation [(/ (width) 2) (/ (height) 2)]
-   (draw-plot f 0 100 0.01)))
+  (q/background 255)
+  (q/with-translation [(/ (q/width) 2) (/ (q/height) 2)]
+    (draw-plot f 0 100 0.01)))
 ```
 
-Cool, now we can experiment with `f` by changing it in any way we'd like. And here comes real beauty of Quil: live reloading.
+Отлично, теперь можно экспериментировать с функцией `f`. И здесь проявляется великолепие Quil и Clojure: перезагрузка на лету.
 
-#### Live Reloading.
-After we changed code we don't need to close sketch, recompile everything and start sketch again as we would do in most other languages. In quil we can update all functions on the fly and see results immediately. In fact we can program whole sketch from the beginning to the end without ever closing it. Of course there are some things we can't do on the fly. We can't register mouse and keyboard listeners on the fly, but we still can update already registered. Now let's get back to work and update `f` function:
+#### Перезагрузка на лету
+В большинстве языков, после изменения кода нам бы понадобилось закрыть текущий скетч, скомпилировать изменения и запустить скетч заново. В Quil мы можем изменить все функции на лету и увидеть изменения немедленно. Вообще, можно запрограммировать весь скетч, от начала до конца, ни разу его не закрыв, а постепенно наращивая его функционал. Конечно, не всё можно изменить на лету, например, невозможно зарегистрировать обработчики событий мыши и клавиатуры. Но это не мешает изменить существующие, т.е. можно изначально зарегистрировать пустые обработчики, а, потом в процессе творчества, добавить в них логику. Теперь давайте вернёмся обратно к коду и изменим функцию `f`:
 
 ```clojure
-; you can get awesome plots using random combinations of trigonometric functions
-; here f which plots a flower
+; можно получить кучу интересных графиков пробуя
+; произвольные комбинации тригонометрических функций,
+; например f, представленная, ниже рисует цветок
 (defn f [t]
-  (let [r (* 200 (sin t) (cos t))]
-    [(* r (sin (* t 0.2)))
-     (* r (cos (* t 0.2)))]))
+  (let [r (* 200 (q/sin t) (q/cos t))]
+    [(* r (q/sin (* t 0.2)))
+     (* r (q/cos (* t 0.2)))]))
 ```
 
-Now we need to reload updated `f`. Standard clojure techniques can be used to do it:
+Теперь нужно перегрузить изменённую функцию `f`. Для этого используются стандартные для Clojure приёмы:
 
-* Emacs: `C-x C-e` to reload `f`.
-* LightTable: `Ctrl+Enter` to reload `f`.
-* REPL: redefine `f` function.
+* Emacs: `C-x C-e` для перегрузки `f`.
+* LightTable: `Ctrl+Enter` для перегрузки `f`.
+* REPL: заново определить функцию `f`.
 
-And here is the flower (together with some other plots of random functions):
+Ниже изображение цветка (и ещё пары других графиков случайных функций):
 
 ![Plot of spiral]({{page.images}}/flower.png)
 ![Plot of water drop]({{page.images}}/water-drop.png)  
@@ -97,48 +95,49 @@ And here is the flower (together with some other plots of random functions):
 ![Plot of crazy lines]({{page.images}}/crazy-lines.png)
 
 
-#### Animation
+#### Анимация
 
-Now we'll look at another quil feature. Up to this point we drew static images which weren't changing over time. But in fact `draw` function is called repeatedly in short intervals. That means we can draw moving objects and do real animation! Let's modify our sketch so on each iteration only a part of a plot is drawn: line from *f(t)* to *f(t+1)*. The only problem is that *t* should change on each iteration, to solve it we'll use [`frame-count`](http://quil.info/environment.html#frame-count) which returns current iteration number and we can use this number as *t*. Here is implementation:
+Теперь рассмотрим ещё одну фичу Quil. До этого момента мы рисовали только статичные изображения, которые не изменялись с течением времени. На самом деле функция `draw` вызывается периодически с короткими интервалами, что позволяет рисовать движущиеся объекты и настоящую анимацию! Сейчас мы изменим `draw` так, чтобы на каждой итерации рисовалась только небольшая часть графика: линия от *f(t)* до *f(t+1)*. Единственная проблема - то, что на каждой итерации *t* должно меняться. Для этого мы воспользуемся функцией [`frame-count`](http://quil.info/environment.html#frame-count), которая возвращает номер текущей итерации. Этот номер и будет служить числом *t*. Теперь cобственно реализация:
 
 ```clojure
 (defn draw []
-  (with-translation [(/ (width) 2) (/ (height) 2)]
-    ; note that we don't use draw-plot here as we need
-    ; to draw only small part of a plot on each iteration
-    (let [t (/ (frame-count) 10)]
-      (line (f t)
-            (f (+ t 0.1))))))
+  (q/with-translation [(/ (q/width) 2) (/ (q/height) 2)]
+    ; заметьте, что мы не используем draw-plot здесь,
+    ; т.к. нам нужно отрисовывать только небольшую часть
+    ; графика на каждой итерации
+    (let [t (/ (q/frame-count) 10)]
+      (q/line (f t)
+              (f (+ t 0.1))))))
 
-; 'setup' is a cousin of 'draw' function
-; setup initialises sketch and it is called only once
-; before draw called for the first time
+; 'setup' - это брат функции 'draw'
+; setup инициализирует скетч и вызывается только один раз,
+; перед первым вызовом draw
 (defn setup []
-  ; draw will be called 60 times per second
-  (frame-rate 60)
-  ; set background to white colour only in the setup
-  ; otherwise each invocation of 'draw' would clear sketch completely
-  (background 255))
+  ; draw будет вызываться 60 раз в секунду
+  (q/frame-rate 60)
+  ; сделаем фон белым только в setup
+  ; если мы будем это вызывать в draw, то на каждой итерации
+  ; скетч будет очищаться
+  (q/background 255))
 
-(defsketch trigonometry
+(q/defsketch trigonometry
   :size [300 300]
   :setup setup
   :draw draw)
 ```
-Time for animation!
+Время для анимации!
 
 ![Animation of leaf plot]({{page.images}}/animation.gif)
 
-All our sketches are black and white. It would be nice to add some colours. I'll leave it as exercise to reader, or, if you're too lazy, you can simply check GitHub repo in the end of this post. Here is what I came up with:
+До сих пор все наши скетчи были чёрно-белыми. Было бы неплохо добавить побольше цветов. Я не буду разбирать, как это сделать в этом посте - это будет упражнение читателю, или, если вы слишком ленивый - можно посмотреть реализации в репо на GitHub в конце этого поста. Вот что у меня получилось:
 
 ![Colourful animation of flower plot]({{page.images}}/animation-color.gif)
 
-That's it for today. Some final notes: Quil is based on Processing programming language, which is itself wonderful language/program for creating visual arts, but Quil moves it to the next level with live reloading (the same could be said about general programming and clojure). It is **very** cool to be able to reload parts of your sketch on fly and get immediate feedback. It boosts your experimentation velocity so I would definitely encourage everyone to play with it. Here is some useful links related to this post:
+На сегодня всё. Пару финальных замечаний: Quil основан на языке Processing, который сам по себе является замечательным языком/программой для создания изображений и анимаций, но Quil улучшает его при помощи перезагрузки на лету (в принципе тоже самое можно сказать и про сам кложур по отношению к программированию в целом). Это **очень** классно, иметь возможность перегружать части скетча на лету и немедленно видеть эффект. Такая возможность ускоряет скорость разработки и экспериментирования, так что я всем советую поиграться с ним. Несколько полезных ссылок:
 
-  * Code from this post is available on [GitHub](https://github.com/nbeloglazov/blog-projects/tree/master/quil-intro).
-  * Official Quil [repo](https://github.com/quil/quil).
-  * Quil API [docs](http://quil.info).
-  * Processing [website](http://processing.org).
+  * Код из этого поста доступен на [GitHub](https://github.com/nbeloglazov/blog-projects/tree/master/quil-intro).
+  * Оффициальный [репо](https://github.com/quil/quil) Quil.
+  * Quil API [доки](http://quil.info).
+  * Сайт [Processing](http://processing.org).
 
-Any comments are welcome!
-
+Любые коментарии приветствуются
