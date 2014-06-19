@@ -13,6 +13,13 @@
   </div>
   <div id="post-info">
     <div id="info-container">
+      {% if site.version == '/ru' %}
+        <p class="lang-link">Ru</p>
+        <a href="{{ page.url }}" class="lang-link">En</a>
+      {% else %}
+        <a href="/ru{{ page.url }}" class="lang-link">Ru</a>
+        <p class="lang-link">En</p>
+      {% endif %}
       <h1 id="title">{{ page.title }}</h1>
       <span id="date">{{ page.date | date_to_string }}</span>
     </div>
