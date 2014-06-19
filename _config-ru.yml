@@ -1,9 +1,0 @@
-markdown: redcarpet
-highlighter: pygments
-exclude: [CNAME, css, images, publish.sh, README.md, Gemfile, Gemfile.lock, scripts]
-
-name: nbeloglazov blog
-description: Блог о Quil, Clojure и программировании вообще
-url: http://nbeloglazov.com/ru
-
-version: /ru
