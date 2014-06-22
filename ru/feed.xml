@@ -7,6 +7,105 @@
     <atom:link href="http://nbeloglazov.com/ru/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Quil Middleware</title>
+      <description>&lt;p&gt;В Quil 2.1.0 была добавлена поддержка middleware (я не знаю русского аналога этого термина, так что буду писать его по-английски). Middleware позволяет расширять скетч без раздувания собственно самого кода. Идея схожа с идеей middleware в ring: middleware - это обычная кложурная функция, которая принимает мапу с параметрами скетча и должна вернуть обновлённую мапу. Что мы можем делать в middleware? В принципе, всё, что душе угодно: можно изменять функции заданные пользователем, такие как &lt;code&gt;draw&lt;/code&gt;, &lt;code&gt;setup&lt;/code&gt;, &lt;code&gt;mouse-pressed&lt;/code&gt; и другие. В качестве примера мы создадим middleware, которое будет вращать скетч относительно центра.&lt;/p&gt;
+
+&lt;h4&gt;Вращательное middleware&lt;/h4&gt;
+
+&lt;p&gt;Работа у нашего middleware довольно проста: нужно заменить определённую пользователем &lt;code&gt;draw&lt;/code&gt; специальной вращательной &lt;code&gt;draw&lt;/code&gt;, которая будет делать 2 вещи: поворачивать скетч на какой-то угол, а потом вызывать оригинальную &lt;code&gt;draw&lt;/code&gt;. Как известно, код стоит больше тысячи слов, так что код (и тысяча слов):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; rotated-draw - вышеупомянутая вращательная функция draw&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; она вращает скетч на определённый угол в зависимости от текущей итерации&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; и потом вызывает исходную пользовательскую draw&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; period - число итераций, за которую скетч повернётся на 360 градусов&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotating-draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;orig-draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;; вычислим угол для поворота используя удобную map-range функцию&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;angle&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/map-range&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;mod&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/frame-count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                           &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt;
+                           &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;q/TWO-PI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;center-x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;/ &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/width&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;center-h&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;/ &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/height&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; нам нужно повернуть скетч относительно центра&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; так что сначала нужно перенести начало координат в центр&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; и только потом вращать&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/with-translation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;center-x&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;center-y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;; повернуть на заданный угол&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/with-rotation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;angle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; вернём начало координат обратно в левый верхний угол&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; наше middleware дожно быть незаметно для пользователя,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/with-translation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;- &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;center-x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;- &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;center-y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+          &lt;span class=&quot;c1&quot;&gt;; вызываем пользовательскую draw&lt;/span&gt;
+          &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;orig-draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; функция, которая и определяет middelware&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;; получаем пользовательскую draw или используем пустую ф-цию,&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; если пользователь не указал draw&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fn &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]))&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; заменяем пользовательскую draw&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; нашей кастомной вращательной draw&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;
+      &lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;partial &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotating-draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; и используем!&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/defsketch&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my-sketch&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:size&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:middleware&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Теперь нужно проверить, работает ли. Вот скучное статичное изображение вложенных квадратов:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/quil-middleware/rect-static.gif&quot; alt=&quot;Static squares&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;И оно начинает вращаться, после того, как мы применили &lt;code&gt;rotate-me&lt;/code&gt; middleware:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/quil-middleware/rect-rotating.gif&quot; alt=&quot;Static squares&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Предположим, что теперь нам понадобилось изменить период вращения. Мы конечно можем изменить &lt;code&gt;rotate-me&lt;/code&gt; функцию напрямую, но это не очень красиво, что если пользователь захочет изменить период? Не очень хочется, чтобы ему пришлось лезть внутрь middleware и что-то там изменять. К тому же, middleware могла быть подключена как сторонняя библиотека, и изменение внутренностей библиотек вообще задача не из простых. К счастью, нашу проблему можно решить проще: можно задать период в опциях и middleware его прочитает:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fn &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]))&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; берём период как значение :rotate-period&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; если такого нет, то используем 200 по умолчанию&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:rotate-period&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;
+      &lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;partial &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotated-draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; и задаём период в скетче&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/defsketch&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my-sketch&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:size&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:middleware&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:rotate-period&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Я не буду ещё раз показывать вращающиеся квадраты, т.к. всё, что изменилось, - это скорость вращения. Вместо этого давайте повращаем не статическую картинку, а анимацию - шарик, отталкивающийся от стен. До вращения:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/quil-middleware/ball-static.gif&quot; alt=&quot;Static ball&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;После:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/quil-middleware/ball-rotating.gif&quot; alt=&quot;Static rotating&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;Заключение&lt;/h4&gt;
+
+&lt;p&gt;Middleware сильно упрощают написание расширений для Quil. Достаточно легко и шарить middleware с другими пользователями - всё, что нужно - это предоставить функцию, и другие могут её добавить в &lt;code&gt;:middleware&lt;/code&gt; и она будет работать!&lt;/p&gt;
+
+&lt;p&gt;Сам Quil использует middleware в своей реализации: например &lt;code&gt;safe-fn&lt;/code&gt; middleware, которое оборачивает все функции, полученные от пользователя так, что если они кидают исключения, то они не пробрасываются дальше, а просто выводятся в консоль, приостанавливая скетч на секунду. Это позволяет пользователю пофиксить свою функции на лету, без необходимости перезапускать скетч. Ещё один пример - &lt;code&gt;deprecated-options&lt;/code&gt;, которое проверяeт опции на наличие устаревших опций и выводит их в консоль, сообщая, что можно использовать вместо них. Вместе с middleware в Quil 2.1.0 был добавлен &lt;a href=&quot;https://github.com/quil/quil/wiki/Functional-mode-%28fun-mode%29&quot;&gt;функциональный режим&lt;/a&gt;, который по сути является middleware.&lt;/p&gt;
+
+&lt;p&gt;Немного ссылок:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Quil middleware вики &lt;a href=&quot;https://github.com/quil/quil/wiki/Middleware&quot;&gt;статья&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Код из данного поста доступен на &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/tree/master/quil-age-of-middleware&quot;&gt;GitHub&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Если вы хотите поиграться с middleware, но не хватает идей, что бы такого реализовать - посмотрите статью на вики, указанную выше. Там есть несколько идей, можно взять их за основу.&lt;/p&gt;
+</description>
+      <pubDate>Sun, 22 Jun 2014 00:00:00 +0100</pubDate>
+      <link>http://nbeloglazov.com/ru/2014/06/22/quil-age-of-middleware.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/06/22/quil-age-of-middleware.html</guid>
+    </item>
+    
+    <item>
       <title>Введение в Quil</title>
       <description>&lt;p&gt;Данный пост является введением в Quil. Quil - это библиотека для создания интерактивной анимации в Clojure. Попросту говоря она позволяет рисовать на экране всё, что душе угодно. Quil предоставляет множество полезных функций для рисования в 2D и 3D. В это посте я покажу, как создавать и запускать эскизы (скетчи). Начнём с чего-нибудь простого, например с тригонометрии... Все её любят: синусы, косинусы, тангенсы, что может быть лучше? Наш первый скетч будет просто рисовать спираль используя функции sin и cos.&lt;/p&gt;
 

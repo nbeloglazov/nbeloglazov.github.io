@@ -7,6 +7,105 @@
     <atom:link href="http://nbeloglazov.com/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Quil: Age of Middleware</title>
+      <description>&lt;p&gt;Quil 2.1.0 introduced new feature: middleware. Middleware is a way to augment a sketch without blowing up your code, you can think of it as a way to create &amp;quot;libraries&amp;quot; for Quil. Idea is similar to the ring middleware: Quil middleware is a regular clojure function which takes map of sketch options and returns updated map, that&amp;#39;s all. What can we do in a middleware? Well, a lot of things, middleware has full power over options so we can wrap functions like &lt;code&gt;draw&lt;/code&gt;, &lt;code&gt;setup&lt;/code&gt; and others user-provided functions anyway we want. As an example let&amp;#39;s create a middleware which rotates sketch on each frame.&lt;/p&gt;
+
+&lt;h4&gt;Rotating middleware&lt;/h4&gt;
+
+&lt;p&gt;The rotating middleware&amp;#39;s job is pretty simple: replace user-provided &lt;code&gt;draw&lt;/code&gt; function with it own special version of &lt;code&gt;draw&lt;/code&gt;. This special &lt;code&gt;draw&lt;/code&gt; function does two things: first, it rotates sketch some angle, and second, calls original &lt;code&gt;draw&lt;/code&gt;. But code is worth a thousand words, so here it is:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; rotated-draw is the special draw function,&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; which rotates sketch some angle depending on current frame number,&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; and then calls original user-provided &amp;#39;draw&amp;#39; function.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; period is a number of frames to rotate sketch a full 360 degrees&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotating-draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;orig-draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;; calculate angle to rotate using handy map-range function&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;angle&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/map-range&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;mod&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/frame-count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                           &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt;
+                           &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;q/TWO-PI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;center-x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;/ &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/width&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;center-h&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;/ &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/height&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; we want to rotate sketch relative to the center of screen&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; so we need to move the origin point first and only then rotate&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/with-translation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;center-x&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;center-y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;; rotate screen given angle&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/with-rotation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;angle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; move origin back to the left top corner (default position)&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; our middleware should be transparent to the user so we don&amp;#39;t&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; want to change any default settings&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/with-translation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;- &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;center-x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;- &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;center-y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+          &lt;span class=&quot;c1&quot;&gt;; call user-provided &amp;#39;draw&amp;#39; function&lt;/span&gt;
+          &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;orig-draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; the middleware function&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; it is a regular clojure function&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;; user-provided &amp;#39;draw&amp;#39; or empty function if it&amp;#39;s not present&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fn &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]))&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; replace user-provided draw with&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;; our custom rotating &amp;#39;draw&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;
+      &lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;partial &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotating-draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; and here how we use it&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/defsketch&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my-sketch&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:size&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:middleware&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let&amp;#39;s check now if it works. Here is a boring static image of nested squares:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/quil-middleware/rect-static.gif&quot; alt=&quot;Static squares&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;It starts rotating after applying &lt;code&gt;rotate-me&lt;/code&gt; middleware:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/quil-middleware/rect-rotating.gif&quot; alt=&quot;Static squares&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s say we want to change rotation period now. We can always modify &lt;code&gt;rotate-me&lt;/code&gt; function and change period there. But that&amp;#39;s not very customizable, what if user wants to change it? We don&amp;#39;t want user to dive into middleware and modify it. Even more, middleware may be shipped as a library and modifying a third-party library is not an easy task. Fortunately our problem is easy to solve: let&amp;#39;s read rotation period from &lt;code&gt;options&lt;/code&gt; map:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fn &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]))&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; read period as :rotate-period value&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; or fallback to 200 if not provided&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:rotate-period&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;
+      &lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;partial &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotated-draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;period&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; customize period in defsketch&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/defsketch&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my-sketch&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:size&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:middleware&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:rotate-period&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I won&amp;#39;t show rotating squares gif here again, it is just rotating twice as fast as original, so there is no point of repeating it. Instead let&amp;#39;s rotate animation of bouncing ball. Before:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/quil-middleware/ball-static.gif&quot; alt=&quot;Static ball&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;After:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/quil-middleware/ball-rotating.gif&quot; alt=&quot;Static rotating&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;Conclusion&lt;/h4&gt;
+
+&lt;p&gt;With middleware it becomes easier to write pluggable extensions for Quil. It&amp;#39;s easy to share middleware with other users - you need to provide a single function which everyone can add to their &lt;code&gt;:middleware&lt;/code&gt; option and it works!&lt;/p&gt;
+
+&lt;p&gt;Quil already uses middleware internally: there is a &lt;code&gt;safe-fn&lt;/code&gt; middleware which wraps all user-provided handlers, so exceptions thrown inside them are not propagated outside. It allows user to fix broken handler on fly without need to restart the sketch. The other middleware is &lt;code&gt;deprecated-options&lt;/code&gt; which checks if some of the options are deprecated and prints info to console. Along with middleware, Quil 2.1.0 introduced &lt;a href=&quot;https://github.com/quil/quil/wiki/Functional-mode-%28fun-mode%29&quot;&gt;functional mode&lt;/a&gt;, which itself is a middleware.&lt;/p&gt;
+
+&lt;p&gt;Some links:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Quil middleware Wiki &lt;a href=&quot;https://github.com/quil/quil/wiki/Middleware&quot;&gt;article&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Code from this post is available on &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/tree/master/quil-age-of-middleware&quot;&gt;GitHub&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you want to play with middleware but don&amp;#39;t have ideas of what to implement - check wiki article above. It contains some ideas for middleware, feel free to work on them.&lt;/p&gt;
+</description>
+      <pubDate>Sun, 22 Jun 2014 00:00:00 +0100</pubDate>
+      <link>http://nbeloglazov.com/2014/06/22/quil-age-of-middleware.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/2014/06/22/quil-age-of-middleware.html</guid>
+    </item>
+    
+    <item>
       <title>Quil Intro</title>
       <description>&lt;p&gt;This is an introductory post about Quil. Quil is an interactive animation library for clojure. Simply speaking it allows you to draw whatever you want on a rectangular window. Quil provides tons of useful functions for drawing in 2D and 3D. In this post I will show how to create and run Quil sketches. Let&amp;#39;s start with something simple: with trigonometry... Everyone loves trigonometry: sine, cosine, tangent, what can be better? Our first sketch will draw a spiral using sin and cos functions:&lt;/p&gt;
 
