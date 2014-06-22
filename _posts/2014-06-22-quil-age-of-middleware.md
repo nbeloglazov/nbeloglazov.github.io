@@ -97,4 +97,4 @@ Some links:
 * Quil middleware Wiki [article](https://github.com/quil/quil/wiki/Middleware).
 * Code from this post is available on [GitHub](https://github.com/nbeloglazov/blog-projects/tree/master/quil-age-of-middleware).
 
-If you want to play with middleware but don't have ideas of what to implement - check wiki article above. Tt contains some ideas for middleware, feel free to work on them.
+If you want to play with middleware but don't have ideas of what to implement - check wiki article above. It contains some ideas for middleware, feel free to work on them.
