@@ -2,6 +2,7 @@
 layout: post
 title: Quil Intro
 images: /images/quil-intro
+date: "2014-05-29 00:00:00"
 ---
 
 This is an introductory post about Quil. Quil is an interactive animation library for clojure. Simply speaking it allows you to draw whatever you want on a rectangular window. Quil provides tons of useful functions for drawing in 2D and 3D. In this post I will show how to create and run Quil sketches. Let's start with something simple: with trigonometry... Everyone loves trigonometry: sine, cosine, tangent, what can be better? Our first sketch will draw a spiral using sin and cos functions:
