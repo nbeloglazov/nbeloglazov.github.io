@@ -7,6 +7,128 @@
     <atom:link href="http://nbeloglazov.com/ru/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Clojure Dojo и PubSub</title>
+      <description>&lt;h3&gt;Clojure Dojo&lt;/h3&gt;
+
+&lt;p&gt;В этот понедельник я ходил на кложурное доджо в Лондоне, организованное компанией uSwitch. Доджо это мероприятия, проводимые каждые 2 недели какой-либо компанией, в основном это ThoughtWorks и uSwitch. Собираются около 10-15 человек, заказыват пиццу, предлагают идеи для кодинга, потом делятся на команды по 3-5 человек в каждой и кодят какую-либо идею в течение часов 2. После кодинга каждая команда делает короткую 5-минутную презентацию о том, что же они наделали за вечер. Главное правило в доджо (кроме &amp;quot;получать удовольствие&amp;quot;) - каждый участник должен хоть немного покодить, написать хоть пару строчек, но должен.&lt;/p&gt;
+
+&lt;p&gt;Народ на доджо собирается разношёрстный. Некоторые годами кодят на кложуре и используют его на работе, другие же на прошлой неделе начали изучать и написали только &amp;quot;Hello, world&amp;quot;. Идеи для проектов обычно не очень сложные, в конце концов даётся только 2 часа, и у многих участников опыта в кложуре немного. Например, на последнем доджо организовалось 5 команд. Две из них были командами новичков, они работали над упражнениями из &lt;a href=&quot;http://exercism.io/&quot;&gt;exercism.io&lt;/a&gt;. Две другие команды пробовали на вкус &lt;a href=&quot;https://groups.google.com/forum/#!topic/clojure/6vDnBWOgHDc&quot;&gt;Quil на ClojureScript&lt;/a&gt;, поддержку которого, кстати, добавил Максим Карандашов, Google Summer of Code студент из Саратова. И наконец пятая команда (в которой я был) работала над PubSub библиотекой работающей на уровне локальной сети.&lt;/p&gt;
+
+&lt;p&gt;Один из ключевых аспектов в доджо - среда разработки. Команда обычно работает на одном ноутбуке, потому что шарить код в реальном времени между несколькими ноутбуками не очень просто. Так что получается, что кто-то один кодит, а остальные обсуждают задачу и помогают ему. Один из уроков, который я усвоил после посещения пары-тройки доджо, это то, что редактор должен быть как можно проще. Конечно у каждого есть собственный любимый emacs/vim/что-нибудь ещё с настроенными примочками, но использовать их в доджо будет плохой идеей. Я был на нескольких доджо, на которых мы большую часть времени потратили сражаясь с специфичными кей-биндингами в емаксе вместо того, чтобы писать кложур. Это расстраивает. А если представить, что вы новичок и пришли на доджо, то вам мало того, что надо писать на неведомом языке, так ещё и в непонятном, нелогичном редакторе. Это расстраивает вдвойне. Так что редактор должен быть простым. Я считаю, что &lt;a href=&quot;http://www.lighttable.com/&quot;&gt;LightTable&lt;/a&gt; - лучший вариант для кложурных доджо. Он легко запускается, позволяет писать текст без выкручивания пальцев и мозга, и наконец, позволяет легко исполнять кложурный код, просто нажмите &amp;quot;Ctrl+Enter&amp;quot;.&lt;/p&gt;
+
+&lt;p&gt;Теперь я хотел бы описать проект, на которым наша команда работала на доджо: PubSub&lt;/p&gt;
+
+&lt;h3&gt;PubSub&lt;/h3&gt;
+
+&lt;p&gt;Идея достаточно проста: написать библиотеку, состоящую из 2 функций: &lt;code&gt;publish&lt;/code&gt; и &lt;code&gt;subscribe&lt;/code&gt;. Она должна удовлетворять следующим требованиям:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Посылка сообщений и подписка должны происходить на уровне сети, т.е. каждый компьютер должен получать сообщения опубликованные другими компьютерами в этой же сети.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;publish&lt;/code&gt; принимает 1 аргумент - сообщение. Сообщение - это произвольный кложурный объект (строка, мапа, вектор или что-нибудь ещё).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;subscribe&lt;/code&gt; принимает 1 аргумент - функцию-обработчик, которая будет обрабатывать полученные сообщения.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Как можно видеть, у библиотеки не должно быть концепции адресов, очередей или топиков. Также не должно быть концепции сервера: клиенты должны быть способны общаться друг с другом без надобности подсоединения к какому-либо серверу.&lt;/p&gt;
+
+&lt;p&gt;Для реализации мы решили воспользоваться &lt;a href=&quot;http://en.wikipedia.org/wiki/IP_multicast&quot;&gt;IP мультикастом&lt;/a&gt;. Мы не лезли глубоко в дебри спецификации и технических деталей, просто нагуглили, как это сделать в джаве. Нашли &lt;code&gt;java.net.MulticastSocket&lt;/code&gt; класс, который делает как раз то, что нам и надо. Более того, &lt;a href=&quot;http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html&quot;&gt;джавадок&lt;/a&gt; для этого класса содержит пример, как его использовать. Фактически, мы просто переписали пример на кложур и немного расширили. Собственно код:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pubsub.core&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;java.net&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;InetAddress&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;DatagramPacket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;MulticastSocket&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+
+&lt;span class=&quot;c1&quot;&gt;; константы определяющие адрес мультикаста&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;address&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;228.5.6.7&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6789&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;InetAddress/getByName&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+
+&lt;span class=&quot;c1&quot;&gt;; функция для создания мультикаст-сокета&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;init-comm&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;MulticastSocket.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.joinGroup&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; определяем глобальный сокет, которые используется для посылки сообщений&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;init-comm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;get-packet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;DatagramPacket.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.getBytes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.length&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; определяем &amp;#39;publish&amp;#39; функцию. По каким-то причинам мы назвали её &amp;#39;send-it&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.send&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;get-packet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;pr-str &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Теперь мы умеем посылать сообщения, круто! Как можно видеть, мы используем &lt;a href=&quot;https://github.com/edn-format/edn&quot;&gt;EDN&lt;/a&gt; в качестве формата сообщения (&lt;code&gt;pr-str&lt;/code&gt; конвертирует объект в EDN строку). Теперь настало время реализовать механизм подписки. Мы немного отклонились от начальных условий и реализовали чуть более сложную модель. Добавлены 2 фичи, которые изначально не планировались:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Вместо того, чтобы передавать только функцию-обработчик, мы можем передавать 2 функции: предикат и функцию-обработчик. Предикат проверяет, удовлетворяет ли сообщение какому-либо критерию и если удовлетворяет, то вызывает функцию-обработчик.&lt;/li&gt;
+&lt;li&gt;Изначально механизм прекращения подписки не предусматривался. Мы его добавили. Когда вы подписываетесь создаётся promise объект. Он используется как флаг конца подписки: как только кто-то положит что-либо в него, то подписка будет остановлена. Этот объект возвращается из функции &lt;code&gt;subscribe&lt;/code&gt;, так что пользователь может положить что-нибудь в него, когда нужно остановить подписку.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;И теперь код:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; &amp;#39;process-message&amp;#39; - рекурсивная функция для обработки 1 сообщения&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; Аргументы&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;;   socket - сокет, из которого мы будем считывать сообщение&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;;   predicate - предикат, заданный пользователем&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;;   handler - функция-обработчик, заданная пользователем&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;;   finished - объект promise, для прекращения подписки&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;process-message&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;packet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;DatagramPacket.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;byte-array&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when-not &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;realized?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.receive&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;packet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;packet&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;.getData&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;String.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;read-string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+          &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;handler&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;recur&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; функция &amp;#39;subscribe&amp;#39;. Мы снова назвали её по-другому :)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;subscribe-with&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;constantly &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;init-comm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+          &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;promise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;future&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;process-message&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.leaveGroup&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Вот и всё. Библиотека готова к использованию. Далее пример использования:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pubsub.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;subscribe-with&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; подписаться на все сообщения&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Simplest subscribe&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; послать сообщение, оно должно отобразиться в консоли&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;something&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; подписаться только на сообщения-мапы, в которых топик == :dojo&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;= &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:dojo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Dojo message&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; подписаться только на сообщения с топиком :work&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;= &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:work&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Work message&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; подписаться только на сообщения с топиком :home&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;= &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:home&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Home message&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; посылаем сообщения с разными топиками&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:dojo&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:message&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello, clojurians!&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:work&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:message&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;You&amp;#39;re at work...&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:home&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:message&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;You&amp;#39;re at home...&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Далее можно написать что-нибудь на основе этой библиотеки, например децентрализованный чат или простую мультиплеерную игру. Может это будет интересным проектом для какого-нибудь другого доджо.&lt;/p&gt;
+
+&lt;p&gt;Если интересно поиграться с кодом - он доступен на &lt;a href=&quot;https://github.com/nbeloglazov/dojo-pubsub&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Tue, 15 Jul 2014 23:00:00 +0100</pubDate>
+      <link>http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html</guid>
+    </item>
+    
+    <item>
       <title>Quil Middleware</title>
       <description>&lt;p&gt;В Quil 2.1.0 была добавлена поддержка middleware (я не знаю русского аналога этого термина, так что буду писать его по-английски). Middleware позволяет расширять скетч без раздувания собственно самого кода. Идея схожа с идеей middleware в ring: middleware - это обычная кложурная функция, которая принимает мапу с параметрами скетча и должна вернуть обновлённую мапу. Что мы можем делать в middleware? В принципе, всё, что душе угодно: можно изменять функции заданные пользователем, такие как &lt;code&gt;draw&lt;/code&gt;, &lt;code&gt;setup&lt;/code&gt;, &lt;code&gt;mouse-pressed&lt;/code&gt; и другие. В качестве примера мы создадим middleware, которое будет вращать скетч относительно центра.&lt;/p&gt;
 

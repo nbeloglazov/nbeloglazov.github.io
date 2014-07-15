@@ -45,6 +45,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/ru/2014/07/15/clojure-dojo-and-pubsub.html">
+                  <span class="post-date">15 Jul 2014</span>
+                  Clojure Dojo и PubSub
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/ru/2014/06/22/quil-age-of-middleware.html">
                   <span class="post-date">22 Jun 2014</span>
                   Quil Middleware
@@ -86,105 +93,128 @@
     <div id="info-container">
       
         <p class="lang-link">Ru</p>
-        <a href="/2014/06/22/quil-age-of-middleware.html" class="lang-link">En</a>
+        <a href="/2014/07/15/clojure-dojo-and-pubsub.html" class="lang-link">En</a>
       
-      <h1 id="title">Quil Middleware</h1>
-      <span id="date">22 Jun 2014</span>
+      <h1 id="title">Clojure Dojo и PubSub</h1>
+      <span id="date">15 Jul 2014</span>
     </div>
   </div>
 
   <div class="post">
-    <p>В Quil 2.1.0 была добавлена поддержка middleware (я не знаю русского аналога этого термина, так что буду писать его по-английски). Middleware позволяет расширять скетч без раздувания собственно самого кода. Идея схожа с идеей middleware в ring: middleware - это обычная кложурная функция, которая принимает мапу с параметрами скетча и должна вернуть обновлённую мапу. Что мы можем делать в middleware? В принципе, всё, что душе угодно: можно изменять функции заданные пользователем, такие как <code>draw</code>, <code>setup</code>, <code>mouse-pressed</code> и другие. В качестве примера мы создадим middleware, которое будет вращать скетч относительно центра.</p>
+    <h3>Clojure Dojo</h3>
 
-<h4>Вращательное middleware</h4>
+<p>В этот понедельник я ходил на кложурное доджо в Лондоне, организованное компанией uSwitch. Доджо это мероприятия, проводимые каждые 2 недели какой-либо компанией, в основном это ThoughtWorks и uSwitch. Собираются около 10-15 человек, заказыват пиццу, предлагают идеи для кодинга, потом делятся на команды по 3-5 человек в каждой и кодят какую-либо идею в течение часов 2. После кодинга каждая команда делает короткую 5-минутную презентацию о том, что же они наделали за вечер. Главное правило в доджо (кроме &quot;получать удовольствие&quot;) - каждый участник должен хоть немного покодить, написать хоть пару строчек, но должен.</p>
 
-<p>Работа у нашего middleware довольно проста: нужно заменить определённую пользователем <code>draw</code> специальной вращательной <code>draw</code>, которая будет делать 2 вещи: поворачивать скетч на какой-то угол, а потом вызывать оригинальную <code>draw</code>. Как известно, код стоит больше тысячи слов, так что код (и тысяча слов):</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; rotated-draw - вышеупомянутая вращательная функция draw</span>
-<span class="c1">; она вращает скетч на определённый угол в зависимости от текущей итерации</span>
-<span class="c1">; и потом вызывает исходную пользовательскую draw</span>
-<span class="c1">; period - число итераций, за которую скетч повернётся на 360 градусов</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">rotating-draw</span> <span class="p">[</span><span class="nv">period</span> <span class="nv">orig-draw</span><span class="p">]</span>
-  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="c1">; вычислим угол для поворота используя удобную map-range функцию</span>
-        <span class="nv">angle</span> <span class="p">(</span><span class="nf">q/map-range</span> <span class="p">(</span><span class="nf">mod</span> <span class="p">(</span><span class="nf">q/frame-count</span><span class="p">)</span> <span class="nv">period</span><span class="p">)</span>
-                           <span class="mi">0</span> <span class="nv">period</span>
-                           <span class="mi">0</span> <span class="nv">q/TWO-PI</span><span class="p">)</span>
-        <span class="nv">center-x</span> <span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/width</span><span class="p">)</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="nv">center-h</span> <span class="p">(</span><span class="nb">/ </span><span class="p">(</span><span class="nf">q/height</span><span class="p">)</span> <span class="mi">2</span><span class="p">)]</span>
-    <span class="c1">; нам нужно повернуть скетч относительно центра</span>
-    <span class="c1">; так что сначала нужно перенести начало координат в центр</span>
-    <span class="c1">; и только потом вращать</span>
-    <span class="p">(</span><span class="nf">q/with-translation</span> <span class="p">[</span><span class="nv">center-x</span> <span class="nv">center-y</span><span class="p">]</span>
-      <span class="c1">; повернуть на заданный угол</span>
-      <span class="p">(</span><span class="nf">q/with-rotation</span> <span class="p">[</span><span class="nv">angle</span><span class="p">]</span>
-        <span class="c1">; вернём начало координат обратно в левый верхний угол</span>
-        <span class="c1">; наше middleware дожно быть незаметно для пользователя,</span>
-        <span class="p">(</span><span class="nf">q/with-translation</span> <span class="p">[(</span><span class="nb">- </span><span class="nv">center-x</span><span class="p">)</span> <span class="p">(</span><span class="nb">- </span><span class="nv">center-y</span><span class="p">)]</span>
-          <span class="c1">; вызываем пользовательскую draw</span>
-          <span class="p">(</span><span class="nf">orig-draw</span><span class="p">))))))</span>
+<p>Народ на доджо собирается разношёрстный. Некоторые годами кодят на кложуре и используют его на работе, другие же на прошлой неделе начали изучать и написали только &quot;Hello, world&quot;. Идеи для проектов обычно не очень сложные, в конце концов даётся только 2 часа, и у многих участников опыта в кложуре немного. Например, на последнем доджо организовалось 5 команд. Две из них были командами новичков, они работали над упражнениями из <a href="http://exercism.io/">exercism.io</a>. Две другие команды пробовали на вкус <a href="https://groups.google.com/forum/#!topic/clojure/6vDnBWOgHDc">Quil на ClojureScript</a>, поддержку которого, кстати, добавил Максим Карандашов, Google Summer of Code студент из Саратова. И наконец пятая команда (в которой я был) работала над PubSub библиотекой работающей на уровне локальной сети.</p>
 
-<span class="c1">; функция, которая и определяет middelware</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">rotate-me</span> <span class="p">[</span><span class="nv">options</span><span class="p">]</span>
-  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="c1">; получаем пользовательскую draw или используем пустую ф-цию,</span>
-        <span class="c1">; если пользователь не указал draw</span>
-        <span class="nv">draw</span> <span class="p">(</span><span class="ss">:draw</span> <span class="nv">options</span> <span class="p">(</span><span class="k">fn </span><span class="p">[]))</span>
-        <span class="nv">period</span> <span class="mi">200</span><span class="p">]</span>
-    <span class="c1">; заменяем пользовательскую draw</span>
-    <span class="c1">; нашей кастомной вращательной draw</span>
-    <span class="p">(</span><span class="nb">assoc </span><span class="nv">options</span>
-      <span class="ss">:draw</span> <span class="p">(</span><span class="nb">partial </span><span class="nv">rotating-draw</span> <span class="nv">period</span> <span class="nv">draw</span><span class="p">))))</span>
+<p>Один из ключевых аспектов в доджо - среда разработки. Команда обычно работает на одном ноутбуке, потому что шарить код в реальном времени между несколькими ноутбуками не очень просто. Так что получается, что кто-то один кодит, а остальные обсуждают задачу и помогают ему. Один из уроков, который я усвоил после посещения пары-тройки доджо, это то, что редактор должен быть как можно проще. Конечно у каждого есть собственный любимый emacs/vim/что-нибудь ещё с настроенными примочками, но использовать их в доджо будет плохой идеей. Я был на нескольких доджо, на которых мы большую часть времени потратили сражаясь с специфичными кей-биндингами в емаксе вместо того, чтобы писать кложур. Это расстраивает. А если представить, что вы новичок и пришли на доджо, то вам мало того, что надо писать на неведомом языке, так ещё и в непонятном, нелогичном редакторе. Это расстраивает вдвойне. Так что редактор должен быть простым. Я считаю, что <a href="http://www.lighttable.com/">LightTable</a> - лучший вариант для кложурных доджо. Он легко запускается, позволяет писать текст без выкручивания пальцев и мозга, и наконец, позволяет легко исполнять кложурный код, просто нажмите &quot;Ctrl+Enter&quot;.</p>
 
-<span class="c1">; и используем!</span>
-<span class="p">(</span><span class="nf">q/defsketch</span> <span class="nv">my-sketch</span>
-  <span class="ss">:draw</span> <span class="nv">draw</span>
-  <span class="ss">:size</span> <span class="p">[</span><span class="mi">500</span> <span class="mi">500</span><span class="p">]</span>
-  <span class="ss">:middleware</span> <span class="p">[</span><span class="nv">rotate-me</span><span class="p">])</span>
-</code></pre></div>
-<p>Теперь нужно проверить, работает ли. Вот скучное статичное изображение вложенных квадратов:</p>
+<p>Теперь я хотел бы описать проект, на которым наша команда работала на доджо: PubSub</p>
 
-<p><img src="/images/quil-middleware/rect-static.gif" alt="Static squares"></p>
+<h3>PubSub</h3>
 
-<p>И оно начинает вращаться, после того, как мы применили <code>rotate-me</code> middleware:</p>
-
-<p><img src="/images/quil-middleware/rect-rotating.gif" alt="Static squares"></p>
-
-<p>Предположим, что теперь нам понадобилось изменить период вращения. Мы конечно можем изменить <code>rotate-me</code> функцию напрямую, но это не очень красиво, что если пользователь захочет изменить период? Не очень хочется, чтобы ему пришлось лезть внутрь middleware и что-то там изменять. К тому же, middleware могла быть подключена как сторонняя библиотека, и изменение внутренностей библиотек вообще задача не из простых. К счастью, нашу проблему можно решить проще: можно задать период в опциях и middleware его прочитает:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">rotate-me</span> <span class="p">[</span><span class="nv">options</span><span class="p">]</span>
-  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">draw</span> <span class="p">(</span><span class="ss">:draw</span> <span class="nv">options</span> <span class="p">(</span><span class="k">fn </span><span class="p">[]))</span>
-        <span class="c1">; берём период как значение :rotate-period</span>
-        <span class="c1">; если такого нет, то используем 200 по умолчанию</span>
-        <span class="nv">period</span> <span class="p">(</span><span class="ss">:rotate-period</span> <span class="nv">options</span> <span class="mi">200</span><span class="p">)]</span>
-    <span class="p">(</span><span class="nb">assoc </span><span class="nv">options</span>
-      <span class="ss">:draw</span> <span class="p">(</span><span class="nb">partial </span><span class="nv">rotated-draw</span> <span class="nv">period</span> <span class="nv">draw</span><span class="p">))))</span>
-
-<span class="c1">; и задаём период в скетче</span>
-<span class="p">(</span><span class="nf">q/defsketch</span> <span class="nv">my-sketch</span>
-  <span class="ss">:draw</span> <span class="nv">draw</span>
-  <span class="ss">:size</span> <span class="p">[</span><span class="mi">200</span> <span class="mi">200</span><span class="p">]</span>
-  <span class="ss">:middleware</span> <span class="p">[</span><span class="nv">rotate-me</span><span class="p">]</span>
-  <span class="ss">:rotate-period</span> <span class="mi">100</span><span class="p">)</span>
-</code></pre></div>
-<p>Я не буду ещё раз показывать вращающиеся квадраты, т.к. всё, что изменилось, - это скорость вращения. Вместо этого давайте повращаем не статическую картинку, а анимацию - шарик, отталкивающийся от стен. До вращения:</p>
-
-<p><img src="/images/quil-middleware/ball-static.gif" alt="Static ball"></p>
-
-<p>После:</p>
-
-<p><img src="/images/quil-middleware/ball-rotating.gif" alt="Static rotating"></p>
-
-<h4>Заключение</h4>
-
-<p>Middleware сильно упрощают написание расширений для Quil. Достаточно легко и шарить middleware с другими пользователями - всё, что нужно - это предоставить функцию, и другие могут её добавить в <code>:middleware</code> и она будет работать!</p>
-
-<p>Сам Quil использует middleware в своей реализации: например <code>safe-fn</code> middleware, которое оборачивает все функции, полученные от пользователя так, что если они кидают исключения, то они не пробрасываются дальше, а просто выводятся в консоль, приостанавливая скетч на секунду. Это позволяет пользователю пофиксить свою функции на лету, без необходимости перезапускать скетч. Ещё один пример - <code>deprecated-options</code>, которое проверяeт опции на наличие устаревших опций и выводит их в консоль, сообщая, что можно использовать вместо них. Вместе с middleware в Quil 2.1.0 был добавлен <a href="https://github.com/quil/quil/wiki/Functional-mode-%28fun-mode%29">функциональный режим</a>, который по сути является middleware.</p>
-
-<p>Немного ссылок:</p>
+<p>Идея достаточно проста: написать библиотеку, состоящую из 2 функций: <code>publish</code> и <code>subscribe</code>. Она должна удовлетворять следующим требованиям:</p>
 
 <ul>
-<li>Quil middleware вики <a href="https://github.com/quil/quil/wiki/Middleware">статья</a>.</li>
-<li>Код из данного поста доступен на <a href="https://github.com/nbeloglazov/blog-projects/tree/master/quil-age-of-middleware">GitHub</a>.</li>
+<li>Посылка сообщений и подписка должны происходить на уровне сети, т.е. каждый компьютер должен получать сообщения опубликованные другими компьютерами в этой же сети.</li>
+<li><code>publish</code> принимает 1 аргумент - сообщение. Сообщение - это произвольный кложурный объект (строка, мапа, вектор или что-нибудь ещё).</li>
+<li><code>subscribe</code> принимает 1 аргумент - функцию-обработчик, которая будет обрабатывать полученные сообщения.</li>
 </ul>
 
-<p>Если вы хотите поиграться с middleware, но не хватает идей, что бы такого реализовать - посмотрите статью на вики, указанную выше. Там есть несколько идей, можно взять их за основу.</p>
+<p>Как можно видеть, у библиотеки не должно быть концепции адресов, очередей или топиков. Также не должно быть концепции сервера: клиенты должны быть способны общаться друг с другом без надобности подсоединения к какому-либо серверу.</p>
+
+<p>Для реализации мы решили воспользоваться <a href="http://en.wikipedia.org/wiki/IP_multicast">IP мультикастом</a>. Мы не лезли глубоко в дебри спецификации и технических деталей, просто нагуглили, как это сделать в джаве. Нашли <code>java.net.MulticastSocket</code> класс, который делает как раз то, что нам и надо. Более того, <a href="http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html">джавадок</a> для этого класса содержит пример, как его использовать. Фактически, мы просто переписали пример на кложур и немного расширили. Собственно код:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
+  <span class="p">(</span><span class="ss">:import</span> <span class="p">[</span><span class="nv">java.net</span> <span class="nv">InetAddress</span> <span class="nv">DatagramPacket</span> <span class="nv">MulticastSocket</span><span class="p">]))</span>
+
+
+<span class="c1">; константы определяющие адрес мультикаста</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">address</span> <span class="s">&quot;228.5.6.7&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">port</span> <span class="mi">6789</span><span class="p">)</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">group</span> <span class="p">(</span><span class="nf">InetAddress/getByName</span> <span class="nv">address</span><span class="p">))</span>
+
+
+<span class="c1">; функция для создания мультикаст-сокета</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">init-comm</span> <span class="p">[]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">s</span> <span class="p">(</span><span class="nf">MulticastSocket.</span> <span class="nv">port</span><span class="p">)]</span>
+    <span class="p">(</span><span class="nf">.joinGroup</span> <span class="nv">s</span> <span class="nv">group</span><span class="p">)</span>
+    <span class="nv">s</span><span class="p">))</span>
+
+<span class="c1">; определяем глобальный сокет, которые используется для посылки сообщений</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">socket</span> <span class="p">(</span><span class="nf">init-comm</span><span class="p">))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">get-packet</span> <span class="p">[</span><span class="nv">message</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">DatagramPacket.</span> <span class="p">(</span><span class="nf">.getBytes</span> <span class="nv">message</span><span class="p">)</span> <span class="p">(</span><span class="nf">.length</span> <span class="nv">message</span><span class="p">)</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">))</span>
+
+<span class="c1">; определяем &#39;publish&#39; функцию. По каким-то причинам мы назвали её &#39;send-it&#39;</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">send-it</span> <span class="p">[</span><span class="nv">message</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">.send</span> <span class="nv">socket</span> <span class="p">(</span><span class="nf">get-packet</span> <span class="p">(</span><span class="nb">pr-str </span><span class="nv">message</span><span class="p">)</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">)))</span>
+</code></pre></div>
+<p>Теперь мы умеем посылать сообщения, круто! Как можно видеть, мы используем <a href="https://github.com/edn-format/edn">EDN</a> в качестве формата сообщения (<code>pr-str</code> конвертирует объект в EDN строку). Теперь настало время реализовать механизм подписки. Мы немного отклонились от начальных условий и реализовали чуть более сложную модель. Добавлены 2 фичи, которые изначально не планировались:</p>
+
+<ul>
+<li>Вместо того, чтобы передавать только функцию-обработчик, мы можем передавать 2 функции: предикат и функцию-обработчик. Предикат проверяет, удовлетворяет ли сообщение какому-либо критерию и если удовлетворяет, то вызывает функцию-обработчик.</li>
+<li>Изначально механизм прекращения подписки не предусматривался. Мы его добавили. Когда вы подписываетесь создаётся promise объект. Он используется как флаг конца подписки: как только кто-то положит что-либо в него, то подписка будет остановлена. Этот объект возвращается из функции <code>subscribe</code>, так что пользователь может положить что-нибудь в него, когда нужно остановить подписку.</li>
+</ul>
+
+<p>И теперь код:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; - рекурсивная функция для обработки 1 сообщения</span>
+<span class="c1">; Аргументы</span>
+<span class="c1">;   socket - сокет, из которого мы будем считывать сообщение</span>
+<span class="c1">;   predicate - предикат, заданный пользователем</span>
+<span class="c1">;   handler - функция-обработчик, заданная пользователем</span>
+<span class="c1">;   finished - объект promise, для прекращения подписки</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">process-message</span> <span class="p">[</span><span class="nv">socket</span> <span class="nv">predicate</span> <span class="nv">handler</span> <span class="nv">finished</span><span class="p">]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">size</span> <span class="mi">1000</span>
+        <span class="nv">packet</span> <span class="p">(</span><span class="nf">DatagramPacket.</span> <span class="p">(</span><span class="nf">byte-array</span> <span class="nv">size</span><span class="p">)</span> <span class="nv">size</span><span class="p">)]</span>
+    <span class="p">(</span><span class="nb">when-not </span><span class="p">(</span><span class="nf">realized?</span> <span class="nv">finished</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">.receive</span> <span class="nv">socket</span> <span class="nv">packet</span><span class="p">)</span>
+      <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">obj</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">packet</span> <span class="nv">.getData</span> <span class="p">(</span><span class="nf">String.</span><span class="p">)</span> <span class="nv">read-string</span><span class="p">)]</span>
+        <span class="p">(</span><span class="nb">when </span><span class="p">(</span><span class="nf">predicate</span> <span class="nv">obj</span><span class="p">)</span>
+          <span class="p">(</span><span class="nf">handler</span> <span class="nv">obj</span><span class="p">))))</span>
+      <span class="p">(</span><span class="nf">recur</span> <span class="nv">socket</span> <span class="nv">predicate</span> <span class="nv">handler</span> <span class="nv">finished</span><span class="p">)))</span>
+
+<span class="c1">; функция &#39;subscribe&#39;. Мы снова назвали её по-другому :)</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">subscribe-with</span>
+  <span class="p">([</span><span class="nv">handler</span><span class="p">]</span>
+    <span class="p">(</span><span class="nf">subscribe-with</span> <span class="p">(</span><span class="nb">constantly </span><span class="nv">true</span><span class="p">)</span> <span class="nv">handler</span><span class="p">))</span>
+  <span class="p">([</span><span class="nv">predicate</span> <span class="nv">handler</span><span class="p">]</span>
+    <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">socket</span> <span class="p">(</span><span class="nf">init-comm</span><span class="p">)</span>
+          <span class="nv">finished</span> <span class="p">(</span><span class="nf">promise</span><span class="p">)]</span>
+      <span class="p">(</span><span class="nf">future</span>
+        <span class="p">(</span><span class="nf">process-message</span> <span class="nv">socket</span> <span class="nv">predicate</span> <span class="nv">handler</span> <span class="nv">finished</span><span class="p">)</span>
+        <span class="p">(</span><span class="nf">.leaveGroup</span> <span class="nv">socket</span> <span class="nv">group</span><span class="p">))</span>
+      <span class="nv">finished</span><span class="p">)))</span>
+</code></pre></div>
+<p>Вот и всё. Библиотека готова к использованию. Далее пример использования:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
+
+<span class="c1">; подписаться на все сообщения</span>
+<span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Simplest subscribe&quot;</span> <span class="nv">%</span><span class="p">))</span>
+
+<span class="c1">; послать сообщение, оно должно отобразиться в консоли</span>
+<span class="p">(</span><span class="nf">send-it</span> <span class="s">&quot;something&quot;</span><span class="p">)</span>
+
+<span class="c1">; подписаться только на сообщения-мапы, в которых топик == :dojo</span>
+<span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:dojo</span><span class="p">)</span>
+                <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Dojo message&quot;</span> <span class="nv">%</span><span class="p">))</span>
+
+<span class="c1">; подписаться только на сообщения с топиком :work</span>
+<span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:work</span><span class="p">)</span>
+                <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Work message&quot;</span> <span class="nv">%</span><span class="p">))</span>
+
+<span class="c1">; подписаться только на сообщения с топиком :home</span>
+<span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:home</span><span class="p">)</span>
+                <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Home message&quot;</span> <span class="nv">%</span><span class="p">))</span>
+
+<span class="c1">; посылаем сообщения с разными топиками</span>
+<span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:dojo</span> <span class="ss">:message</span> <span class="s">&quot;Hello, clojurians!&quot;</span><span class="p">})</span>
+<span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:work</span> <span class="ss">:message</span> <span class="s">&quot;You&#39;re at work...&quot;</span><span class="p">})</span>
+<span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:home</span> <span class="ss">:message</span> <span class="s">&quot;You&#39;re at home...&quot;</span><span class="p">})</span>
+</code></pre></div>
+<p>Далее можно написать что-нибудь на основе этой библиотеки, например децентрализованный чат или простую мультиплеерную игру. Может это будет интересным проектом для какого-нибудь другого доджо.</p>
+
+<p>Если интересно поиграться с кодом - он доступен на <a href="https://github.com/nbeloglazov/dojo-pubsub">GitHub</a>.</p>
 
   </div>
   <div class="colophon">
@@ -193,26 +223,26 @@
         
           Опубликовано
         
-        22 Jun 2014
+        15 Jul 2014
       </span>
     </p>
   </div>
   <div id="social-buttons">
-    <g:plusone href="http://nbeloglazov.com/ru/2014/06/22/quil-age-of-middleware.html"></g:plusone>
-    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/ru/2014/06/22/quil-age-of-middleware.html">Tweet</a>
+    <g:plusone href="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html"></g:plusone>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html">Tweet</a>
     <script>
       !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
     </script>
-    <div class="fb-like" data-href="http://nbeloglazov.com/ru/2014/06/22/quil-age-of-middleware.html" data-layout="button_count"
+    <div class="fb-like" data-href="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html" data-layout="button_count"
          data-action="like" data-show-faces="true" data-share="false"></div>
   </div>
   <!-- AddThis Button END -->
   <div id="disqus_thread"></div>
   <script type="text/javascript">
     var disqus_shortname = 'nbeloglazovblog';
-    var disqus_identifier = '/ru/2014/06/22/quil-age-of-middleware';
-    var disqus_title = 'Quil Middleware';
-    var disqus_url = 'http://nbeloglazov.com/ru/2014/06/22/quil-age-of-middleware.html';
+    var disqus_identifier = '/ru/2014/07/15/clojure-dojo-and-pubsub';
+    var disqus_title = 'Clojure Dojo и PubSub';
+    var disqus_url = 'http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html';
 
     (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

@@ -3,7 +3,7 @@
   <head>
       <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>nbeloglazov blog</title>
+      <title>Clojure Dojo и PubSub</title>
       <meta name="viewport" content="width=device-width">
 
       <!-- syntax highlighting CSS -->
@@ -35,9 +35,9 @@
       <div class="sidebar" id="sidebar">
         <div class="header">
           
-            <h1 class="title"><a href="/"><img id="avatar" src="/images/avatar.jpg"></a></h1>
+            <h1 class="title"><a href="/ru"><img id="avatar" src="/images/avatar.jpg"></a></h1>
             <span class="tagline">
-              Quil, Сlojure and programming in general
+              Блог о Quil, Clojure и программировании
             </span>
           
         </div>
@@ -45,23 +45,23 @@
           <ul class="posts-list">
             
               <li class="post-link">
-                <a class="post-title" href="/2014/07/15/clojure-dojo-and-pubsub.html">
+                <a class="post-title" href="/ru/2014/07/15/clojure-dojo-and-pubsub.html">
                   <span class="post-date">15 Jul 2014</span>
-                  Clojure Dojo and PubSub
+                  Clojure Dojo и PubSub
                 </a>
               </li>
             
               <li class="post-link">
-                <a class="post-title" href="/2014/06/22/quil-age-of-middleware.html">
+                <a class="post-title" href="/ru/2014/06/22/quil-age-of-middleware.html">
                   <span class="post-date">22 Jun 2014</span>
-                  Quil: Age of Middleware
+                  Quil Middleware
                 </a>
               </li>
             
               <li class="post-link">
-                <a class="post-title" href="/2014/05/29/quil-intro.html">
+                <a class="post-title" href="/ru/2014/05/29/quil-intro.html">
                   <span class="post-date">29 May 2014</span>
-                  Quil Intro
+                  Введение в Quil
                 </a>
               </li>
             
@@ -74,9 +74,7 @@
           </span>
         </div>
       </div>
-        
-
-<div class="content" id="home">
+        <div class="content" id="home">
   <div id="fb-root"></div>
   <script>(function(d, s, id) {
     var js, fjs = d.getElementsByTagName(s)[0];
@@ -92,10 +90,10 @@
   <div id="post-info">
     <div id="info-container">
       
-        <a href="/ru/2014/07/15/clojure-dojo-and-pubsub.html" class="lang-link">Ru</a>
-        <p class="lang-link">En</p>
+        <p class="lang-link">Ru</p>
+        <a href="/2014/07/15/clojure-dojo-and-pubsub.html" class="lang-link">En</a>
       
-      <h1 id="title">Clojure Dojo and PubSub</h1>
+      <h1 id="title">Clojure Dojo и PubSub</h1>
       <span id="date">15 Jul 2014</span>
     </div>
   </div>
@@ -103,67 +101,67 @@
   <div class="post">
     <h3>Clojure Dojo</h3>
 
-<p>This Monday I went to a London Clojure Dojo at uSwitch. Dojos are organized beweekly by some companies like ThoughtWorks or uSwitch. Around 10-15 people gather together, order pizza, propose ideas for coding and then split into teams of 3-5 people to code for ~2 hours. After coding part each team gives 5-minutes presentation of what they have done. Main rule (beside &quot;Have fun&quot;) is that each participant must write at least a couple of lines in Clojure during dojo.</p>
+<p>В этот понедельник я ходил на кложурное доджо в Лондоне, организованное компанией uSwitch. Доджо это мероприятия, проводимые каждые 2 недели какой-либо компанией, в основном это ThoughtWorks и uSwitch. Собираются около 10-15 человек, заказыват пиццу, предлагают идеи для кодинга, потом делятся на команды по 3-5 человек в каждой и кодят какую-либо идею в течение часов 2. После кодинга каждая команда делает короткую 5-минутную презентацию о том, что же они наделали за вечер. Главное правило в доджо (кроме &quot;получать удовольствие&quot;) - каждый участник должен хоть немного покодить, написать хоть пару строчек, но должен.</p>
 
-<p>People coming to dojos have quite different clojure background. Some have been coding clojure for years and use it at work. Some have started learning clojure last week and have written only basic &quot;Hello, world&quot;. Ideas for coding are not very complex, after all you have only 2 hours to code and some people don&#39;t have much experience with clojure. For example at the last dojo we got 5 teams. Two of them were teams of beginners, who worked on exercises from <a href="http://exercism.io/">exercism.io</a>. Two teams tried out <a href="https://groups.google.com/forum/#!topic/clojure/6vDnBWOgHDc">Quil on ClojureScript</a>. And finally last team (I was in that team) worked on simple network-level PubSub library.</p>
+<p>Народ на доджо собирается разношёрстный. Некоторые годами кодят на кложуре и используют его на работе, другие же на прошлой неделе начали изучать и написали только &quot;Hello, world&quot;. Идеи для проектов обычно не очень сложные, в конце концов даётся только 2 часа, и у многих участников опыта в кложуре немного. Например, на последнем доджо организовалось 5 команд. Две из них были командами новичков, они работали над упражнениями из <a href="http://exercism.io/">exercism.io</a>. Две другие команды пробовали на вкус <a href="https://groups.google.com/forum/#!topic/clojure/6vDnBWOgHDc">Quil на ClojureScript</a>, поддержку которого, кстати, добавил Максим Карандашов, Google Summer of Code студент из Саратова. И наконец пятая команда (в которой я был) работала над PubSub библиотекой работающей на уровне локальной сети.</p>
 
-<p>One of the important issues during the dojo is working environment. A team usually works on a single laptop, because sharing code between several laptops realtime is not an easy task to do. So someone is coding while others discuss and help her/him. One lesson I learned after going to dojos is that editor should be simplest possible. Of course everyone has his/her own favorite setup of emacs/vim/whatever and wants to use it, but it&#39;s a bad idea. I&#39;ve been on some dojos where we were mostly fighting with emacs instead of writing clojure, it was frustrating. Even more, imagine you&#39;re a beginner and you came to a dojo, and now you have to write in language you barely know and use some weird editor which doesn&#39;t behave as normal editors do, double frustrating. So editor should be simple. I think <a href="http://www.lighttable.com/">LightTable</a> is the best clojure editor for dojos. It is easy to start, you can write text without twisting your fingers and brain, and finally, it is very easy to execute clojure code, just &quot;Ctrl+Enter&quot;.</p>
+<p>Один из ключевых аспектов в доджо - среда разработки. Команда обычно работает на одном ноутбуке, потому что шарить код в реальном времени между несколькими ноутбуками не очень просто. Так что получается, что кто-то один кодит, а остальные обсуждают задачу и помогают ему. Один из уроков, который я усвоил после посещения пары-тройки доджо, это то, что редактор должен быть как можно проще. Конечно у каждого есть собственный любимый emacs/vim/что-нибудь ещё с настроенными примочками, но использовать их в доджо будет плохой идеей. Я был на нескольких доджо, на которых мы большую часть времени потратили сражаясь с специфичными кей-биндингами в емаксе вместо того, чтобы писать кложур. Это расстраивает. А если представить, что вы новичок и пришли на доджо, то вам мало того, что надо писать на неведомом языке, так ещё и в непонятном, нелогичном редакторе. Это расстраивает вдвойне. Так что редактор должен быть простым. Я считаю, что <a href="http://www.lighttable.com/">LightTable</a> - лучший вариант для кложурных доджо. Он легко запускается, позволяет писать текст без выкручивания пальцев и мозга, и наконец, позволяет легко исполнять кложурный код, просто нажмите &quot;Ctrl+Enter&quot;.</p>
 
-<p>Now I&#39;d like to describe the project my team worked on at the last dojo: PusSub.</p>
+<p>Теперь я хотел бы описать проект, на которым наша команда работала на доджо: PubSub</p>
 
 <h3>PubSub</h3>
 
-<p>Idea quite simple: write a library which consists of 2 functions: <code>publish</code> and <code>subscribe</code>. It should satisfy following contract:</p>
+<p>Идея достаточно проста: написать библиотеку, состоящую из 2 функций: <code>publish</code> и <code>subscribe</code>. Она должна удовлетворять следующим требованиям:</p>
 
 <ul>
-<li>Publishing and subscription are on network level, so each machine gets messages published by other machines on the same network.</li>
-<li><code>publish</code> takes 1 argument - message. Message is an arbitrary clojure object (string, map, vector, etc.)</li>
-<li><code>subscribe</code> takes 1 argument - handler function which processes messages.</li>
+<li>Посылка сообщений и подписка должны происходить на уровне сети, т.е. каждый компьютер должен получать сообщения опубликованные другими компьютерами в этой же сети.</li>
+<li><code>publish</code> принимает 1 аргумент - сообщение. Сообщение - это произвольный кложурный объект (строка, мапа, вектор или что-нибудь ещё).</li>
+<li><code>subscribe</code> принимает 1 аргумент - функцию-обработчик, которая будет обрабатывать полученные сообщения.</li>
 </ul>
 
-<p>As you can see the library should not have concept of addresses, queues or topics. The library should not have concept of a server: clients should be able to communicate to each other without connecting to some kind of server.</p>
+<p>Как можно видеть, у библиотеки не должно быть концепции адресов, очередей или топиков. Также не должно быть концепции сервера: клиенты должны быть способны общаться друг с другом без надобности подсоединения к какому-либо серверу.</p>
 
-<p>For implementation we decided to use <a href="http://en.wikipedia.org/wiki/IP_multicast">IP multicast</a>. We didn&#39;t dig deep into specification and technical details, just googled how to do it in java. We found <code>java.net.MulticastSocket</code> class which does exactly what we want. Even more, <a href="http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html">javadoc</a> for that class contains nice example of how to use it. We translated it into clojure and enhanced a little bit. Here what we got:</p>
+<p>Для реализации мы решили воспользоваться <a href="http://en.wikipedia.org/wiki/IP_multicast">IP мультикастом</a>. Мы не лезли глубоко в дебри спецификации и технических деталей, просто нагуглили, как это сделать в джаве. Нашли <code>java.net.MulticastSocket</code> класс, который делает как раз то, что нам и надо. Более того, <a href="http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html">джавадок</a> для этого класса содержит пример, как его использовать. Фактически, мы просто переписали пример на кложур и немного расширили. Собственно код:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
   <span class="p">(</span><span class="ss">:import</span> <span class="p">[</span><span class="nv">java.net</span> <span class="nv">InetAddress</span> <span class="nv">DatagramPacket</span> <span class="nv">MulticastSocket</span><span class="p">]))</span>
 
 
-<span class="c1">; constants specifying multicast address</span>
+<span class="c1">; константы определяющие адрес мультикаста</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">address</span> <span class="s">&quot;228.5.6.7&quot;</span><span class="p">)</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">port</span> <span class="mi">6789</span><span class="p">)</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">group</span> <span class="p">(</span><span class="nf">InetAddress/getByName</span> <span class="nv">address</span><span class="p">))</span>
 
 
-<span class="c1">; function to create new multicast socket</span>
+<span class="c1">; функция для создания мультикаст-сокета</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">init-comm</span> <span class="p">[]</span>
   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">s</span> <span class="p">(</span><span class="nf">MulticastSocket.</span> <span class="nv">port</span><span class="p">)]</span>
     <span class="p">(</span><span class="nf">.joinGroup</span> <span class="nv">s</span> <span class="nv">group</span><span class="p">)</span>
     <span class="nv">s</span><span class="p">))</span>
 
-<span class="c1">; define socket to be used for sending message from current machine</span>
+<span class="c1">; определяем глобальный сокет, которые используется для посылки сообщений</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">socket</span> <span class="p">(</span><span class="nf">init-comm</span><span class="p">))</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">get-packet</span> <span class="p">[</span><span class="nv">message</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">]</span>
   <span class="p">(</span><span class="nf">DatagramPacket.</span> <span class="p">(</span><span class="nf">.getBytes</span> <span class="nv">message</span><span class="p">)</span> <span class="p">(</span><span class="nf">.length</span> <span class="nv">message</span><span class="p">)</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">))</span>
 
-<span class="c1">; define &#39;publish&#39; function. For some reason we named it &#39;send-it&#39;</span>
+<span class="c1">; определяем &#39;publish&#39; функцию. По каким-то причинам мы назвали её &#39;send-it&#39;</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">send-it</span> <span class="p">[</span><span class="nv">message</span><span class="p">]</span>
   <span class="p">(</span><span class="nf">.send</span> <span class="nv">socket</span> <span class="p">(</span><span class="nf">get-packet</span> <span class="p">(</span><span class="nb">pr-str </span><span class="nv">message</span><span class="p">)</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">)))</span>
 </code></pre></div>
-<p>Now we can publish messages, cool! As you can see we use <a href="https://github.com/edn-format/edn">EDN</a> as format for sending messages (<code>pr-str</code> converts clojure object to EDN string). Now it is time to implement subscription mechanism. We diverted a little bit from initial goal and implemented more complex subscription model. It has 2 features not mentioned in initial design:</p>
+<p>Теперь мы умеем посылать сообщения, круто! Как можно видеть, мы используем <a href="https://github.com/edn-format/edn">EDN</a> в качестве формата сообщения (<code>pr-str</code> конвертирует объект в EDN строку). Теперь настало время реализовать механизм подписки. Мы немного отклонились от начальных условий и реализовали чуть более сложную модель. Добавлены 2 фичи, которые изначально не планировались:</p>
 
 <ul>
-<li>Instead of passing only handler function, we pass 2 functions: predicate and handler. Predicate checks whether message should be processed and if it returns true then handler is invoked.</li>
-<li>Initial design doesn&#39;t have a mechanism to unsubscribe handler. We added it. When you subscribe, a promise object is created. The promise is used as finished flag: subscription halts once someone delivered anything into the promise. The promise is returned from <code>subscribe</code> function so user can put any value to it to unsubscribe.</li>
+<li>Вместо того, чтобы передавать только функцию-обработчик, мы можем передавать 2 функции: предикат и функцию-обработчик. Предикат проверяет, удовлетворяет ли сообщение какому-либо критерию и если удовлетворяет, то вызывает функцию-обработчик.</li>
+<li>Изначально механизм прекращения подписки не предусматривался. Мы его добавили. Когда вы подписываетесь создаётся promise объект. Он используется как флаг конца подписки: как только кто-то положит что-либо в него, то подписка будет остановлена. Этот объект возвращается из функции <code>subscribe</code>, так что пользователь может положить что-нибудь в него, когда нужно остановить подписку.</li>
 </ul>
 
-<p>Here is the code:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; is a recursive function used to process messages</span>
-<span class="c1">; Parameters</span>
-<span class="c1">;   socket - socket object to receive message from</span>
-<span class="c1">;   predicate - user-provided function which decides whether process message or not</span>
-<span class="c1">;   handler - user-provided function which processes message</span>
-<span class="c1">;   finished - promise which indicates when to unsubscribe</span>
+<p>И теперь код:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; - рекурсивная функция для обработки 1 сообщения</span>
+<span class="c1">; Аргументы</span>
+<span class="c1">;   socket - сокет, из которого мы будем считывать сообщение</span>
+<span class="c1">;   predicate - предикат, заданный пользователем</span>
+<span class="c1">;   handler - функция-обработчик, заданная пользователем</span>
+<span class="c1">;   finished - объект promise, для прекращения подписки</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">process-message</span> <span class="p">[</span><span class="nv">socket</span> <span class="nv">predicate</span> <span class="nv">handler</span> <span class="nv">finished</span><span class="p">]</span>
   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">size</span> <span class="mi">1000</span>
         <span class="nv">packet</span> <span class="p">(</span><span class="nf">DatagramPacket.</span> <span class="p">(</span><span class="nf">byte-array</span> <span class="nv">size</span><span class="p">)</span> <span class="nv">size</span><span class="p">)]</span>
@@ -174,9 +172,7 @@
           <span class="p">(</span><span class="nf">handler</span> <span class="nv">obj</span><span class="p">))))</span>
       <span class="p">(</span><span class="nf">recur</span> <span class="nv">socket</span> <span class="nv">predicate</span> <span class="nv">handler</span> <span class="nv">finished</span><span class="p">)))</span>
 
-<span class="c1">; &#39;subscribe&#39; function. Again, we named it differently :)</span>
-<span class="c1">; It has 2 versions, first is classic, takes only handler.</span>
-<span class="c1">; Second version takes predicate and handler.</span>
+<span class="c1">; функция &#39;subscribe&#39;. Мы снова назвали её по-другому :)</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">subscribe-with</span>
   <span class="p">([</span><span class="nv">handler</span><span class="p">]</span>
     <span class="p">(</span><span class="nf">subscribe-with</span> <span class="p">(</span><span class="nb">constantly </span><span class="nv">true</span><span class="p">)</span> <span class="nv">handler</span><span class="p">))</span>
@@ -188,63 +184,63 @@
         <span class="p">(</span><span class="nf">.leaveGroup</span> <span class="nv">socket</span> <span class="nv">group</span><span class="p">))</span>
       <span class="nv">finished</span><span class="p">)))</span>
 </code></pre></div>
-<p>That&#39;s all. The library is ready to use. Here is how to use it:</p>
+<p>Вот и всё. Библиотека готова к использованию. Далее пример использования:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
 
-<span class="c1">; subscribe to all messages</span>
+<span class="c1">; подписаться на все сообщения</span>
 <span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Simplest subscribe&quot;</span> <span class="nv">%</span><span class="p">))</span>
 
-<span class="c1">; send message, we should see it printed in console</span>
+<span class="c1">; послать сообщение, оно должно отобразиться в консоли</span>
 <span class="p">(</span><span class="nf">send-it</span> <span class="s">&quot;something&quot;</span><span class="p">)</span>
 
-<span class="c1">; subscripe only to messages which are maps and contain topic == :dojo</span>
+<span class="c1">; подписаться только на сообщения-мапы, в которых топик == :dojo</span>
 <span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:dojo</span><span class="p">)</span>
                 <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Dojo message&quot;</span> <span class="nv">%</span><span class="p">))</span>
 
-<span class="c1">; subscribe only to messages with topic :work</span>
+<span class="c1">; подписаться только на сообщения с топиком :work</span>
 <span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:work</span><span class="p">)</span>
                 <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Work message&quot;</span> <span class="nv">%</span><span class="p">))</span>
 
-<span class="c1">; subscript only to messages with topic :home</span>
+<span class="c1">; подписаться только на сообщения с топиком :home</span>
 <span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:home</span><span class="p">)</span>
                 <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Home message&quot;</span> <span class="nv">%</span><span class="p">))</span>
 
-<span class="c1">; send messages with different topics</span>
+<span class="c1">; посылаем сообщения с разными топиками</span>
 <span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:dojo</span> <span class="ss">:message</span> <span class="s">&quot;Hello, clojurians!&quot;</span><span class="p">})</span>
 <span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:work</span> <span class="ss">:message</span> <span class="s">&quot;You&#39;re at work...&quot;</span><span class="p">})</span>
 <span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:home</span> <span class="ss">:message</span> <span class="s">&quot;You&#39;re at home...&quot;</span><span class="p">})</span>
 </code></pre></div>
-<p>We can built something else on top of the library, for example decentralized chat app or simple multiplayer game. Who knows, it might make a nice project for another dojo.</p>
+<p>Далее можно написать что-нибудь на основе этой библиотеки, например децентрализованный чат или простую мультиплеерную игру. Может это будет интересным проектом для какого-нибудь другого доджо.</p>
 
-<p>If you want to play with the code - check project on <a href="https://github.com/nbeloglazov/dojo-pubsub">GitHub</a>.</p>
+<p>Если интересно поиграться с кодом - он доступен на <a href="https://github.com/nbeloglazov/dojo-pubsub">GitHub</a>.</p>
 
   </div>
   <div class="colophon">
     <p>
       <span id="pub-date">
         
-          Published on
+          Опубликовано
         
         15 Jul 2014
       </span>
     </p>
   </div>
   <div id="social-buttons">
-    <g:plusone href="http://nbeloglazov.com/2014/07/15/clojure-dojo-and-pubsub.html"></g:plusone>
-    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/2014/07/15/clojure-dojo-and-pubsub.html">Tweet</a>
+    <g:plusone href="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html"></g:plusone>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html">Tweet</a>
     <script>
       !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
     </script>
-    <div class="fb-like" data-href="http://nbeloglazov.com/2014/07/15/clojure-dojo-and-pubsub.html" data-layout="button_count"
+    <div class="fb-like" data-href="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html" data-layout="button_count"
          data-action="like" data-show-faces="true" data-share="false"></div>
   </div>
   <!-- AddThis Button END -->
   <div id="disqus_thread"></div>
   <script type="text/javascript">
     var disqus_shortname = 'nbeloglazovblog';
-    var disqus_identifier = '/2014/07/15/clojure-dojo-and-pubsub';
-    var disqus_title = 'Clojure Dojo and PubSub';
-    var disqus_url = 'http://nbeloglazov.com/2014/07/15/clojure-dojo-and-pubsub.html';
+    var disqus_identifier = '/ru/2014/07/15/clojure-dojo-and-pubsub';
+    var disqus_title = 'Clojure Dojo и PubSub';
+    var disqus_url = 'http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html';
 
     (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

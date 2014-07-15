@@ -7,6 +7,130 @@
     <atom:link href="http://nbeloglazov.com/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Clojure Dojo and PubSub</title>
+      <description>&lt;h3&gt;Clojure Dojo&lt;/h3&gt;
+
+&lt;p&gt;This Monday I went to a London Clojure Dojo at uSwitch. Dojos are organized beweekly by some companies like ThoughtWorks or uSwitch. Around 10-15 people gather together, order pizza, propose ideas for coding and then split into teams of 3-5 people to code for ~2 hours. After coding part each team gives 5-minutes presentation of what they have done. Main rule (beside &amp;quot;Have fun&amp;quot;) is that each participant must write at least a couple of lines in Clojure during dojo.&lt;/p&gt;
+
+&lt;p&gt;People coming to dojos have quite different clojure background. Some have been coding clojure for years and use it at work. Some have started learning clojure last week and have written only basic &amp;quot;Hello, world&amp;quot;. Ideas for coding are not very complex, after all you have only 2 hours to code and some people don&amp;#39;t have much experience with clojure. For example at the last dojo we got 5 teams. Two of them were teams of beginners, who worked on exercises from &lt;a href=&quot;http://exercism.io/&quot;&gt;exercism.io&lt;/a&gt;. Two teams tried out &lt;a href=&quot;https://groups.google.com/forum/#!topic/clojure/6vDnBWOgHDc&quot;&gt;Quil on ClojureScript&lt;/a&gt;. And finally last team (I was in that team) worked on simple network-level PubSub library.&lt;/p&gt;
+
+&lt;p&gt;One of the important issues during the dojo is working environment. A team usually works on a single laptop, because sharing code between several laptops realtime is not an easy task to do. So someone is coding while others discuss and help her/him. One lesson I learned after going to dojos is that editor should be simplest possible. Of course everyone has his/her own favorite setup of emacs/vim/whatever and wants to use it, but it&amp;#39;s a bad idea. I&amp;#39;ve been on some dojos where we were mostly fighting with emacs instead of writing clojure, it was frustrating. Even more, imagine you&amp;#39;re a beginner and you came to a dojo, and now you have to write in language you barely know and use some weird editor which doesn&amp;#39;t behave as normal editors do, double frustrating. So editor should be simple. I think &lt;a href=&quot;http://www.lighttable.com/&quot;&gt;LightTable&lt;/a&gt; is the best clojure editor for dojos. It is easy to start, you can write text without twisting your fingers and brain, and finally, it is very easy to execute clojure code, just &amp;quot;Ctrl+Enter&amp;quot;.&lt;/p&gt;
+
+&lt;p&gt;Now I&amp;#39;d like to describe the project my team worked on at the last dojo: PusSub.&lt;/p&gt;
+
+&lt;h3&gt;PubSub&lt;/h3&gt;
+
+&lt;p&gt;Idea quite simple: write a library which consists of 2 functions: &lt;code&gt;publish&lt;/code&gt; and &lt;code&gt;subscribe&lt;/code&gt;. It should satisfy following contract:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Publishing and subscription are on network level, so each machine gets messages published by other machines on the same network.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;publish&lt;/code&gt; takes 1 argument - message. Message is an arbitrary clojure object (string, map, vector, etc.)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;subscribe&lt;/code&gt; takes 1 argument - handler function which processes messages.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As you can see the library should not have concept of addresses, queues or topics. The library should not have concept of a server: clients should be able to communicate to each other without connecting to some kind of server.&lt;/p&gt;
+
+&lt;p&gt;For implementation we decided to use &lt;a href=&quot;http://en.wikipedia.org/wiki/IP_multicast&quot;&gt;IP multicast&lt;/a&gt;. We didn&amp;#39;t dig deep into specification and technical details, just googled how to do it in java. We found &lt;code&gt;java.net.MulticastSocket&lt;/code&gt; class which does exactly what we want. Even more, &lt;a href=&quot;http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html&quot;&gt;javadoc&lt;/a&gt; for that class contains nice example of how to use it. We translated it into clojure and enhanced a little bit. Here what we got:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pubsub.core&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;java.net&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;InetAddress&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;DatagramPacket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;MulticastSocket&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+
+&lt;span class=&quot;c1&quot;&gt;; constants specifying multicast address&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;address&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;228.5.6.7&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6789&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;InetAddress/getByName&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+
+&lt;span class=&quot;c1&quot;&gt;; function to create new multicast socket&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;init-comm&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;MulticastSocket.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.joinGroup&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; define socket to be used for sending message from current machine&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;init-comm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;get-packet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;DatagramPacket.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.getBytes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.length&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; define &amp;#39;publish&amp;#39; function. For some reason we named it &amp;#39;send-it&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.send&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;get-packet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;pr-str &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now we can publish messages, cool! As you can see we use &lt;a href=&quot;https://github.com/edn-format/edn&quot;&gt;EDN&lt;/a&gt; as format for sending messages (&lt;code&gt;pr-str&lt;/code&gt; converts clojure object to EDN string). Now it is time to implement subscription mechanism. We diverted a little bit from initial goal and implemented more complex subscription model. It has 2 features not mentioned in initial design:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Instead of passing only handler function, we pass 2 functions: predicate and handler. Predicate checks whether message should be processed and if it returns true then handler is invoked.&lt;/li&gt;
+&lt;li&gt;Initial design doesn&amp;#39;t have a mechanism to unsubscribe handler. We added it. When you subscribe, a promise object is created. The promise is used as finished flag: subscription halts once someone delivered anything into the promise. The promise is returned from &lt;code&gt;subscribe&lt;/code&gt; function so user can put any value to it to unsubscribe.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Here is the code:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; &amp;#39;process-message&amp;#39; is a recursive function used to process messages&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; Parameters&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;;   socket - socket object to receive message from&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;;   predicate - user-provided function which decides whether process message or not&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;;   handler - user-provided function which processes message&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;;   finished - promise which indicates when to unsubscribe&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;process-message&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;packet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;DatagramPacket.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;byte-array&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when-not &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;realized?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.receive&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;packet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;packet&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;.getData&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;String.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;read-string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+          &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;handler&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;recur&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; &amp;#39;subscribe&amp;#39; function. Again, we named it differently :)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; It has 2 versions, first is classic, takes only handler.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; Second version takes predicate and handler.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;subscribe-with&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;constantly &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;init-comm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+          &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;promise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;future&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;process-message&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;predicate&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.leaveGroup&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;socket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;#39;s all. The library is ready to use. Here is how to use it:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pubsub.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;subscribe-with&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; subscribe to all messages&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Simplest subscribe&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; send message, we should see it printed in console&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;something&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; subscripe only to messages which are maps and contain topic == :dojo&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;= &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:dojo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Dojo message&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; subscribe only to messages with topic :work&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;= &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:work&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Work message&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; subscript only to messages with topic :home&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;= &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:home&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Home message&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; send messages with different topics&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:dojo&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:message&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello, clojurians!&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:work&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:message&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;You&amp;#39;re at work...&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:topic&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:home&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:message&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;You&amp;#39;re at home...&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We can built something else on top of the library, for example decentralized chat app or simple multiplayer game. Who knows, it might make a nice project for another dojo.&lt;/p&gt;
+
+&lt;p&gt;If you want to play with the code - check project on &lt;a href=&quot;https://github.com/nbeloglazov/dojo-pubsub&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Tue, 15 Jul 2014 23:00:00 +0100</pubDate>
+      <link>http://nbeloglazov.com/2014/07/15/clojure-dojo-and-pubsub.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/2014/07/15/clojure-dojo-and-pubsub.html</guid>
+    </item>
+    
+    <item>
       <title>Quil: Age of Middleware</title>
       <description>&lt;p&gt;Quil 2.1.0 introduced new feature: middleware. Middleware is a way to augment a sketch without blowing up your code, you can think of it as a way to create &amp;quot;libraries&amp;quot; for Quil. Idea is similar to the ring middleware: Quil middleware is a regular clojure function which takes map of sketch options and returns updated map, that&amp;#39;s all. What can we do in a middleware? Well, a lot of things, middleware has full power over options so we can wrap functions like &lt;code&gt;draw&lt;/code&gt;, &lt;code&gt;setup&lt;/code&gt; and others user-provided functions anyway we want. As an example let&amp;#39;s create a middleware which rotates sketch on each frame.&lt;/p&gt;
 
