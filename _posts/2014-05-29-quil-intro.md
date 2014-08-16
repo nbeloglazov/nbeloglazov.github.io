@@ -71,7 +71,7 @@ Now let's refactor `draw` function making plotting functions easier. To achieve 
 
 Cool, now we can experiment with `f` by changing it in any way we'd like. And here comes real beauty of Quil: live reloading.
 
-#### Live Reloading.
+### Live Reloading.
 After we changed code we don't need to close sketch, recompile everything and start sketch again as we would do in most other languages. In quil we can update all functions on the fly and see results immediately. In fact we can program whole sketch from the beginning to the end without ever closing it. Of course there are some things we can't do on the fly. We can't register mouse and keyboard listeners on the fly, but we still can update already registered. Now let's get back to work and update `f` function:
 
 ```clojure
@@ -97,7 +97,7 @@ And here is the flower (together with some other plots of random functions):
 ![Plot of crazy lines]({{page.images}}/crazy-lines.png)
 
 
-#### Animation
+### Animation
 
 Now we'll look at another quil feature. Up to this point we drew static images which weren't changing over time. But in fact `draw` function is called repeatedly in short intervals. That means we can draw moving objects and do real animation! Let's modify our sketch so on each iteration only a part of a plot is drawn: line from *f(t)* to *f(t+1)*. The only problem is that *t* should change on each iteration, to solve it we'll use [`frame-count`](http://quil.info/environment.html#frame-count) which returns current iteration number and we can use this number as *t*. Here is implementation:
 

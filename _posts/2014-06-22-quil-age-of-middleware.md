@@ -7,7 +7,7 @@ date: "2014-06-22 23:00:00"
 
 Quil 2.1.0 introduced new feature: middleware. Middleware is a way to augment a sketch without blowing up your code, you can think of it as a way to create "libraries" for Quil. Idea is similar to the ring middleware: Quil middleware is a regular clojure function which takes map of sketch options and returns updated map, that's all. What can we do in a middleware? Well, a lot of things, middleware has full power over options so we can wrap functions like `draw`, `setup` and others user-provided functions anyway we want. As an example let's create a middleware which rotates sketch on each frame.
 
-#### Rotating middleware
+### Rotating middleware
 
 The rotating middleware's job is pretty simple: replace user-provided `draw` function with it own special version of `draw`. This special `draw` function does two things: first, it rotates sketch some angle, and second, calls original `draw`. But code is worth a thousand words, so here it is:
 
@@ -87,7 +87,7 @@ After:
 
 ![Static rotating]({{page.images}}/ball-rotating.gif)
 
-#### Conclusion
+### Conclusion
 
 With middleware it becomes easier to write pluggable extensions for Quil. It's easy to share middleware with other users - you need to provide a single function which everyone can add to their `:middleware` option and it works!
 
