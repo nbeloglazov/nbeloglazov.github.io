@@ -7,6 +7,279 @@
     <atom:link href="http://nbeloglazov.com/ru/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Cljsfiddle для бедных</title>
+      <description>&lt;h3&gt;Введение&lt;/h3&gt;
+
+&lt;p&gt;В этом посте я расскажу, как написать cljsfiddle для бедных за 4 шага. Настоящий &lt;a href=&quot;http://cljsfiddle.net/&quot;&gt;cljsfiddle&lt;/a&gt; - это сайт, похожий на &lt;a href=&quot;http://jsfiddle.net/&quot;&gt;jsfiddle&lt;/a&gt;, который позволяет тестировать и играться с кложурскриптом онлайн. Сайт был создан &lt;a href=&quot;https://github.com/jonase&quot;&gt;Джонасом&lt;/a&gt; (не знаю, как правильно) для конкурса &lt;a href=&quot;http://lispinsummerprojects.org/&quot;&gt;Lisp in Summer Projects&lt;/a&gt; (кстати он занял первое место). Но вернёмся к нашей версии cljsfiddle. Будем её называть cljsbin, чтобы не путаться. Cljsbin будет состоять только из 3 элементов: поля для ввода кложурскрипт кода, кнопки &amp;quot;Send&amp;quot; и iframe, в котором будет запускаться скомпилированный код. Минималистический дизайн и все дела!&lt;/p&gt;
+
+&lt;p&gt;Как это будет работать:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Пользователь пишет кложурскрипт и нажимает &amp;quot;Send&amp;quot;.&lt;/li&gt;
+&lt;li&gt;Отправляется POST &lt;code&gt;/create&lt;/code&gt; запрос. В запросе содержится исходник.&lt;/li&gt;
+&lt;li&gt;Сервер получает запрос, генерирует уникальный id для нового сниппета, компилирует исходник и отправляет ответ, содержащий id.&lt;/li&gt;
+&lt;li&gt;Как только браузер получил ответ, он достаёт id и устанавливает &lt;code&gt;src&lt;/code&gt; аттрибут iframe в &lt;code&gt;/html/ID&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Iframe загружает html файл с сервера. Файл пустой, в нём содержится только импорт 1 скрипта - &lt;code&gt;/js/ID&lt;/code&gt;. Скрипт содержит скомпилированный js код, который и выполняется в iframe.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3&gt;Шаг 0 - Создание проекта&lt;/h3&gt;
+
+&lt;p&gt;Структура проекта:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;├── project.clj
+├── src
+│   └── cljsbin.clj
+└── public
+    ├── index.html
+    ├── script.js
+    └── styles.css
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;project.clj:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.1.8&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hiccup&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.0.5&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.3.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring/ring-json&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.3.1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojurescript&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.0-2268&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;me.raynes/fs&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.4.6&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Шаг 1 - Раздаём статические файлы&lt;/h3&gt;
+
+&lt;p&gt;Начнём мы с создания сервера, который умеет только отдавать статику. У сервера есть целых 3 файла: index.html, styles.css и script.js (нам нужно немного джаваскрипта, чтобы обрабатывать нажатие на кнопку).&lt;/p&gt;
+
+&lt;p&gt;cljsbin.clj:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.route&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; Отдаём index.html как начальную страницу, когда пользователь&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; запрашивает http://localhost:8080/&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;slurp &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;public/index.html&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; Отдаём статику. По умолчанию используется &amp;#39;public&amp;#39; папка для&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; статики. Например если пользователь запросил http://localhost:8080/script.js,&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; то сервер попытается отдать public/script.js файл.&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;files&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;index.html:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;Cljsbin&lt;span class=&quot;nt&quot;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/script.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;link&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;stylesheet&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/styles.css&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;input-area&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;lt;textarea&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/textarea&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;lt;button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;send&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;Send&lt;span class=&quot;nt&quot;&gt;&amp;lt;/button&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;iframe&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;result&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;script.js:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;Not implemented. Wait for the Step 2.&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+
+&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#send&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;click&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Тривиальный styles.css можно взять &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/blob/master/cljsbin/public/styles.css&quot;&gt;отсюда&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Запускам сервер при помощи jetty:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ring.adapter.jetty/run-jetty&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljsbin/app&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:port&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Открываем &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt;, нажимаем на кнопку и проверяем js консоль - мы должны увидеть &amp;quot;Not implemented&amp;quot; сообщение.&lt;/p&gt;
+
+&lt;h3&gt;Шаг 2 - Раздаём файлы для iframe&lt;/h3&gt;
+
+&lt;p&gt;Теперь давайте научим сервер отдавать html и js файлы, которые будут загружаться в iframe. js файл будет на данном этапе статическим, т.к. мы ещё не посылаем код со страницы.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring.util.response&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hiccup.page&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;html5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Создаём ответ на запрос &amp;quot;/js/ID&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;console.log(&amp;#39;I am snippet &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;!&amp;#39;);&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/content-type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;application/javascript&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Создаём ответ на запрос &amp;quot;/html/ID&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-html&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; Структура html элементарна, так что тут легче использовать&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; hiccup, вместо того чтобы загружать и модифировать какой-нибудь&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; html шаблон.&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;list &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:head&lt;/span&gt;
+             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:title&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Snippet &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:script&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:src&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/js/&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}]]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;html5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/js/:id&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/html/:id&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;snippet-html&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Теперь перезапустим сервер и откроем &lt;a href=&quot;http://localhost:8080/html/42&quot;&gt;http://localhost:8080/html/42&lt;/a&gt;, мы должны увидеть пустую страницу и сообщение &amp;quot;I am snippet 42!&amp;quot; в js консоли.&lt;/p&gt;
+
+&lt;h3&gt;Шаг 3 - Реализуем посылку кода&lt;/h3&gt;
+
+&lt;p&gt;Осталось чуть-чуть! Теперь добавим поддержку &lt;code&gt;/create&lt;/code&gt; запроса и изменим джаваскриптовую &lt;code&gt;send&lt;/code&gt; функцию. Компиляцию cljs-&amp;gt;js мы пока не делаем, просто сохраняем исходники без изменениея. Формат запроса (json):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Some cljs code here.&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;И ответ (json):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;12345&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Изменяем cljsbin.clj:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;POST&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+            &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring.middleware.json&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Сохраняем сниппеты в атоме. Мы могли бы использовать&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; БД здесь, но в конце концов у нас же cljsfiddle для&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; бедных.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; Структура мапы: id-&amp;gt;js&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;atom&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Генератор уникальных id.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;atom&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;next-id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;inc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Реализация &amp;quot;/create&amp;quot;.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; Сохраняем исходник и возвращаем id.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;next-id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Изменённый snippet-js. Сейчас уже ипользуется не&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; статическая строка в качестве js кода, а он извлекается&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; из атома со снипетами.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/content-type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;application/javascript&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;POST&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/create&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:body&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Используем ring middleware для декодирование/кодирования&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; json запросов/ответов.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;json/wrap-json-body&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:keywords?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;json/wrap-json-response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Изменяем script.js:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#source&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()};&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ajax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/create&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;method&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;POST&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;contentType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;application/json&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;success&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/html/&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#result&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;attr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;src&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Я очень извиняюсь за то, что использую неправославный джаваскрипт вместо благословлённого кложурскрипта, но у меня рука не поднялась настраивать cljsbuild и прочую штуку для несчастных 16 строк. Теперь опять перезапускаем сервер, только в этот раз используем &lt;code&gt;cljsbin/handler&lt;/code&gt; вместо &lt;code&gt;cljsbin/app&lt;/code&gt;. Открываем &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt; и пробуем послать следующий код:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nb&quot;&gt;window&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;addEventListener&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;innerHTML&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;I am alive!&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Мы должны увидеть сообщение &amp;#39;I am alive!&amp;#39; в iframe справа. У нас получился &lt;a href=&quot;http://jsfiddle.net&quot;&gt;jsfiddle&lt;/a&gt; для бедных!&lt;/p&gt;
+
+&lt;h3&gt;Шаг 4 - Компиляция кложурскрипта&lt;/h3&gt;
+
+&lt;p&gt;Наконец-то, самая интересная часть - компиляция cljs-&amp;gt;js. Перейдём сразу к коду:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs.closure&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;me.raynes.fs&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Создаём временную директорию, где будет происходить компиляция.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; Директория помогает ускорить процесс компиляции: компилятор хранит&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; промежуточные результаты в ней. Например в ней он хранит скомпиленные&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; в js cljs.core и clojure.* неймспейсы. Директория опциональна.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs-compilation-dir&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-dir&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-compilation&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compile-cljs&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;; Компилятор предпочитает работать с файлами, так что&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; создадим временные файлы для хранение исходника и&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; скомпилированного результата.&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-source&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-compiled&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;; Пишем исходник во временный файл.&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;spit&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;; Компилируем, используя :simple уровень оптимизации.&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cljs/build&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:optimizations&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:simple&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:output-to&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.getAbsolutePath&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:output-dir&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.getAbsolutePath&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljs-compilation-dir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:pretty-print&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;; Читаем скомпиленный код и удаляем временные файлы.&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compiled&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;slurp &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/delete&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/delete&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;compiled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Обновлённый create-snippet&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;next-id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile-cljs&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Перезапускаем сервер в последний раз и пробуем послать следующий код (возможно придётся немного подождать, пока он компилируется):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hello&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;clojure.browser.dom&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;say-hello&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;-&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello from ClojureScript!&amp;quot;&lt;/span&gt;
+       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;dom/element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;dom/append&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.-body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js/document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.addEventListener&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js/window&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;load&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;say-hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Наслаждаемся приветствием от кложурскрипта! Теперь можно начинать работу над промо-видео и запуском проекта на кикстартере.&lt;/p&gt;
+
+&lt;h3&gt;Заключение&lt;/h3&gt;
+
+&lt;p&gt;Мы сделали простенький cljsfiddle менее чем в 60 строк на кложуре (и 16 на джаваскрипте), что, по-моему, весьма неплохо. В данный момент я работаю над созданием cljsfiddle-подобного сайта для &lt;a href=&quot;https://github.com/quil/quil&quot;&gt;Quil&lt;/a&gt;: я хочу сделать сайт для того, чтобы делиться скетчами, написанными под Quil на кложурскрипте. Ещё одна приятная особенность кложурскрипт компилятора заключается в том, что легко подключать другие кложурскрипт библиотеки, которые могут быть использованы из кода, который мы компилируем - нужано просто добавить их в project.clj и всё! Компилятор сам выяснит, какие из них используются в коде, достанёт и скомпилит их.&lt;/p&gt;
+
+&lt;p&gt;Компиляция состоит из 2 основных шагов:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Компиляция cljs файлов и их зависимостей в отдельные js файлы.&lt;/li&gt;
+&lt;li&gt;Компиляция всех этих js файлов в финальный js файл используя &lt;a href=&quot;https://developers.google.com/closure/compiler/&quot;&gt;Google Closure Compiler&lt;/a&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Я использовал &lt;code&gt;cljs.closure/build&lt;/code&gt; функцию, которая делает оба этих шага за меня. Джонас в cljsfiddle выбрал другой способ: он использует кложурскрипт компилятор только для того, чтобы выполнить шаг 1, и потом делает шаг 2 вручную: &lt;a href=&quot;https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L33&quot;&gt;шаг 1&lt;/a&gt; и &lt;a href=&quot;https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L47&quot;&gt;шаг 2&lt;/a&gt;. Это позволяет ему компилировать в памяти, не используя файлы. Но выглядит это более сложно. Скорее всего есть и другие преимущества такого подхода, буду рад услышать о них в комментариях.&lt;/p&gt;
+
+&lt;p&gt;Код из данного поста доступен на &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/tree/master/cljsbin.&quot;&gt;GitHub&lt;/a&gt;&lt;/p&gt;
+</description>
+      <pubDate>Sat, 16 Aug 2014 22:00:00 +0100</pubDate>
+      <link>http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html</guid>
+    </item>
+    
+    <item>
       <title>Clojure Dojo и PubSub</title>
       <description>&lt;h3&gt;Clojure Dojo&lt;/h3&gt;
 
@@ -132,7 +405,7 @@
       <title>Quil Middleware</title>
       <description>&lt;p&gt;В Quil 2.1.0 была добавлена поддержка middleware (я не знаю русского аналога этого термина, так что буду писать его по-английски). Middleware позволяет расширять скетч без раздувания собственно самого кода. Идея схожа с идеей middleware в ring: middleware - это обычная кложурная функция, которая принимает мапу с параметрами скетча и должна вернуть обновлённую мапу. Что мы можем делать в middleware? В принципе, всё, что душе угодно: можно изменять функции заданные пользователем, такие как &lt;code&gt;draw&lt;/code&gt;, &lt;code&gt;setup&lt;/code&gt;, &lt;code&gt;mouse-pressed&lt;/code&gt; и другие. В качестве примера мы создадим middleware, которое будет вращать скетч относительно центра.&lt;/p&gt;
 
-&lt;h4&gt;Вращательное middleware&lt;/h4&gt;
+&lt;h3&gt;Вращательное middleware&lt;/h3&gt;
 
 &lt;p&gt;Работа у нашего middleware довольно проста: нужно заменить определённую пользователем &lt;code&gt;draw&lt;/code&gt; специальной вращательной &lt;code&gt;draw&lt;/code&gt;, которая будет делать 2 вещи: поворачивать скетч на какой-то угол, а потом вызывать оригинальную &lt;code&gt;draw&lt;/code&gt;. Как известно, код стоит больше тысячи слов, так что код (и тысяча слов):&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; rotated-draw - вышеупомянутая вращательная функция draw&lt;/span&gt;
@@ -207,7 +480,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/images/quil-middleware/ball-rotating.gif&quot; alt=&quot;Static rotating&quot;&gt;&lt;/p&gt;
 
-&lt;h4&gt;Заключение&lt;/h4&gt;
+&lt;h3&gt;Заключение&lt;/h3&gt;
 
 &lt;p&gt;Middleware сильно упрощают написание расширений для Quil. Достаточно легко и шарить middleware с другими пользователями - всё, что нужно - это предоставить функцию, и другие могут её добавить в &lt;code&gt;:middleware&lt;/code&gt; и она будет работать!&lt;/p&gt;
 
@@ -234,7 +507,7 @@
 &lt;p&gt;project.clj&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
   &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;И собственно сам код quil_intro.clj:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt;
@@ -284,7 +557,7 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Отлично, теперь можно экспериментировать с функцией &lt;code&gt;f&lt;/code&gt;. И здесь проявляется великолепие Quil и Clojure: перезагрузка на лету.&lt;/p&gt;
 
-&lt;h4&gt;Перезагрузка на лету&lt;/h4&gt;
+&lt;h3&gt;Перезагрузка на лету&lt;/h3&gt;
 
 &lt;p&gt;В большинстве языков, после изменения кода нам бы понадобилось закрыть текущий скетч, скомпилировать изменения и запустить скетч заново. В Quil мы можем изменить все функции на лету и увидеть изменения немедленно. Вообще, можно запрограммировать весь скетч, от начала до конца, ни разу его не закрыв, а постепенно наращивая его функционал. Конечно, не всё можно изменить на лету, например, невозможно зарегистрировать обработчики событий мыши и клавиатуры. Но это не мешает изменить существующие, т.е. можно изначально зарегистрировать пустые обработчики, а, потом в процессе творчества, добавить в них логику. Теперь давайте вернёмся обратно к коду и изменим функцию &lt;code&gt;f&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; можно получить кучу интересных графиков пробуя&lt;/span&gt;
@@ -310,7 +583,7 @@
 &lt;img src=&quot;/images/quil-intro/leaf.png&quot; alt=&quot;Plot of leaf&quot;&gt;
 &lt;img src=&quot;/images/quil-intro/crazy-lines.png&quot; alt=&quot;Plot of crazy lines&quot;&gt;&lt;/p&gt;
 
-&lt;h4&gt;Анимация&lt;/h4&gt;
+&lt;h3&gt;Анимация&lt;/h3&gt;
 
 &lt;p&gt;Теперь рассмотрим ещё одну фичу Quil. До этого момента мы рисовали только статичные изображения, которые не изменялись с течением времени. На самом деле функция &lt;code&gt;draw&lt;/code&gt; вызывается периодически с короткими интервалами, что позволяет рисовать движущиеся объекты и настоящую анимацию! Сейчас мы изменим &lt;code&gt;draw&lt;/code&gt; так, чтобы на каждой итерации рисовалась только небольшая часть графика: линия от &lt;em&gt;f(t)&lt;/em&gt; до &lt;em&gt;f(t+1)&lt;/em&gt;. Единственная проблема - то, что на каждой итерации &lt;em&gt;t&lt;/em&gt; должно меняться. Для этого мы воспользуемся функцией &lt;a href=&quot;http://quil.info/environment.html#frame-count&quot;&gt;&lt;code&gt;frame-count&lt;/code&gt;&lt;/a&gt;, которая возвращает номер текущей итерации. Этот номер и будет служить числом &lt;em&gt;t&lt;/em&gt;. Теперь cобственно реализация:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;

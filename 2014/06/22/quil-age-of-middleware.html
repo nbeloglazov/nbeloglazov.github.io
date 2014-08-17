@@ -45,6 +45,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/2014/08/16/poor-mans-cljsfiddle.html">
+                  <span class="post-date">16 Aug 2014</span>
+                  Poor Man's Cljsfiddle
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/2014/07/15/clojure-dojo-and-pubsub.html">
                   <span class="post-date">15 Jul 2014</span>
                   Clojure Dojo and PubSub
@@ -101,7 +108,7 @@
   <div class="post">
     <p>Quil 2.1.0 introduced new feature: middleware. Middleware is a way to augment a sketch without blowing up your code, you can think of it as a way to create &quot;libraries&quot; for Quil. Idea is similar to the ring middleware: Quil middleware is a regular clojure function which takes map of sketch options and returns updated map, that&#39;s all. What can we do in a middleware? Well, a lot of things, middleware has full power over options so we can wrap functions like <code>draw</code>, <code>setup</code> and others user-provided functions anyway we want. As an example let&#39;s create a middleware which rotates sketch on each frame.</p>
 
-<h4>Rotating middleware</h4>
+<h3>Rotating middleware</h3>
 
 <p>The rotating middleware&#39;s job is pretty simple: replace user-provided <code>draw</code> function with it own special version of <code>draw</code>. This special <code>draw</code> function does two things: first, it rotates sketch some angle, and second, calls original <code>draw</code>. But code is worth a thousand words, so here it is:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; rotated-draw is the special draw function,</span>
@@ -176,7 +183,7 @@
 
 <p><img src="/images/quil-middleware/ball-rotating.gif" alt="Static rotating"></p>
 
-<h4>Conclusion</h4>
+<h3>Conclusion</h3>
 
 <p>With middleware it becomes easier to write pluggable extensions for Quil. It&#39;s easy to share middleware with other users - you need to provide a single function which everyone can add to their <code>:middleware</code> option and it works!</p>
 

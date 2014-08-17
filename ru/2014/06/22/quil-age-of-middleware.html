@@ -45,6 +45,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/ru/2014/08/16/poor-mans-cljsfiddle.html">
+                  <span class="post-date">16 Aug 2014</span>
+                  Cljsfiddle для бедных
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/ru/2014/07/15/clojure-dojo-and-pubsub.html">
                   <span class="post-date">15 Jul 2014</span>
                   Clojure Dojo и PubSub
@@ -101,7 +108,7 @@
   <div class="post">
     <p>В Quil 2.1.0 была добавлена поддержка middleware (я не знаю русского аналога этого термина, так что буду писать его по-английски). Middleware позволяет расширять скетч без раздувания собственно самого кода. Идея схожа с идеей middleware в ring: middleware - это обычная кложурная функция, которая принимает мапу с параметрами скетча и должна вернуть обновлённую мапу. Что мы можем делать в middleware? В принципе, всё, что душе угодно: можно изменять функции заданные пользователем, такие как <code>draw</code>, <code>setup</code>, <code>mouse-pressed</code> и другие. В качестве примера мы создадим middleware, которое будет вращать скетч относительно центра.</p>
 
-<h4>Вращательное middleware</h4>
+<h3>Вращательное middleware</h3>
 
 <p>Работа у нашего middleware довольно проста: нужно заменить определённую пользователем <code>draw</code> специальной вращательной <code>draw</code>, которая будет делать 2 вещи: поворачивать скетч на какой-то угол, а потом вызывать оригинальную <code>draw</code>. Как известно, код стоит больше тысячи слов, так что код (и тысяча слов):</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; rotated-draw - вышеупомянутая вращательная функция draw</span>
@@ -176,7 +183,7 @@
 
 <p><img src="/images/quil-middleware/ball-rotating.gif" alt="Static rotating"></p>
 
-<h4>Заключение</h4>
+<h3>Заключение</h3>
 
 <p>Middleware сильно упрощают написание расширений для Quil. Достаточно легко и шарить middleware с другими пользователями - всё, что нужно - это предоставить функцию, и другие могут её добавить в <code>:middleware</code> и она будет работать!</p>
 

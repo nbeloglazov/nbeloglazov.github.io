@@ -18,7 +18,7 @@ html, body {
 body {
   color: #333;
   background-color: #fafbfc;
-  font-family: 'Raleway', Arial, sans-serif;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
   font-weight: 400;
   font-size: 0.85em;
   overflow: hidden;
@@ -142,6 +142,8 @@ a:hover {
   line-height: 24px;
   max-width: 725px;
   clear: both;
+  font-size: 1.1em;
+  text-align: justify;
 }
 
 .content .highlight {
@@ -170,13 +172,6 @@ a:hover {
   border: 1px solid #ddd;
   background-color: #eef;
   padding: 0 .4em;
-}
-
-.post p {
-  font-family: 'Source Sans Pro', Arial, sans-serif;
-  font-size: 1.1em;
-  margin-bottom: 1.45em;
-  text-align: justify;
 }
 
 .post ul, .post ol {
@@ -305,4 +300,8 @@ a:hover {
 
 .post pre {
     overflow: auto;
+}
+
+.post h3 {
+    margin-top: 1.45em;
 }

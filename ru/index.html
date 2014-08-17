@@ -45,6 +45,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/ru/2014/08/16/poor-mans-cljsfiddle.html">
+                  <span class="post-date">16 Aug 2014</span>
+                  Cljsfiddle для бедных
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/ru/2014/07/15/clojure-dojo-and-pubsub.html">
                   <span class="post-date">15 Jul 2014</span>
                   Clojure Dojo и PubSub
@@ -93,128 +100,279 @@
     <div id="info-container">
       
         <p class="lang-link">Ru</p>
-        <a href="/2014/07/15/clojure-dojo-and-pubsub.html" class="lang-link">En</a>
+        <a href="/2014/08/16/poor-mans-cljsfiddle.html" class="lang-link">En</a>
       
-      <h1 id="title">Clojure Dojo и PubSub</h1>
-      <span id="date">15 Jul 2014</span>
+      <h1 id="title">Cljsfiddle для бедных</h1>
+      <span id="date">16 Aug 2014</span>
     </div>
   </div>
 
   <div class="post">
-    <h3>Clojure Dojo</h3>
+    <h3>Введение</h3>
 
-<p>В этот понедельник я ходил на кложурное доджо в Лондоне, организованное компанией uSwitch. Доджо это мероприятия, проводимые каждые 2 недели какой-либо компанией, в основном это ThoughtWorks и uSwitch. Собираются около 10-15 человек, заказыват пиццу, предлагают идеи для кодинга, потом делятся на команды по 3-5 человек в каждой и кодят какую-либо идею в течение часов 2. После кодинга каждая команда делает короткую 5-минутную презентацию о том, что же они наделали за вечер. Главное правило в доджо (кроме &quot;получать удовольствие&quot;) - каждый участник должен хоть немного покодить, написать хоть пару строчек, но должен.</p>
+<p>В этом посте я расскажу, как написать cljsfiddle для бедных за 4 шага. Настоящий <a href="http://cljsfiddle.net/">cljsfiddle</a> - это сайт, похожий на <a href="http://jsfiddle.net/">jsfiddle</a>, который позволяет тестировать и играться с кложурскриптом онлайн. Сайт был создан <a href="https://github.com/jonase">Джонасом</a> (не знаю, как правильно) для конкурса <a href="http://lispinsummerprojects.org/">Lisp in Summer Projects</a> (кстати он занял первое место). Но вернёмся к нашей версии cljsfiddle. Будем её называть cljsbin, чтобы не путаться. Cljsbin будет состоять только из 3 элементов: поля для ввода кложурскрипт кода, кнопки &quot;Send&quot; и iframe, в котором будет запускаться скомпилированный код. Минималистический дизайн и все дела!</p>
 
-<p>Народ на доджо собирается разношёрстный. Некоторые годами кодят на кложуре и используют его на работе, другие же на прошлой неделе начали изучать и написали только &quot;Hello, world&quot;. Идеи для проектов обычно не очень сложные, в конце концов даётся только 2 часа, и у многих участников опыта в кложуре немного. Например, на последнем доджо организовалось 5 команд. Две из них были командами новичков, они работали над упражнениями из <a href="http://exercism.io/">exercism.io</a>. Две другие команды пробовали на вкус <a href="https://groups.google.com/forum/#!topic/clojure/6vDnBWOgHDc">Quil на ClojureScript</a>, поддержку которого, кстати, добавил Максим Карандашов, Google Summer of Code студент из Саратова. И наконец пятая команда (в которой я был) работала над PubSub библиотекой работающей на уровне локальной сети.</p>
+<p>Как это будет работать:</p>
 
-<p>Один из ключевых аспектов в доджо - среда разработки. Команда обычно работает на одном ноутбуке, потому что шарить код в реальном времени между несколькими ноутбуками не очень просто. Так что получается, что кто-то один кодит, а остальные обсуждают задачу и помогают ему. Один из уроков, который я усвоил после посещения пары-тройки доджо, это то, что редактор должен быть как можно проще. Конечно у каждого есть собственный любимый emacs/vim/что-нибудь ещё с настроенными примочками, но использовать их в доджо будет плохой идеей. Я был на нескольких доджо, на которых мы большую часть времени потратили сражаясь с специфичными кей-биндингами в емаксе вместо того, чтобы писать кложур. Это расстраивает. А если представить, что вы новичок и пришли на доджо, то вам мало того, что надо писать на неведомом языке, так ещё и в непонятном, нелогичном редакторе. Это расстраивает вдвойне. Так что редактор должен быть простым. Я считаю, что <a href="http://www.lighttable.com/">LightTable</a> - лучший вариант для кложурных доджо. Он легко запускается, позволяет писать текст без выкручивания пальцев и мозга, и наконец, позволяет легко исполнять кложурный код, просто нажмите &quot;Ctrl+Enter&quot;.</p>
+<ol>
+<li>Пользователь пишет кложурскрипт и нажимает &quot;Send&quot;.</li>
+<li>Отправляется POST <code>/create</code> запрос. В запросе содержится исходник.</li>
+<li>Сервер получает запрос, генерирует уникальный id для нового сниппета, компилирует исходник и отправляет ответ, содержащий id.</li>
+<li>Как только браузер получил ответ, он достаёт id и устанавливает <code>src</code> аттрибут iframe в <code>/html/ID</code>.</li>
+<li>Iframe загружает html файл с сервера. Файл пустой, в нём содержится только импорт 1 скрипта - <code>/js/ID</code>. Скрипт содержит скомпилированный js код, который и выполняется в iframe.</li>
+</ol>
 
-<p>Теперь я хотел бы описать проект, на которым наша команда работала на доджо: PubSub</p>
+<h3>Шаг 0 - Создание проекта</h3>
 
-<h3>PubSub</h3>
-
-<p>Идея достаточно проста: написать библиотеку, состоящую из 2 функций: <code>publish</code> и <code>subscribe</code>. Она должна удовлетворять следующим требованиям:</p>
-
-<ul>
-<li>Посылка сообщений и подписка должны происходить на уровне сети, т.е. каждый компьютер должен получать сообщения опубликованные другими компьютерами в этой же сети.</li>
-<li><code>publish</code> принимает 1 аргумент - сообщение. Сообщение - это произвольный кложурный объект (строка, мапа, вектор или что-нибудь ещё).</li>
-<li><code>subscribe</code> принимает 1 аргумент - функцию-обработчик, которая будет обрабатывать полученные сообщения.</li>
-</ul>
-
-<p>Как можно видеть, у библиотеки не должно быть концепции адресов, очередей или топиков. Также не должно быть концепции сервера: клиенты должны быть способны общаться друг с другом без надобности подсоединения к какому-либо серверу.</p>
-
-<p>Для реализации мы решили воспользоваться <a href="http://en.wikipedia.org/wiki/IP_multicast">IP мультикастом</a>. Мы не лезли глубоко в дебри спецификации и технических деталей, просто нагуглили, как это сделать в джаве. Нашли <code>java.net.MulticastSocket</code> класс, который делает как раз то, что нам и надо. Более того, <a href="http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html">джавадок</a> для этого класса содержит пример, как его использовать. Фактически, мы просто переписали пример на кложур и немного расширили. Собственно код:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
-  <span class="p">(</span><span class="ss">:import</span> <span class="p">[</span><span class="nv">java.net</span> <span class="nv">InetAddress</span> <span class="nv">DatagramPacket</span> <span class="nv">MulticastSocket</span><span class="p">]))</span>
-
-
-<span class="c1">; константы определяющие адрес мультикаста</span>
-<span class="p">(</span><span class="k">def </span><span class="nv">address</span> <span class="s">&quot;228.5.6.7&quot;</span><span class="p">)</span>
-<span class="p">(</span><span class="k">def </span><span class="nv">port</span> <span class="mi">6789</span><span class="p">)</span>
-<span class="p">(</span><span class="k">def </span><span class="nv">group</span> <span class="p">(</span><span class="nf">InetAddress/getByName</span> <span class="nv">address</span><span class="p">))</span>
-
-
-<span class="c1">; функция для создания мультикаст-сокета</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">init-comm</span> <span class="p">[]</span>
-  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">s</span> <span class="p">(</span><span class="nf">MulticastSocket.</span> <span class="nv">port</span><span class="p">)]</span>
-    <span class="p">(</span><span class="nf">.joinGroup</span> <span class="nv">s</span> <span class="nv">group</span><span class="p">)</span>
-    <span class="nv">s</span><span class="p">))</span>
-
-<span class="c1">; определяем глобальный сокет, которые используется для посылки сообщений</span>
-<span class="p">(</span><span class="k">def </span><span class="nv">socket</span> <span class="p">(</span><span class="nf">init-comm</span><span class="p">))</span>
-
-<span class="p">(</span><span class="kd">defn </span><span class="nv">get-packet</span> <span class="p">[</span><span class="nv">message</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">]</span>
-  <span class="p">(</span><span class="nf">DatagramPacket.</span> <span class="p">(</span><span class="nf">.getBytes</span> <span class="nv">message</span><span class="p">)</span> <span class="p">(</span><span class="nf">.length</span> <span class="nv">message</span><span class="p">)</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">))</span>
-
-<span class="c1">; определяем &#39;publish&#39; функцию. По каким-то причинам мы назвали её &#39;send-it&#39;</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">send-it</span> <span class="p">[</span><span class="nv">message</span><span class="p">]</span>
-  <span class="p">(</span><span class="nf">.send</span> <span class="nv">socket</span> <span class="p">(</span><span class="nf">get-packet</span> <span class="p">(</span><span class="nb">pr-str </span><span class="nv">message</span><span class="p">)</span> <span class="nv">group</span> <span class="nv">port</span><span class="p">)))</span>
+<p>Структура проекта:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">├── project.clj
+├── src
+│   └── cljsbin.clj
+└── public
+    ├── index.html
+    ├── script.js
+    └── styles.css
 </code></pre></div>
-<p>Теперь мы умеем посылать сообщения, круто! Как можно видеть, мы используем <a href="https://github.com/edn-format/edn">EDN</a> в качестве формата сообщения (<code>pr-str</code> конвертирует объект в EDN строку). Теперь настало время реализовать механизм подписки. Мы немного отклонились от начальных условий и реализовали чуть более сложную модель. Добавлены 2 фичи, которые изначально не планировались:</p>
-
-<ul>
-<li>Вместо того, чтобы передавать только функцию-обработчик, мы можем передавать 2 функции: предикат и функцию-обработчик. Предикат проверяет, удовлетворяет ли сообщение какому-либо критерию и если удовлетворяет, то вызывает функцию-обработчик.</li>
-<li>Изначально механизм прекращения подписки не предусматривался. Мы его добавили. Когда вы подписываетесь создаётся promise объект. Он используется как флаг конца подписки: как только кто-то положит что-либо в него, то подписка будет остановлена. Этот объект возвращается из функции <code>subscribe</code>, так что пользователь может положить что-нибудь в него, когда нужно остановить подписку.</li>
-</ul>
-
-<p>И теперь код:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; - рекурсивная функция для обработки 1 сообщения</span>
-<span class="c1">; Аргументы</span>
-<span class="c1">;   socket - сокет, из которого мы будем считывать сообщение</span>
-<span class="c1">;   predicate - предикат, заданный пользователем</span>
-<span class="c1">;   handler - функция-обработчик, заданная пользователем</span>
-<span class="c1">;   finished - объект promise, для прекращения подписки</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">process-message</span> <span class="p">[</span><span class="nv">socket</span> <span class="nv">predicate</span> <span class="nv">handler</span> <span class="nv">finished</span><span class="p">]</span>
-  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">size</span> <span class="mi">1000</span>
-        <span class="nv">packet</span> <span class="p">(</span><span class="nf">DatagramPacket.</span> <span class="p">(</span><span class="nf">byte-array</span> <span class="nv">size</span><span class="p">)</span> <span class="nv">size</span><span class="p">)]</span>
-    <span class="p">(</span><span class="nb">when-not </span><span class="p">(</span><span class="nf">realized?</span> <span class="nv">finished</span><span class="p">)</span>
-      <span class="p">(</span><span class="nf">.receive</span> <span class="nv">socket</span> <span class="nv">packet</span><span class="p">)</span>
-      <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">obj</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">packet</span> <span class="nv">.getData</span> <span class="p">(</span><span class="nf">String.</span><span class="p">)</span> <span class="nv">read-string</span><span class="p">)]</span>
-        <span class="p">(</span><span class="nb">when </span><span class="p">(</span><span class="nf">predicate</span> <span class="nv">obj</span><span class="p">)</span>
-          <span class="p">(</span><span class="nf">handler</span> <span class="nv">obj</span><span class="p">))))</span>
-      <span class="p">(</span><span class="nf">recur</span> <span class="nv">socket</span> <span class="nv">predicate</span> <span class="nv">handler</span> <span class="nv">finished</span><span class="p">)))</span>
-
-<span class="c1">; функция &#39;subscribe&#39;. Мы снова назвали её по-другому :)</span>
-<span class="p">(</span><span class="kd">defn </span><span class="nv">subscribe-with</span>
-  <span class="p">([</span><span class="nv">handler</span><span class="p">]</span>
-    <span class="p">(</span><span class="nf">subscribe-with</span> <span class="p">(</span><span class="nb">constantly </span><span class="nv">true</span><span class="p">)</span> <span class="nv">handler</span><span class="p">))</span>
-  <span class="p">([</span><span class="nv">predicate</span> <span class="nv">handler</span><span class="p">]</span>
-    <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">socket</span> <span class="p">(</span><span class="nf">init-comm</span><span class="p">)</span>
-          <span class="nv">finished</span> <span class="p">(</span><span class="nf">promise</span><span class="p">)]</span>
-      <span class="p">(</span><span class="nf">future</span>
-        <span class="p">(</span><span class="nf">process-message</span> <span class="nv">socket</span> <span class="nv">predicate</span> <span class="nv">handler</span> <span class="nv">finished</span><span class="p">)</span>
-        <span class="p">(</span><span class="nf">.leaveGroup</span> <span class="nv">socket</span> <span class="nv">group</span><span class="p">))</span>
-      <span class="nv">finished</span><span class="p">)))</span>
+<p>project.clj:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defproject </span><span class="nv">cljsbin</span> <span class="s">&quot;0.1.0-SNAPSHOT&quot;</span>
+  <span class="ss">:dependencies</span> <span class="p">[[</span><span class="nv">org.clojure/clojure</span> <span class="s">&quot;1.6.0&quot;</span><span class="p">]</span>
+                 <span class="p">[</span><span class="nv">compojure</span> <span class="s">&quot;1.1.8&quot;</span><span class="p">]</span>
+                 <span class="p">[</span><span class="nv">hiccup</span> <span class="s">&quot;1.0.5&quot;</span><span class="p">]</span>
+                 <span class="p">[</span><span class="nv">ring</span> <span class="s">&quot;1.3.0&quot;</span><span class="p">]</span>
+                 <span class="p">[</span><span class="nv">ring/ring-json</span> <span class="s">&quot;0.3.1&quot;</span><span class="p">]</span>
+                 <span class="p">[</span><span class="nv">org.clojure/clojurescript</span> <span class="s">&quot;0.0-2268&quot;</span><span class="p">]</span>
+                 <span class="p">[</span><span class="nv">me.raynes/fs</span> <span class="s">&quot;1.4.6&quot;</span><span class="p">]])</span>
 </code></pre></div>
-<p>Вот и всё. Библиотека готова к использованию. Далее пример использования:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
+<h3>Шаг 1 - Раздаём статические файлы</h3>
 
-<span class="c1">; подписаться на все сообщения</span>
-<span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Simplest subscribe&quot;</span> <span class="nv">%</span><span class="p">))</span>
+<p>Начнём мы с создания сервера, который умеет только отдавать статику. У сервера есть целых 3 файла: index.html, styles.css и script.js (нам нужно немного джаваскрипта, чтобы обрабатывать нажатие на кнопку).</p>
 
-<span class="c1">; послать сообщение, оно должно отобразиться в консоли</span>
-<span class="p">(</span><span class="nf">send-it</span> <span class="s">&quot;something&quot;</span><span class="p">)</span>
+<p>cljsbin.clj:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">compojure.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">defroutes</span> <span class="nv">GET</span><span class="p">]]</span>
+            <span class="p">[</span><span class="nv">compojure.route</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">files</span><span class="p">]]))</span>
 
-<span class="c1">; подписаться только на сообщения-мапы, в которых топик == :dojo</span>
-<span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:dojo</span><span class="p">)</span>
-                <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Dojo message&quot;</span> <span class="nv">%</span><span class="p">))</span>
-
-<span class="c1">; подписаться только на сообщения с топиком :work</span>
-<span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:work</span><span class="p">)</span>
-                <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Work message&quot;</span> <span class="nv">%</span><span class="p">))</span>
-
-<span class="c1">; подписаться только на сообщения с топиком :home</span>
-<span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="p">(</span><span class="ss">:topic</span> <span class="nv">%</span><span class="p">)</span> <span class="ss">:home</span><span class="p">)</span>
-                <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Home message&quot;</span> <span class="nv">%</span><span class="p">))</span>
-
-<span class="c1">; посылаем сообщения с разными топиками</span>
-<span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:dojo</span> <span class="ss">:message</span> <span class="s">&quot;Hello, clojurians!&quot;</span><span class="p">})</span>
-<span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:work</span> <span class="ss">:message</span> <span class="s">&quot;You&#39;re at work...&quot;</span><span class="p">})</span>
-<span class="p">(</span><span class="nf">send-it</span> <span class="p">{</span><span class="ss">:topic</span> <span class="ss">:home</span> <span class="ss">:message</span> <span class="s">&quot;You&#39;re at home...&quot;</span><span class="p">})</span>
+<span class="p">(</span><span class="nf">defroutes</span> <span class="nv">app</span>
+  <span class="c1">; Отдаём index.html как начальную страницу, когда пользователь</span>
+  <span class="c1">; запрашивает http://localhost:8080/</span>
+  <span class="p">(</span><span class="nf">GET</span> <span class="s">&quot;/&quot;</span> <span class="p">[]</span> <span class="p">(</span><span class="nb">slurp </span><span class="s">&quot;public/index.html&quot;</span><span class="p">))</span>
+  <span class="c1">; Отдаём статику. По умолчанию используется &#39;public&#39; папка для</span>
+  <span class="c1">; статики. Например если пользователь запросил http://localhost:8080/script.js,</span>
+  <span class="c1">; то сервер попытается отдать public/script.js файл.</span>
+  <span class="p">(</span><span class="nf">files</span> <span class="s">&quot;/&quot;</span><span class="p">))</span>
 </code></pre></div>
-<p>Далее можно написать что-нибудь на основе этой библиотеки, например децентрализованный чат или простую мультиплеерную игру. Может это будет интересным проектом для какого-нибудь другого доджо.</p>
+<p>index.html:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;title&gt;</span>Cljsbin<span class="nt">&lt;/title&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;/script.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;/styles.css&quot;</span><span class="nt">&gt;&lt;/link&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;input-area&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">&quot;source&quot;</span><span class="nt">&gt;&lt;/textarea&gt;</span>
+      <span class="nt">&lt;button</span> <span class="na">id=</span><span class="s">&quot;send&quot;</span><span class="nt">&gt;</span>Send<span class="nt">&lt;/button&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;iframe</span> <span class="na">id=</span><span class="s">&quot;result&quot;</span><span class="nt">&gt;&lt;/iframe&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div>
+<p>script.js:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">send</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Not implemented. Wait for the Step 2.&#39;</span><span class="p">);</span>
+<span class="p">}</span>
 
-<p>Если интересно поиграться с кодом - он доступен на <a href="https://github.com/nbeloglazov/dojo-pubsub">GitHub</a>.</p>
+
+<span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#send&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="nx">send</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Тривиальный styles.css можно взять <a href="https://github.com/nbeloglazov/blog-projects/blob/master/cljsbin/public/styles.css">отсюда</a>.</p>
+
+<p>Запускам сервер при помощи jetty:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">ring.adapter.jetty/run-jetty</span> <span class="nv">cljsbin/app</span> <span class="p">{</span><span class="ss">:port</span> <span class="mi">8080</span><span class="p">})</span>
+</code></pre></div>
+<p>Открываем <a href="http://localhost:8080">http://localhost:8080</a>, нажимаем на кнопку и проверяем js консоль - мы должны увидеть &quot;Not implemented&quot; сообщение.</p>
+
+<h3>Шаг 2 - Раздаём файлы для iframe</h3>
+
+<p>Теперь давайте научим сервер отдавать html и js файлы, которые будут загружаться в iframe. js файл будет на данном этапе статическим, т.к. мы ещё не посылаем код со страницы.</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="nv">...</span>
+            <span class="p">[</span><span class="nv">ring.util.response</span> <span class="ss">:as</span> <span class="nv">resp</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">hiccup.page</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">html5</span><span class="p">]]))</span>
+
+<span class="c1">; Создаём ответ на запрос &quot;/js/ID&quot;</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">snippet-js</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">-&gt; </span><span class="p">(</span><span class="nb">str </span><span class="s">&quot;console.log(&#39;I am snippet &quot;</span> <span class="nv">id</span> <span class="s">&quot;!&#39;);&quot;</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">resp/response</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">resp/content-type</span> <span class="s">&quot;application/javascript&quot;</span><span class="p">)))</span>
+
+<span class="c1">; Создаём ответ на запрос &quot;/html/ID&quot;</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">snippet-html</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span>
+  <span class="c1">; Структура html элементарна, так что тут легче использовать</span>
+  <span class="c1">; hiccup, вместо того чтобы загружать и модифировать какой-нибудь</span>
+  <span class="c1">; html шаблон.</span>
+  <span class="p">(</span><span class="nb">-&gt; </span><span class="p">(</span><span class="nb">list </span><span class="p">[</span><span class="ss">:head</span>
+             <span class="p">[</span><span class="ss">:title</span> <span class="p">(</span><span class="nb">str </span><span class="s">&quot;Snippet &quot;</span> <span class="nv">id</span><span class="p">)]</span>
+             <span class="p">[</span><span class="ss">:script</span> <span class="p">{</span><span class="ss">:src</span> <span class="p">(</span><span class="nb">str </span><span class="s">&quot;/js/&quot;</span> <span class="nv">id</span><span class="p">)}]]</span>
+            <span class="p">[</span><span class="ss">:body</span><span class="p">])</span>
+      <span class="nv">html5</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defroutes</span> <span class="nv">app</span>
+  <span class="p">(</span><span class="nf">GET</span> <span class="s">&quot;/js/:id&quot;</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span> <span class="p">(</span><span class="nf">snippet-js</span> <span class="nv">id</span><span class="p">))</span>
+  <span class="p">(</span><span class="nf">GET</span> <span class="s">&quot;/html/:id&quot;</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span> <span class="p">(</span><span class="nf">snippet-html</span> <span class="nv">id</span><span class="p">))</span>
+  <span class="nv">...</span><span class="p">)</span>
+</code></pre></div>
+<p>Теперь перезапустим сервер и откроем <a href="http://localhost:8080/html/42">http://localhost:8080/html/42</a>, мы должны увидеть пустую страницу и сообщение &quot;I am snippet 42!&quot; в js консоли.</p>
+
+<h3>Шаг 3 - Реализуем посылку кода</h3>
+
+<p>Осталось чуть-чуть! Теперь добавим поддержку <code>/create</code> запроса и изменим джаваскриптовую <code>send</code> функцию. Компиляцию cljs-&gt;js мы пока не делаем, просто сохраняем исходники без изменениея. Формат запроса (json):</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;Some cljs code here.&quot;</span><span class="p">}</span>
+</code></pre></div>
+<p>И ответ (json):</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="o">:</span> <span class="s2">&quot;12345&quot;</span><span class="p">}</span>
+</code></pre></div>
+<p>Изменяем cljsbin.clj:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">compojure.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">defroutes</span> <span class="nv">GET</span> <span class="nv">POST</span><span class="p">]]</span>
+            <span class="nv">...</span>
+            <span class="p">[</span><span class="nv">ring.middleware.json</span> <span class="ss">:as</span> <span class="nv">json</span><span class="p">]))</span>
+
+<span class="c1">; Сохраняем сниппеты в атоме. Мы могли бы использовать</span>
+<span class="c1">; БД здесь, но в конце концов у нас же cljsfiddle для</span>
+<span class="c1">; бедных.</span>
+<span class="c1">; Структура мапы: id-&gt;js</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">snippets</span> <span class="p">(</span><span class="nf">atom</span> <span class="p">{}))</span>
+
+<span class="c1">; Генератор уникальных id.</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">id</span> <span class="p">(</span><span class="nf">atom</span> <span class="mi">0</span><span class="p">)]</span>
+  <span class="p">(</span><span class="kd">defn </span><span class="nv">next-id</span> <span class="p">[]</span>
+    <span class="p">(</span><span class="nb">str </span><span class="p">(</span><span class="nf">swap!</span> <span class="nv">id</span> <span class="nv">inc</span><span class="p">))))</span>
+
+<span class="c1">; Реализация &quot;/create&quot;.</span>
+<span class="c1">; Сохраняем исходник и возвращаем id.</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">create-snippet</span> <span class="p">[</span><span class="nv">source</span><span class="p">]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">id</span> <span class="p">(</span><span class="nf">next-id</span><span class="p">)]</span>
+    <span class="p">(</span><span class="nf">swap!</span> <span class="nv">snippets</span> <span class="nb">assoc </span><span class="nv">id</span> <span class="nv">source</span><span class="p">)</span>
+    <span class="p">(</span><span class="nf">resp/response</span> <span class="p">{</span><span class="ss">:id</span> <span class="nv">id</span><span class="p">})))</span>
+
+<span class="c1">; Изменённый snippet-js. Сейчас уже ипользуется не</span>
+<span class="c1">; статическая строка в качестве js кода, а он извлекается</span>
+<span class="c1">; из атома со снипетами.</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">snippet-js</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">-&gt; </span><span class="p">(</span><span class="o">@</span><span class="nv">snippets</span> <span class="nv">id</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">resp/response</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">resp/content-type</span> <span class="s">&quot;application/javascript&quot;</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defroutes</span> <span class="nv">app</span>
+  <span class="p">(</span><span class="nf">POST</span> <span class="s">&quot;/create&quot;</span> <span class="nv">req</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">req</span> <span class="ss">:body</span> <span class="ss">:source</span> <span class="nv">create-snippet</span><span class="p">))</span>
+  <span class="nv">...</span><span class="p">)</span>
+
+<span class="c1">; Используем ring middleware для декодирование/кодирования</span>
+<span class="c1">; json запросов/ответов.</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">handler</span>
+  <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">app</span>
+      <span class="p">(</span><span class="nf">json/wrap-json-body</span> <span class="p">{</span><span class="ss">:keywords?</span> <span class="nv">true</span><span class="p">})</span>
+      <span class="nv">json/wrap-json-response</span><span class="p">))</span>
+</code></pre></div>
+<p>Изменяем script.js:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">send</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span><span class="nx">source</span><span class="o">:</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#source&#39;</span><span class="p">).</span><span class="nx">val</span><span class="p">()};</span>
+    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="s1">&#39;/create&#39;</span><span class="p">,</span>
+        <span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+        <span class="nx">data</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">data</span><span class="p">),</span>
+        <span class="nx">contentType</span><span class="o">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+        <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">resp</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">src</span> <span class="o">=</span> <span class="s1">&#39;/html/&#39;</span> <span class="o">+</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#result&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="nx">src</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="p">...</span>
+</code></pre></div>
+<p>Я очень извиняюсь за то, что использую неправославный джаваскрипт вместо благословлённого кложурскрипта, но у меня рука не поднялась настраивать cljsbuild и прочую штуку для несчастных 16 строк. Теперь опять перезапускаем сервер, только в этот раз используем <code>cljsbin/handler</code> вместо <code>cljsbin/app</code>. Открываем <a href="http://localhost:8080">http://localhost:8080</a> и пробуем послать следующий код:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s1">&#39;I am alive!&#39;</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Мы должны увидеть сообщение &#39;I am alive!&#39; в iframe справа. У нас получился <a href="http://jsfiddle.net">jsfiddle</a> для бедных!</p>
+
+<h3>Шаг 4 - Компиляция кложурскрипта</h3>
+
+<p>Наконец-то, самая интересная часть - компиляция cljs-&gt;js. Перейдём сразу к коду:</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="nv">...</span>
+            <span class="p">[</span><span class="nv">cljs.closure</span> <span class="ss">:as</span> <span class="nv">cljs</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">me.raynes.fs</span> <span class="ss">:as</span> <span class="nv">fs</span><span class="p">]))</span>
+
+<span class="c1">; Создаём временную директорию, где будет происходить компиляция.</span>
+<span class="c1">; Директория помогает ускорить процесс компиляции: компилятор хранит</span>
+<span class="c1">; промежуточные результаты в ней. Например в ней он хранит скомпиленные</span>
+<span class="c1">; в js cljs.core и clojure.* неймспейсы. Директория опциональна.</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">cljs-compilation-dir</span> <span class="p">(</span><span class="nf">fs/temp-dir</span> <span class="s">&quot;cljs-compilation&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">compile-cljs</span> <span class="p">[</span><span class="nv">source</span><span class="p">]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="c1">; Компилятор предпочитает работать с файлами, так что</span>
+        <span class="c1">; создадим временные файлы для хранение исходника и</span>
+        <span class="c1">; скомпилированного результата.</span>
+        <span class="nv">source-file</span> <span class="p">(</span><span class="nf">fs/temp-file</span> <span class="s">&quot;cljs-source&quot;</span><span class="p">)</span>
+        <span class="nv">compiled-file</span> <span class="p">(</span><span class="nf">fs/temp-file</span> <span class="s">&quot;cljs-compiled&quot;</span><span class="p">)]</span>
+
+    <span class="c1">; Пишем исходник во временный файл.</span>
+    <span class="p">(</span><span class="nf">spit</span> <span class="nv">source-file</span> <span class="nv">source</span><span class="p">)</span>
+
+    <span class="c1">; Компилируем, используя :simple уровень оптимизации.</span>
+    <span class="p">(</span><span class="nf">cljs/build</span> <span class="nv">source-file</span>
+                <span class="p">{</span><span class="ss">:optimizations</span> <span class="ss">:simple</span>
+                 <span class="ss">:output-to</span> <span class="p">(</span><span class="nf">.getAbsolutePath</span> <span class="nv">compiled-file</span><span class="p">)</span>
+                 <span class="ss">:output-dir</span> <span class="p">(</span><span class="nf">.getAbsolutePath</span> <span class="nv">cljs-compilation-dir</span><span class="p">)</span>
+                 <span class="ss">:pretty-print</span> <span class="nv">true</span><span class="p">})</span>
+
+    <span class="c1">; Читаем скомпиленный код и удаляем временные файлы.</span>
+    <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">compiled</span> <span class="p">(</span><span class="nb">slurp </span><span class="nv">compiled-file</span><span class="p">)]</span>
+      <span class="p">(</span><span class="nf">fs/delete</span> <span class="nv">source-file</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">fs/delete</span> <span class="nv">compiled-file</span><span class="p">)</span>
+      <span class="nv">compiled</span><span class="p">)))</span>
+
+<span class="c1">; Обновлённый create-snippet</span>
+<span class="p">(</span><span class="kd">defn </span><span class="nv">create-snippet</span> <span class="p">[</span><span class="nv">source</span><span class="p">]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">id</span> <span class="p">(</span><span class="nf">next-id</span><span class="p">)</span>
+        <span class="nv">js</span> <span class="p">(</span><span class="nf">compile-cljs</span> <span class="nv">source</span><span class="p">)]</span>
+    <span class="p">(</span><span class="nf">swap!</span> <span class="nv">snippets</span> <span class="nb">assoc </span><span class="nv">id</span> <span class="nv">js</span><span class="p">)</span>
+    <span class="p">(</span><span class="nf">resp/response</span> <span class="p">{</span><span class="ss">:id</span> <span class="nv">id</span><span class="p">})))</span>
+</code></pre></div>
+<p>Перезапускаем сервер в последний раз и пробуем послать следующий код (возможно придётся немного подождать, пока он компилируется):</p>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">hello</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">clojure.browser.dom</span> <span class="ss">:as</span> <span class="nv">dom</span><span class="p">]))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">say-hello</span> <span class="p">[]</span>
+  <span class="p">(</span><span class="nf">-&gt;&gt;</span> <span class="s">&quot;Hello from ClojureScript!&quot;</span>
+       <span class="p">(</span><span class="nf">dom/element</span><span class="p">)</span>
+       <span class="p">(</span><span class="nf">dom/append</span> <span class="p">(</span><span class="nf">.-body</span> <span class="nv">js/document</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">.addEventListener</span> <span class="nv">js/window</span> <span class="s">&quot;load&quot;</span> <span class="nv">say-hello</span><span class="p">)</span>
+</code></pre></div>
+<p>Наслаждаемся приветствием от кложурскрипта! Теперь можно начинать работу над промо-видео и запуском проекта на кикстартере.</p>
+
+<h3>Заключение</h3>
+
+<p>Мы сделали простенький cljsfiddle менее чем в 60 строк на кложуре (и 16 на джаваскрипте), что, по-моему, весьма неплохо. В данный момент я работаю над созданием cljsfiddle-подобного сайта для <a href="https://github.com/quil/quil">Quil</a>: я хочу сделать сайт для того, чтобы делиться скетчами, написанными под Quil на кложурскрипте. Ещё одна приятная особенность кложурскрипт компилятора заключается в том, что легко подключать другие кложурскрипт библиотеки, которые могут быть использованы из кода, который мы компилируем - нужано просто добавить их в project.clj и всё! Компилятор сам выяснит, какие из них используются в коде, достанёт и скомпилит их.</p>
+
+<p>Компиляция состоит из 2 основных шагов:</p>
+
+<ol>
+<li>Компиляция cljs файлов и их зависимостей в отдельные js файлы.</li>
+<li>Компиляция всех этих js файлов в финальный js файл используя <a href="https://developers.google.com/closure/compiler/">Google Closure Compiler</a>.</li>
+</ol>
+
+<p>Я использовал <code>cljs.closure/build</code> функцию, которая делает оба этих шага за меня. Джонас в cljsfiddle выбрал другой способ: он использует кложурскрипт компилятор только для того, чтобы выполнить шаг 1, и потом делает шаг 2 вручную: <a href="https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L33">шаг 1</a> и <a href="https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L47">шаг 2</a>. Это позволяет ему компилировать в памяти, не используя файлы. Но выглядит это более сложно. Скорее всего есть и другие преимущества такого подхода, буду рад услышать о них в комментариях.</p>
+
+<p>Код из данного поста доступен на <a href="https://github.com/nbeloglazov/blog-projects/tree/master/cljsbin.">GitHub</a></p>
 
   </div>
   <div class="colophon">
@@ -223,26 +381,26 @@
         
           Опубликовано
         
-        15 Jul 2014
+        16 Aug 2014
       </span>
     </p>
   </div>
   <div id="social-buttons">
-    <g:plusone href="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html"></g:plusone>
-    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html">Tweet</a>
+    <g:plusone href="http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html"></g:plusone>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html">Tweet</a>
     <script>
       !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
     </script>
-    <div class="fb-like" data-href="http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html" data-layout="button_count"
+    <div class="fb-like" data-href="http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html" data-layout="button_count"
          data-action="like" data-show-faces="true" data-share="false"></div>
   </div>
   <!-- AddThis Button END -->
   <div id="disqus_thread"></div>
   <script type="text/javascript">
     var disqus_shortname = 'nbeloglazovblog';
-    var disqus_identifier = '/ru/2014/07/15/clojure-dojo-and-pubsub';
-    var disqus_title = 'Clojure Dojo и PubSub';
-    var disqus_url = 'http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html';
+    var disqus_identifier = '/ru/2014/08/16/poor-mans-cljsfiddle';
+    var disqus_title = 'Cljsfiddle для бедных';
+    var disqus_url = 'http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html';
 
     (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

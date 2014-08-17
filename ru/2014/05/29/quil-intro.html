@@ -45,6 +45,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/ru/2014/08/16/poor-mans-cljsfiddle.html">
+                  <span class="post-date">16 Aug 2014</span>
+                  Cljsfiddle для бедных
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/ru/2014/07/15/clojure-dojo-and-pubsub.html">
                   <span class="post-date">15 Jul 2014</span>
                   Clojure Dojo и PubSub
@@ -104,7 +111,7 @@
 <p>project.clj</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defproject </span><span class="nv">quil-intro</span> <span class="s">&quot;0.1.0-SNAPSHOT&quot;</span>
   <span class="ss">:dependencies</span> <span class="p">[[</span><span class="nv">org.clojure/clojure</span> <span class="s">&quot;1.6.0&quot;</span><span class="p">]</span>
-                 <span class="p">[</span><span class="nv">quil</span> <span class="s">&quot;2.2.0&quot;</span><span class="p">]])</span>
+                 <span class="p">[</span><span class="nv">quil</span> <span class="s">&quot;2.2.1&quot;</span><span class="p">]])</span>
 </code></pre></div>
 <p>И собственно сам код quil_intro.clj:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">quil-intro</span>
@@ -154,7 +161,7 @@
 </code></pre></div>
 <p>Отлично, теперь можно экспериментировать с функцией <code>f</code>. И здесь проявляется великолепие Quil и Clojure: перезагрузка на лету.</p>
 
-<h4>Перезагрузка на лету</h4>
+<h3>Перезагрузка на лету</h3>
 
 <p>В большинстве языков, после изменения кода нам бы понадобилось закрыть текущий скетч, скомпилировать изменения и запустить скетч заново. В Quil мы можем изменить все функции на лету и увидеть изменения немедленно. Вообще, можно запрограммировать весь скетч, от начала до конца, ни разу его не закрыв, а постепенно наращивая его функционал. Конечно, не всё можно изменить на лету, например, невозможно зарегистрировать обработчики событий мыши и клавиатуры. Но это не мешает изменить существующие, т.е. можно изначально зарегистрировать пустые обработчики, а, потом в процессе творчества, добавить в них логику. Теперь давайте вернёмся обратно к коду и изменим функцию <code>f</code>:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; можно получить кучу интересных графиков пробуя</span>
@@ -180,7 +187,7 @@
 <img src="/images/quil-intro/leaf.png" alt="Plot of leaf">
 <img src="/images/quil-intro/crazy-lines.png" alt="Plot of crazy lines"></p>
 
-<h4>Анимация</h4>
+<h3>Анимация</h3>
 
 <p>Теперь рассмотрим ещё одну фичу Quil. До этого момента мы рисовали только статичные изображения, которые не изменялись с течением времени. На самом деле функция <code>draw</code> вызывается периодически с короткими интервалами, что позволяет рисовать движущиеся объекты и настоящую анимацию! Сейчас мы изменим <code>draw</code> так, чтобы на каждой итерации рисовалась только небольшая часть графика: линия от <em>f(t)</em> до <em>f(t+1)</em>. Единственная проблема - то, что на каждой итерации <em>t</em> должно меняться. Для этого мы воспользуемся функцией <a href="http://quil.info/environment.html#frame-count"><code>frame-count</code></a>, которая возвращает номер текущей итерации. Этот номер и будет служить числом <em>t</em>. Теперь cобственно реализация:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">draw</span> <span class="p">[]</span>

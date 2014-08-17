@@ -7,6 +7,274 @@
     <atom:link href="http://nbeloglazov.com/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Poor Man's Cljsfiddle</title>
+      <description>&lt;h3&gt;Intro&lt;/h3&gt;
+
+&lt;p&gt;In this post I&amp;#39;ll describe how to create poor man&amp;#39;s cljsfiddle in 4 steps. Rich man&amp;#39;s &lt;a href=&quot;http://cljsfiddle.net/&quot;&gt;cljsfiddle&lt;/a&gt; is a website similar to &lt;a href=&quot;http://jsfiddle.net/&quot;&gt;jsfiddle&lt;/a&gt; which allows you to try and test clojurescript snippets online. It was created by &lt;a href=&quot;https://github.com/jonase&quot;&gt;Jonas&lt;/a&gt; during &lt;a href=&quot;http://lispinsummerprojects.org/&quot;&gt;Lisp in Summer Projects&lt;/a&gt; (he took first place!). Cljsfiddle is pretty cool and I encourage you to try it out. But let&amp;#39;s get back to our own cljsfidle. Let&amp;#39;s call it cljsbin to avoid confusion. Cljsbin will have only 3 elements on a page: textarea for writing clojurescript, send button and iframe for running compiled cljs code. Minimalist design for the win!&lt;/p&gt;
+
+&lt;p&gt;How it should work:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;User puts clojurescript to the textarea code and clicks &amp;quot;Send&amp;quot;.&lt;/li&gt;
+&lt;li&gt;A POST &lt;code&gt;/create&lt;/code&gt; request is sent. The request contains cljs source.&lt;/li&gt;
+&lt;li&gt;The server receives the request, generates unique id for the new snippet, compiles the source and responds with the id.&lt;/li&gt;
+&lt;li&gt;Upon receiving response browser extracts the id and sets &lt;code&gt;src&lt;/code&gt; attribute of the iframe to &lt;code&gt;/html/ID&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Iframe loads html file from the server. The file imports single script file: &lt;code&gt;/js/ID&lt;/code&gt;. The script contains compiled js which is executed inside the iframe.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3&gt;Step 0 - Create Project&lt;/h3&gt;
+
+&lt;p&gt;Project structure:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;├── project.clj
+├── src
+│   └── cljsbin.clj
+└── public
+    ├── index.html
+    ├── script.js
+    └── styles.css
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;project.clj:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.1.8&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hiccup&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.0.5&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.3.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring/ring-json&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.3.1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojurescript&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.0-2268&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;me.raynes/fs&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.4.6&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Step 1 - Serve Static Siles&lt;/h3&gt;
+
+&lt;p&gt;We start by creating a server that does only static files. The server will serve 3 static files: index.html, styles.css and script.js (we need a little bit of js to handle button click).&lt;/p&gt;
+
+&lt;p&gt;cljsbin.clj:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.route&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; Serve index.html as initial page when user requests&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; http://localhost:8080/&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;slurp &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;public/index.html&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; Serve static files. By default &amp;#39;public&amp;#39; directory is used.&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; Example: public/script.js served when user requests&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; http://localhost:8080/script.js&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;files&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;index.html:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;Cljsbin&lt;span class=&quot;nt&quot;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/script.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;link&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;stylesheet&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/styles.css&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;input-area&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;lt;textarea&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/textarea&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;lt;button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;send&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;Send&lt;span class=&quot;nt&quot;&gt;&amp;lt;/button&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;iframe&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;result&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;script.js:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;Not implemented. Wait for the Step 2.&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#send&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;click&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Use &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/blob/master/cljsbin/public/styles.css&quot;&gt;this&lt;/a&gt; styles.css.&lt;/p&gt;
+
+&lt;p&gt;Run server using jetty:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ring.adapter.jetty/run-jetty&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljsbin/app&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:port&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Open &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt;, click button and check js console - you should see &amp;quot;Not implemented&amp;quot; message.&lt;/p&gt;
+
+&lt;h3&gt;Step 2 - Serve Iframe Files&lt;/h3&gt;
+
+&lt;p&gt;Time to serve html and js files which will be loaded by the iframe. Result js file will be static for now as we&amp;#39;re not sending code from the page.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring.util.response&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hiccup.page&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;html5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Create response for &amp;quot;/js/ID&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;console.log(&amp;#39;I am snippet &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;!&amp;#39;);&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/content-type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;application/javascript&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Create response for &amp;quot;/html/ID&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-html&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; Html structure is dead simple so it is easier to use hiccup here&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;; then load/update html template.&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;list &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:head&lt;/span&gt;
+             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:title&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Snippet &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:script&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:src&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/js/&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}]]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;html5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/js/:id&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/html/:id&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;snippet-html&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now reload the server and open &lt;a href=&quot;http://localhost:8080/html/42&quot;&gt;http://localhost:8080/html/42&lt;/a&gt;, you should see blank page and &amp;quot;I am snippet 42!&amp;quot; message in the js console.&lt;/p&gt;
+
+&lt;h3&gt;Step 3 - Implement Send&lt;/h3&gt;
+
+&lt;p&gt;We&amp;#39;re almost there! Let&amp;#39;s implement &lt;code&gt;/create&lt;/code&gt; request now and update js &lt;code&gt;send&lt;/code&gt; function. No cljs-&amp;gt;js compilation yet, just store source and serve it without modification. Format of request (json):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Some cljs code here.&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And response (json):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;12345&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Update for cljsbin.clj:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;POST&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+            &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring.middleware.json&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Save all snippets in an atom. We could use db,&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; but we&amp;#39;re doing poor&amp;#39;s man cljsfiddle after all.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; Map structure: id -&amp;gt; js.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;atom&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Unique id generator.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;atom&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;next-id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;inc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Implementation of &amp;quot;/create&amp;quot;.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; Store source and return snippet id.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;next-id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Updated snippet-js. Note that now it retrieves js from&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; the snippet atom instead of using static string.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/content-type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;application/javascript&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;POST&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/create&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:body&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Use ring middleware to decode/encode json requests/response.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;json/wrap-json-body&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:keywords?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;json/wrap-json-response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Update script.js:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#source&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()};&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ajax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/create&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;method&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;POST&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;contentType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;application/json&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;success&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/html/&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#result&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;attr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;src&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;#39;m very sorry for using unholy javascript here instead of blessed clojurescript, but I couldn&amp;#39;t make myself setup all cljsbuild stuff for mere 16 lines of js. Now restart the server, but using &lt;code&gt;cljsbin/handler&lt;/code&gt; instead of &lt;code&gt;cljsbin/app&lt;/code&gt; this time. Open &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt; and try to send following code:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nb&quot;&gt;window&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;addEventListener&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;innerHTML&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;I am alive!&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You should see &amp;#39;I am alive!&amp;#39; message in the iframe on the right. We got poor&amp;#39;s man &lt;a href=&quot;http://jsfiddle.net&quot;&gt;jsfiddle&lt;/a&gt;!&lt;/p&gt;
+
+&lt;h3&gt;Step 4 - Clojurescript Compilation&lt;/h3&gt;
+
+&lt;p&gt;Finally, the most interesting part - cljs-&amp;gt; js compilation. Let&amp;#39;s go straight to code:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs.closure&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;me.raynes.fs&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Create temp dir where cljs will be compiled.&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; It is used to speed up compilation: clojurescript compiler stores&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; intermediate results there. For example cljs.core and clojure.*&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; namespaces compiled to js. The directory is optional.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs-compilation-dir&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-dir&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-compilation&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compile-cljs&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;; Clojurescript compiler prefers to work with files as&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; input/outputs so we create temp files for the source&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;; and compiled output&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-source&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-compiled&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;; Write source into the temp file.&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;spit&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;; Compile source using :simple level of optimization.&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cljs/build&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:optimizations&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:simple&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:output-to&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.getAbsolutePath&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:output-dir&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.getAbsolutePath&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljs-compilation-dir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:pretty-print&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;; Read compiled output and cleanup temp files.&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compiled&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;slurp &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/delete&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/delete&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;compiled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; Updated create-snippet&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;next-id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile-cljs&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Restart the server for the last time and try sending cljs code (you might need to wait a little while cljs is compiled):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hello&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;clojure.browser.dom&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;say-hello&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;-&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello from ClojureScript!&amp;quot;&lt;/span&gt;
+       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;dom/element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;dom/append&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.-body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js/document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.addEventListener&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js/window&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;load&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;say-hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Enjoy greetings from clojurescript! Time to create an awesome promo video and launch Kickstarter campaign...&lt;/p&gt;
+
+&lt;h3&gt;Final thoughts&lt;/h3&gt;
+
+&lt;p&gt;We did simple cljsfiddle app in less than 60 lines of clojure code (and 16 lines of javascript), which is pretty cool, I think. Currently I&amp;#39;m working on cljsfiddle-kinda-clone for &lt;a href=&quot;https://github.com/quil/quil&quot;&gt;Quil&lt;/a&gt;: I want to create a website for sharing sketches written in Quil on ClojureScript. And that work inspired me to write this post. Nice thing about using clojurescript compiler is that it is very simple to add support for other cljs libraries when compiling cljs code: just include them into your &lt;code&gt;project.clj&lt;/code&gt; and compiler automatically discovers and compiles them.&lt;/p&gt;
+
+&lt;p&gt;Cljs compilation consists of 2 major steps:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Compile cljs files and their dependencies to separate js files.&lt;/li&gt;
+&lt;li&gt;Compile js files to a single js file using &lt;a href=&quot;https://developers.google.com/closure/compiler/&quot;&gt;Google Closure Compiler&lt;/a&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;I used &lt;code&gt;cljs.closure/build&lt;/code&gt; function which does both steps for me. Jonas in his cljsfiddle chose another way: he uses clojurescript compiler to perform only step 1 and then he does step 2 manually: &lt;a href=&quot;https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L33&quot;&gt;step 1&lt;/a&gt; and &lt;a href=&quot;https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L47&quot;&gt;step 2&lt;/a&gt;. It allows to perform compilation in memory - no need to use temp files. But it looks more complex. There are most likely other pros, would be glad to hear them.&lt;/p&gt;
+
+&lt;p&gt;Code from this post is available on &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/tree/master/cljsbin&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Sat, 16 Aug 2014 22:00:00 +0100</pubDate>
+      <link>http://nbeloglazov.com/2014/08/16/poor-mans-cljsfiddle.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/2014/08/16/poor-mans-cljsfiddle.html</guid>
+    </item>
+    
+    <item>
       <title>Clojure Dojo and PubSub</title>
       <description>&lt;h3&gt;Clojure Dojo&lt;/h3&gt;
 
@@ -134,7 +402,7 @@
       <title>Quil: Age of Middleware</title>
       <description>&lt;p&gt;Quil 2.1.0 introduced new feature: middleware. Middleware is a way to augment a sketch without blowing up your code, you can think of it as a way to create &amp;quot;libraries&amp;quot; for Quil. Idea is similar to the ring middleware: Quil middleware is a regular clojure function which takes map of sketch options and returns updated map, that&amp;#39;s all. What can we do in a middleware? Well, a lot of things, middleware has full power over options so we can wrap functions like &lt;code&gt;draw&lt;/code&gt;, &lt;code&gt;setup&lt;/code&gt; and others user-provided functions anyway we want. As an example let&amp;#39;s create a middleware which rotates sketch on each frame.&lt;/p&gt;
 
-&lt;h4&gt;Rotating middleware&lt;/h4&gt;
+&lt;h3&gt;Rotating middleware&lt;/h3&gt;
 
 &lt;p&gt;The rotating middleware&amp;#39;s job is pretty simple: replace user-provided &lt;code&gt;draw&lt;/code&gt; function with it own special version of &lt;code&gt;draw&lt;/code&gt;. This special &lt;code&gt;draw&lt;/code&gt; function does two things: first, it rotates sketch some angle, and second, calls original &lt;code&gt;draw&lt;/code&gt;. But code is worth a thousand words, so here it is:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; rotated-draw is the special draw function,&lt;/span&gt;
@@ -209,7 +477,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/images/quil-middleware/ball-rotating.gif&quot; alt=&quot;Static rotating&quot;&gt;&lt;/p&gt;
 
-&lt;h4&gt;Conclusion&lt;/h4&gt;
+&lt;h3&gt;Conclusion&lt;/h3&gt;
 
 &lt;p&gt;With middleware it becomes easier to write pluggable extensions for Quil. It&amp;#39;s easy to share middleware with other users - you need to provide a single function which everyone can add to their &lt;code&gt;:middleware&lt;/code&gt; option and it works!&lt;/p&gt;
 
@@ -236,7 +504,7 @@
 &lt;p&gt;project.clj&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
   &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;quil_intro.clj:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt;
@@ -288,7 +556,7 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Cool, now we can experiment with &lt;code&gt;f&lt;/code&gt; by changing it in any way we&amp;#39;d like. And here comes real beauty of Quil: live reloading.&lt;/p&gt;
 
-&lt;h4&gt;Live Reloading.&lt;/h4&gt;
+&lt;h3&gt;Live Reloading.&lt;/h3&gt;
 
 &lt;p&gt;After we changed code we don&amp;#39;t need to close sketch, recompile everything and start sketch again as we would do in most other languages. In quil we can update all functions on the fly and see results immediately. In fact we can program whole sketch from the beginning to the end without ever closing it. Of course there are some things we can&amp;#39;t do on the fly. We can&amp;#39;t register mouse and keyboard listeners on the fly, but we still can update already registered. Now let&amp;#39;s get back to work and update &lt;code&gt;f&lt;/code&gt; function:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; you can get awesome plots using random combinations of trigonometric functions&lt;/span&gt;
@@ -313,7 +581,7 @@
 &lt;img src=&quot;/images/quil-intro/leaf.png&quot; alt=&quot;Plot of leaf&quot;&gt;
 &lt;img src=&quot;/images/quil-intro/crazy-lines.png&quot; alt=&quot;Plot of crazy lines&quot;&gt;&lt;/p&gt;
 
-&lt;h4&gt;Animation&lt;/h4&gt;
+&lt;h3&gt;Animation&lt;/h3&gt;
 
 &lt;p&gt;Now we&amp;#39;ll look at another quil feature. Up to this point we drew static images which weren&amp;#39;t changing over time. But in fact &lt;code&gt;draw&lt;/code&gt; function is called repeatedly in short intervals. That means we can draw moving objects and do real animation! Let&amp;#39;s modify our sketch so on each iteration only a part of a plot is drawn: line from &lt;em&gt;f(t)&lt;/em&gt; to &lt;em&gt;f(t+1)&lt;/em&gt;. The only problem is that &lt;em&gt;t&lt;/em&gt; should change on each iteration, to solve it we&amp;#39;ll use &lt;a href=&quot;http://quil.info/environment.html#frame-count&quot;&gt;&lt;code&gt;frame-count&lt;/code&gt;&lt;/a&gt; which returns current iteration number and we can use this number as &lt;em&gt;t&lt;/em&gt;. Here is implementation:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;

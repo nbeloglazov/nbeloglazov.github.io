@@ -45,6 +45,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/2014/08/16/poor-mans-cljsfiddle.html">
+                  <span class="post-date">16 Aug 2014</span>
+                  Poor Man's Cljsfiddle
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/2014/07/15/clojure-dojo-and-pubsub.html">
                   <span class="post-date">15 Jul 2014</span>
                   Clojure Dojo and PubSub
@@ -104,7 +111,7 @@
 <p>project.clj</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defproject </span><span class="nv">quil-intro</span> <span class="s">&quot;0.1.0-SNAPSHOT&quot;</span>
   <span class="ss">:dependencies</span> <span class="p">[[</span><span class="nv">org.clojure/clojure</span> <span class="s">&quot;1.6.0&quot;</span><span class="p">]</span>
-                 <span class="p">[</span><span class="nv">quil</span> <span class="s">&quot;2.2.0&quot;</span><span class="p">]])</span>
+                 <span class="p">[</span><span class="nv">quil</span> <span class="s">&quot;2.2.1&quot;</span><span class="p">]])</span>
 </code></pre></div>
 <p>quil_intro.clj:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">quil-intro</span>
@@ -156,7 +163,7 @@
 </code></pre></div>
 <p>Cool, now we can experiment with <code>f</code> by changing it in any way we&#39;d like. And here comes real beauty of Quil: live reloading.</p>
 
-<h4>Live Reloading.</h4>
+<h3>Live Reloading.</h3>
 
 <p>After we changed code we don&#39;t need to close sketch, recompile everything and start sketch again as we would do in most other languages. In quil we can update all functions on the fly and see results immediately. In fact we can program whole sketch from the beginning to the end without ever closing it. Of course there are some things we can&#39;t do on the fly. We can&#39;t register mouse and keyboard listeners on the fly, but we still can update already registered. Now let&#39;s get back to work and update <code>f</code> function:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; you can get awesome plots using random combinations of trigonometric functions</span>
@@ -181,7 +188,7 @@
 <img src="/images/quil-intro/leaf.png" alt="Plot of leaf">
 <img src="/images/quil-intro/crazy-lines.png" alt="Plot of crazy lines"></p>
 
-<h4>Animation</h4>
+<h3>Animation</h3>
 
 <p>Now we&#39;ll look at another quil feature. Up to this point we drew static images which weren&#39;t changing over time. But in fact <code>draw</code> function is called repeatedly in short intervals. That means we can draw moving objects and do real animation! Let&#39;s modify our sketch so on each iteration only a part of a plot is drawn: line from <em>f(t)</em> to <em>f(t+1)</em>. The only problem is that <em>t</em> should change on each iteration, to solve it we&#39;ll use <a href="http://quil.info/environment.html#frame-count"><code>frame-count</code></a> which returns current iteration number and we can use this number as <em>t</em>. Here is implementation:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">draw</span> <span class="p">[]</span>

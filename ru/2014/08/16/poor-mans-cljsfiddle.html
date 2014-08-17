@@ -3,7 +3,7 @@
   <head>
       <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>nbeloglazov blog</title>
+      <title>Cljsfiddle для бедных</title>
       <meta name="viewport" content="width=device-width">
 
       <!-- syntax highlighting CSS -->
@@ -35,9 +35,9 @@
       <div class="sidebar" id="sidebar">
         <div class="header">
           
-            <h1 class="title"><a href="/"><img id="avatar" src="/images/avatar.jpg"></a></h1>
+            <h1 class="title"><a href="/ru"><img id="avatar" src="/images/avatar.jpg"></a></h1>
             <span class="tagline">
-              Quil, Сlojure and programming in general
+              Блог о Quil, Clojure и программировании
             </span>
           
         </div>
@@ -45,30 +45,30 @@
           <ul class="posts-list">
             
               <li class="post-link">
-                <a class="post-title" href="/2014/08/16/poor-mans-cljsfiddle.html">
+                <a class="post-title" href="/ru/2014/08/16/poor-mans-cljsfiddle.html">
                   <span class="post-date">16 Aug 2014</span>
-                  Poor Man's Cljsfiddle
+                  Cljsfiddle для бедных
                 </a>
               </li>
             
               <li class="post-link">
-                <a class="post-title" href="/2014/07/15/clojure-dojo-and-pubsub.html">
+                <a class="post-title" href="/ru/2014/07/15/clojure-dojo-and-pubsub.html">
                   <span class="post-date">15 Jul 2014</span>
-                  Clojure Dojo and PubSub
+                  Clojure Dojo и PubSub
                 </a>
               </li>
             
               <li class="post-link">
-                <a class="post-title" href="/2014/06/22/quil-age-of-middleware.html">
+                <a class="post-title" href="/ru/2014/06/22/quil-age-of-middleware.html">
                   <span class="post-date">22 Jun 2014</span>
-                  Quil: Age of Middleware
+                  Quil Middleware
                 </a>
               </li>
             
               <li class="post-link">
-                <a class="post-title" href="/2014/05/29/quil-intro.html">
+                <a class="post-title" href="/ru/2014/05/29/quil-intro.html">
                   <span class="post-date">29 May 2014</span>
-                  Quil Intro
+                  Введение в Quil
                 </a>
               </li>
             
@@ -81,9 +81,7 @@
           </span>
         </div>
       </div>
-        
-
-<div class="content" id="home">
+        <div class="content" id="home">
   <div id="fb-root"></div>
   <script>(function(d, s, id) {
     var js, fjs = d.getElementsByTagName(s)[0];
@@ -99,32 +97,32 @@
   <div id="post-info">
     <div id="info-container">
       
-        <a href="/ru/2014/08/16/poor-mans-cljsfiddle.html" class="lang-link">Ru</a>
-        <p class="lang-link">En</p>
+        <p class="lang-link">Ru</p>
+        <a href="/2014/08/16/poor-mans-cljsfiddle.html" class="lang-link">En</a>
       
-      <h1 id="title">Poor Man's Cljsfiddle</h1>
+      <h1 id="title">Cljsfiddle для бедных</h1>
       <span id="date">16 Aug 2014</span>
     </div>
   </div>
 
   <div class="post">
-    <h3>Intro</h3>
+    <h3>Введение</h3>
 
-<p>In this post I&#39;ll describe how to create poor man&#39;s cljsfiddle in 4 steps. Rich man&#39;s <a href="http://cljsfiddle.net/">cljsfiddle</a> is a website similar to <a href="http://jsfiddle.net/">jsfiddle</a> which allows you to try and test clojurescript snippets online. It was created by <a href="https://github.com/jonase">Jonas</a> during <a href="http://lispinsummerprojects.org/">Lisp in Summer Projects</a> (he took first place!). Cljsfiddle is pretty cool and I encourage you to try it out. But let&#39;s get back to our own cljsfidle. Let&#39;s call it cljsbin to avoid confusion. Cljsbin will have only 3 elements on a page: textarea for writing clojurescript, send button and iframe for running compiled cljs code. Minimalist design for the win!</p>
+<p>В этом посте я расскажу, как написать cljsfiddle для бедных за 4 шага. Настоящий <a href="http://cljsfiddle.net/">cljsfiddle</a> - это сайт, похожий на <a href="http://jsfiddle.net/">jsfiddle</a>, который позволяет тестировать и играться с кложурскриптом онлайн. Сайт был создан <a href="https://github.com/jonase">Джонасом</a> (не знаю, как правильно) для конкурса <a href="http://lispinsummerprojects.org/">Lisp in Summer Projects</a> (кстати он занял первое место). Но вернёмся к нашей версии cljsfiddle. Будем её называть cljsbin, чтобы не путаться. Cljsbin будет состоять только из 3 элементов: поля для ввода кложурскрипт кода, кнопки &quot;Send&quot; и iframe, в котором будет запускаться скомпилированный код. Минималистический дизайн и все дела!</p>
 
-<p>How it should work:</p>
+<p>Как это будет работать:</p>
 
 <ol>
-<li>User puts clojurescript to the textarea code and clicks &quot;Send&quot;.</li>
-<li>A POST <code>/create</code> request is sent. The request contains cljs source.</li>
-<li>The server receives the request, generates unique id for the new snippet, compiles the source and responds with the id.</li>
-<li>Upon receiving response browser extracts the id and sets <code>src</code> attribute of the iframe to <code>/html/ID</code>.</li>
-<li>Iframe loads html file from the server. The file imports single script file: <code>/js/ID</code>. The script contains compiled js which is executed inside the iframe.</li>
+<li>Пользователь пишет кложурскрипт и нажимает &quot;Send&quot;.</li>
+<li>Отправляется POST <code>/create</code> запрос. В запросе содержится исходник.</li>
+<li>Сервер получает запрос, генерирует уникальный id для нового сниппета, компилирует исходник и отправляет ответ, содержащий id.</li>
+<li>Как только браузер получил ответ, он достаёт id и устанавливает <code>src</code> аттрибут iframe в <code>/html/ID</code>.</li>
+<li>Iframe загружает html файл с сервера. Файл пустой, в нём содержится только импорт 1 скрипта - <code>/js/ID</code>. Скрипт содержит скомпилированный js код, который и выполняется в iframe.</li>
 </ol>
 
-<h3>Step 0 - Create Project</h3>
+<h3>Шаг 0 - Создание проекта</h3>
 
-<p>Project structure:</p>
+<p>Структура проекта:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">├── project.clj
 ├── src
 │   └── cljsbin.clj
@@ -143,9 +141,9 @@
                  <span class="p">[</span><span class="nv">org.clojure/clojurescript</span> <span class="s">&quot;0.0-2268&quot;</span><span class="p">]</span>
                  <span class="p">[</span><span class="nv">me.raynes/fs</span> <span class="s">&quot;1.4.6&quot;</span><span class="p">]])</span>
 </code></pre></div>
-<h3>Step 1 - Serve Static Siles</h3>
+<h3>Шаг 1 - Раздаём статические файлы</h3>
 
-<p>We start by creating a server that does only static files. The server will serve 3 static files: index.html, styles.css and script.js (we need a little bit of js to handle button click).</p>
+<p>Начнём мы с создания сервера, который умеет только отдавать статику. У сервера есть целых 3 файла: index.html, styles.css и script.js (нам нужно немного джаваскрипта, чтобы обрабатывать нажатие на кнопку).</p>
 
 <p>cljsbin.clj:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
@@ -153,12 +151,12 @@
             <span class="p">[</span><span class="nv">compojure.route</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">files</span><span class="p">]]))</span>
 
 <span class="p">(</span><span class="nf">defroutes</span> <span class="nv">app</span>
-  <span class="c1">; Serve index.html as initial page when user requests</span>
-  <span class="c1">; http://localhost:8080/</span>
+  <span class="c1">; Отдаём index.html как начальную страницу, когда пользователь</span>
+  <span class="c1">; запрашивает http://localhost:8080/</span>
   <span class="p">(</span><span class="nf">GET</span> <span class="s">&quot;/&quot;</span> <span class="p">[]</span> <span class="p">(</span><span class="nb">slurp </span><span class="s">&quot;public/index.html&quot;</span><span class="p">))</span>
-  <span class="c1">; Serve static files. By default &#39;public&#39; directory is used.</span>
-  <span class="c1">; Example: public/script.js served when user requests</span>
-  <span class="c1">; http://localhost:8080/script.js</span>
+  <span class="c1">; Отдаём статику. По умолчанию используется &#39;public&#39; папка для</span>
+  <span class="c1">; статики. Например если пользователь запросил http://localhost:8080/script.js,</span>
+  <span class="c1">; то сервер попытается отдать public/script.js файл.</span>
   <span class="p">(</span><span class="nf">files</span> <span class="s">&quot;/&quot;</span><span class="p">))</span>
 </code></pre></div>
 <p>index.html:</p>
@@ -183,35 +181,37 @@
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Not implemented. Wait for the Step 2.&#39;</span><span class="p">);</span>
 <span class="p">}</span>
 
+
 <span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#send&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="nx">send</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Use <a href="https://github.com/nbeloglazov/blog-projects/blob/master/cljsbin/public/styles.css">this</a> styles.css.</p>
+<p>Тривиальный styles.css можно взять <a href="https://github.com/nbeloglazov/blog-projects/blob/master/cljsbin/public/styles.css">отсюда</a>.</p>
 
-<p>Run server using jetty:</p>
+<p>Запускам сервер при помощи jetty:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">ring.adapter.jetty/run-jetty</span> <span class="nv">cljsbin/app</span> <span class="p">{</span><span class="ss">:port</span> <span class="mi">8080</span><span class="p">})</span>
 </code></pre></div>
-<p>Open <a href="http://localhost:8080">http://localhost:8080</a>, click button and check js console - you should see &quot;Not implemented&quot; message.</p>
+<p>Открываем <a href="http://localhost:8080">http://localhost:8080</a>, нажимаем на кнопку и проверяем js консоль - мы должны увидеть &quot;Not implemented&quot; сообщение.</p>
 
-<h3>Step 2 - Serve Iframe Files</h3>
+<h3>Шаг 2 - Раздаём файлы для iframe</h3>
 
-<p>Time to serve html and js files which will be loaded by the iframe. Result js file will be static for now as we&#39;re not sending code from the page.</p>
+<p>Теперь давайте научим сервер отдавать html и js файлы, которые будут загружаться в iframe. js файл будет на данном этапе статическим, т.к. мы ещё не посылаем код со страницы.</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="nv">...</span>
             <span class="p">[</span><span class="nv">ring.util.response</span> <span class="ss">:as</span> <span class="nv">resp</span><span class="p">]</span>
             <span class="p">[</span><span class="nv">hiccup.page</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">html5</span><span class="p">]]))</span>
 
-<span class="c1">; Create response for &quot;/js/ID&quot;</span>
+<span class="c1">; Создаём ответ на запрос &quot;/js/ID&quot;</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">snippet-js</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span>
   <span class="p">(</span><span class="nb">-&gt; </span><span class="p">(</span><span class="nb">str </span><span class="s">&quot;console.log(&#39;I am snippet &quot;</span> <span class="nv">id</span> <span class="s">&quot;!&#39;);&quot;</span><span class="p">)</span>
       <span class="p">(</span><span class="nf">resp/response</span><span class="p">)</span>
       <span class="p">(</span><span class="nf">resp/content-type</span> <span class="s">&quot;application/javascript&quot;</span><span class="p">)))</span>
 
-<span class="c1">; Create response for &quot;/html/ID&quot;</span>
+<span class="c1">; Создаём ответ на запрос &quot;/html/ID&quot;</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">snippet-html</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span>
-  <span class="c1">; Html structure is dead simple so it is easier to use hiccup here</span>
-  <span class="c1">; then load/update html template.</span>
+  <span class="c1">; Структура html элементарна, так что тут легче использовать</span>
+  <span class="c1">; hiccup, вместо того чтобы загружать и модифировать какой-нибудь</span>
+  <span class="c1">; html шаблон.</span>
   <span class="p">(</span><span class="nb">-&gt; </span><span class="p">(</span><span class="nb">list </span><span class="p">[</span><span class="ss">:head</span>
              <span class="p">[</span><span class="ss">:title</span> <span class="p">(</span><span class="nb">str </span><span class="s">&quot;Snippet &quot;</span> <span class="nv">id</span><span class="p">)]</span>
              <span class="p">[</span><span class="ss">:script</span> <span class="p">{</span><span class="ss">:src</span> <span class="p">(</span><span class="nb">str </span><span class="s">&quot;/js/&quot;</span> <span class="nv">id</span><span class="p">)}]]</span>
@@ -223,41 +223,43 @@
   <span class="p">(</span><span class="nf">GET</span> <span class="s">&quot;/html/:id&quot;</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span> <span class="p">(</span><span class="nf">snippet-html</span> <span class="nv">id</span><span class="p">))</span>
   <span class="nv">...</span><span class="p">)</span>
 </code></pre></div>
-<p>Now reload the server and open <a href="http://localhost:8080/html/42">http://localhost:8080/html/42</a>, you should see blank page and &quot;I am snippet 42!&quot; message in the js console.</p>
+<p>Теперь перезапустим сервер и откроем <a href="http://localhost:8080/html/42">http://localhost:8080/html/42</a>, мы должны увидеть пустую страницу и сообщение &quot;I am snippet 42!&quot; в js консоли.</p>
 
-<h3>Step 3 - Implement Send</h3>
+<h3>Шаг 3 - Реализуем посылку кода</h3>
 
-<p>We&#39;re almost there! Let&#39;s implement <code>/create</code> request now and update js <code>send</code> function. No cljs-&gt;js compilation yet, just store source and serve it without modification. Format of request (json):</p>
+<p>Осталось чуть-чуть! Теперь добавим поддержку <code>/create</code> запроса и изменим джаваскриптовую <code>send</code> функцию. Компиляцию cljs-&gt;js мы пока не делаем, просто сохраняем исходники без изменениея. Формат запроса (json):</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;Some cljs code here.&quot;</span><span class="p">}</span>
 </code></pre></div>
-<p>And response (json):</p>
+<p>И ответ (json):</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="o">:</span> <span class="s2">&quot;12345&quot;</span><span class="p">}</span>
 </code></pre></div>
-<p>Update for cljsbin.clj:</p>
+<p>Изменяем cljsbin.clj:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">compojure.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">defroutes</span> <span class="nv">GET</span> <span class="nv">POST</span><span class="p">]]</span>
             <span class="nv">...</span>
             <span class="p">[</span><span class="nv">ring.middleware.json</span> <span class="ss">:as</span> <span class="nv">json</span><span class="p">]))</span>
 
-<span class="c1">; Save all snippets in an atom. We could use db,</span>
-<span class="c1">; but we&#39;re doing poor&#39;s man cljsfiddle after all.</span>
-<span class="c1">; Map structure: id -&gt; js.</span>
+<span class="c1">; Сохраняем сниппеты в атоме. Мы могли бы использовать</span>
+<span class="c1">; БД здесь, но в конце концов у нас же cljsfiddle для</span>
+<span class="c1">; бедных.</span>
+<span class="c1">; Структура мапы: id-&gt;js</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">snippets</span> <span class="p">(</span><span class="nf">atom</span> <span class="p">{}))</span>
 
-<span class="c1">; Unique id generator.</span>
+<span class="c1">; Генератор уникальных id.</span>
 <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">id</span> <span class="p">(</span><span class="nf">atom</span> <span class="mi">0</span><span class="p">)]</span>
   <span class="p">(</span><span class="kd">defn </span><span class="nv">next-id</span> <span class="p">[]</span>
     <span class="p">(</span><span class="nb">str </span><span class="p">(</span><span class="nf">swap!</span> <span class="nv">id</span> <span class="nv">inc</span><span class="p">))))</span>
 
-<span class="c1">; Implementation of &quot;/create&quot;.</span>
-<span class="c1">; Store source and return snippet id.</span>
+<span class="c1">; Реализация &quot;/create&quot;.</span>
+<span class="c1">; Сохраняем исходник и возвращаем id.</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">create-snippet</span> <span class="p">[</span><span class="nv">source</span><span class="p">]</span>
   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">id</span> <span class="p">(</span><span class="nf">next-id</span><span class="p">)]</span>
     <span class="p">(</span><span class="nf">swap!</span> <span class="nv">snippets</span> <span class="nb">assoc </span><span class="nv">id</span> <span class="nv">source</span><span class="p">)</span>
     <span class="p">(</span><span class="nf">resp/response</span> <span class="p">{</span><span class="ss">:id</span> <span class="nv">id</span><span class="p">})))</span>
 
-<span class="c1">; Updated snippet-js. Note that now it retrieves js from</span>
-<span class="c1">; the snippet atom instead of using static string.</span>
+<span class="c1">; Изменённый snippet-js. Сейчас уже ипользуется не</span>
+<span class="c1">; статическая строка в качестве js кода, а он извлекается</span>
+<span class="c1">; из атома со снипетами.</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">snippet-js</span> <span class="p">[</span><span class="nv">id</span><span class="p">]</span>
   <span class="p">(</span><span class="nb">-&gt; </span><span class="p">(</span><span class="o">@</span><span class="nv">snippets</span> <span class="nv">id</span><span class="p">)</span>
       <span class="p">(</span><span class="nf">resp/response</span><span class="p">)</span>
@@ -267,13 +269,14 @@
   <span class="p">(</span><span class="nf">POST</span> <span class="s">&quot;/create&quot;</span> <span class="nv">req</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">req</span> <span class="ss">:body</span> <span class="ss">:source</span> <span class="nv">create-snippet</span><span class="p">))</span>
   <span class="nv">...</span><span class="p">)</span>
 
-<span class="c1">; Use ring middleware to decode/encode json requests/response.</span>
+<span class="c1">; Используем ring middleware для декодирование/кодирования</span>
+<span class="c1">; json запросов/ответов.</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">handler</span>
   <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">app</span>
       <span class="p">(</span><span class="nf">json/wrap-json-body</span> <span class="p">{</span><span class="ss">:keywords?</span> <span class="nv">true</span><span class="p">})</span>
       <span class="nv">json/wrap-json-response</span><span class="p">))</span>
 </code></pre></div>
-<p>Update script.js:</p>
+<p>Изменяем script.js:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">send</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span><span class="nx">source</span><span class="o">:</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#source&#39;</span><span class="p">).</span><span class="nx">val</span><span class="p">()};</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -290,58 +293,58 @@
 
 <span class="p">...</span>
 </code></pre></div>
-<p>I&#39;m very sorry for using unholy javascript here instead of blessed clojurescript, but I couldn&#39;t make myself setup all cljsbuild stuff for mere 16 lines of js. Now restart the server, but using <code>cljsbin/handler</code> instead of <code>cljsbin/app</code> this time. Open <a href="http://localhost:8080">http://localhost:8080</a> and try to send following code:</p>
+<p>Я очень извиняюсь за то, что использую неправославный джаваскрипт вместо благословлённого кложурскрипта, но у меня рука не поднялась настраивать cljsbuild и прочую штуку для несчастных 16 строк. Теперь опять перезапускаем сервер, только в этот раз используем <code>cljsbin/handler</code> вместо <code>cljsbin/app</code>. Открываем <a href="http://localhost:8080">http://localhost:8080</a> и пробуем послать следующий код:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s1">&#39;I am alive!&#39;</span><span class="p">;</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>You should see &#39;I am alive!&#39; message in the iframe on the right. We got poor&#39;s man <a href="http://jsfiddle.net">jsfiddle</a>!</p>
+<p>Мы должны увидеть сообщение &#39;I am alive!&#39; в iframe справа. У нас получился <a href="http://jsfiddle.net">jsfiddle</a> для бедных!</p>
 
-<h3>Step 4 - Clojurescript Compilation</h3>
+<h3>Шаг 4 - Компиляция кложурскрипта</h3>
 
-<p>Finally, the most interesting part - cljs-&gt; js compilation. Let&#39;s go straight to code:</p>
+<p>Наконец-то, самая интересная часть - компиляция cljs-&gt;js. Перейдём сразу к коду:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="nv">...</span>
             <span class="p">[</span><span class="nv">cljs.closure</span> <span class="ss">:as</span> <span class="nv">cljs</span><span class="p">]</span>
             <span class="p">[</span><span class="nv">me.raynes.fs</span> <span class="ss">:as</span> <span class="nv">fs</span><span class="p">]))</span>
 
-<span class="c1">; Create temp dir where cljs will be compiled.</span>
-<span class="c1">; It is used to speed up compilation: clojurescript compiler stores</span>
-<span class="c1">; intermediate results there. For example cljs.core and clojure.*</span>
-<span class="c1">; namespaces compiled to js. The directory is optional.</span>
+<span class="c1">; Создаём временную директорию, где будет происходить компиляция.</span>
+<span class="c1">; Директория помогает ускорить процесс компиляции: компилятор хранит</span>
+<span class="c1">; промежуточные результаты в ней. Например в ней он хранит скомпиленные</span>
+<span class="c1">; в js cljs.core и clojure.* неймспейсы. Директория опциональна.</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">cljs-compilation-dir</span> <span class="p">(</span><span class="nf">fs/temp-dir</span> <span class="s">&quot;cljs-compilation&quot;</span><span class="p">))</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">compile-cljs</span> <span class="p">[</span><span class="nv">source</span><span class="p">]</span>
-  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="c1">; Clojurescript compiler prefers to work with files as</span>
-        <span class="c1">; input/outputs so we create temp files for the source</span>
-        <span class="c1">; and compiled output</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="c1">; Компилятор предпочитает работать с файлами, так что</span>
+        <span class="c1">; создадим временные файлы для хранение исходника и</span>
+        <span class="c1">; скомпилированного результата.</span>
         <span class="nv">source-file</span> <span class="p">(</span><span class="nf">fs/temp-file</span> <span class="s">&quot;cljs-source&quot;</span><span class="p">)</span>
         <span class="nv">compiled-file</span> <span class="p">(</span><span class="nf">fs/temp-file</span> <span class="s">&quot;cljs-compiled&quot;</span><span class="p">)]</span>
 
-    <span class="c1">; Write source into the temp file.</span>
+    <span class="c1">; Пишем исходник во временный файл.</span>
     <span class="p">(</span><span class="nf">spit</span> <span class="nv">source-file</span> <span class="nv">source</span><span class="p">)</span>
 
-    <span class="c1">; Compile source using :simple level of optimization.</span>
+    <span class="c1">; Компилируем, используя :simple уровень оптимизации.</span>
     <span class="p">(</span><span class="nf">cljs/build</span> <span class="nv">source-file</span>
                 <span class="p">{</span><span class="ss">:optimizations</span> <span class="ss">:simple</span>
                  <span class="ss">:output-to</span> <span class="p">(</span><span class="nf">.getAbsolutePath</span> <span class="nv">compiled-file</span><span class="p">)</span>
                  <span class="ss">:output-dir</span> <span class="p">(</span><span class="nf">.getAbsolutePath</span> <span class="nv">cljs-compilation-dir</span><span class="p">)</span>
                  <span class="ss">:pretty-print</span> <span class="nv">true</span><span class="p">})</span>
 
-    <span class="c1">; Read compiled output and cleanup temp files.</span>
+    <span class="c1">; Читаем скомпиленный код и удаляем временные файлы.</span>
     <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">compiled</span> <span class="p">(</span><span class="nb">slurp </span><span class="nv">compiled-file</span><span class="p">)]</span>
       <span class="p">(</span><span class="nf">fs/delete</span> <span class="nv">source-file</span><span class="p">)</span>
       <span class="p">(</span><span class="nf">fs/delete</span> <span class="nv">compiled-file</span><span class="p">)</span>
       <span class="nv">compiled</span><span class="p">)))</span>
 
-<span class="c1">; Updated create-snippet</span>
+<span class="c1">; Обновлённый create-snippet</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">create-snippet</span> <span class="p">[</span><span class="nv">source</span><span class="p">]</span>
   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">id</span> <span class="p">(</span><span class="nf">next-id</span><span class="p">)</span>
         <span class="nv">js</span> <span class="p">(</span><span class="nf">compile-cljs</span> <span class="nv">source</span><span class="p">)]</span>
     <span class="p">(</span><span class="nf">swap!</span> <span class="nv">snippets</span> <span class="nb">assoc </span><span class="nv">id</span> <span class="nv">js</span><span class="p">)</span>
     <span class="p">(</span><span class="nf">resp/response</span> <span class="p">{</span><span class="ss">:id</span> <span class="nv">id</span><span class="p">})))</span>
 </code></pre></div>
-<p>Restart the server for the last time and try sending cljs code (you might need to wait a little while cljs is compiled):</p>
+<p>Перезапускаем сервер в последний раз и пробуем послать следующий код (возможно придётся немного подождать, пока он компилируется):</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">hello</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">clojure.browser.dom</span> <span class="ss">:as</span> <span class="nv">dom</span><span class="p">]))</span>
 
@@ -352,50 +355,50 @@
 
 <span class="p">(</span><span class="nf">.addEventListener</span> <span class="nv">js/window</span> <span class="s">&quot;load&quot;</span> <span class="nv">say-hello</span><span class="p">)</span>
 </code></pre></div>
-<p>Enjoy greetings from clojurescript! Time to create an awesome promo video and launch Kickstarter campaign...</p>
+<p>Наслаждаемся приветствием от кложурскрипта! Теперь можно начинать работу над промо-видео и запуском проекта на кикстартере.</p>
 
-<h3>Final thoughts</h3>
+<h3>Заключение</h3>
 
-<p>We did simple cljsfiddle app in less than 60 lines of clojure code (and 16 lines of javascript), which is pretty cool, I think. Currently I&#39;m working on cljsfiddle-kinda-clone for <a href="https://github.com/quil/quil">Quil</a>: I want to create a website for sharing sketches written in Quil on ClojureScript. And that work inspired me to write this post. Nice thing about using clojurescript compiler is that it is very simple to add support for other cljs libraries when compiling cljs code: just include them into your <code>project.clj</code> and compiler automatically discovers and compiles them.</p>
+<p>Мы сделали простенький cljsfiddle менее чем в 60 строк на кложуре (и 16 на джаваскрипте), что, по-моему, весьма неплохо. В данный момент я работаю над созданием cljsfiddle-подобного сайта для <a href="https://github.com/quil/quil">Quil</a>: я хочу сделать сайт для того, чтобы делиться скетчами, написанными под Quil на кложурскрипте. Ещё одна приятная особенность кложурскрипт компилятора заключается в том, что легко подключать другие кложурскрипт библиотеки, которые могут быть использованы из кода, который мы компилируем - нужано просто добавить их в project.clj и всё! Компилятор сам выяснит, какие из них используются в коде, достанёт и скомпилит их.</p>
 
-<p>Cljs compilation consists of 2 major steps:</p>
+<p>Компиляция состоит из 2 основных шагов:</p>
 
 <ol>
-<li>Compile cljs files and their dependencies to separate js files.</li>
-<li>Compile js files to a single js file using <a href="https://developers.google.com/closure/compiler/">Google Closure Compiler</a>.</li>
+<li>Компиляция cljs файлов и их зависимостей в отдельные js файлы.</li>
+<li>Компиляция всех этих js файлов в финальный js файл используя <a href="https://developers.google.com/closure/compiler/">Google Closure Compiler</a>.</li>
 </ol>
 
-<p>I used <code>cljs.closure/build</code> function which does both steps for me. Jonas in his cljsfiddle chose another way: he uses clojurescript compiler to perform only step 1 and then he does step 2 manually: <a href="https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L33">step 1</a> and <a href="https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L47">step 2</a>. It allows to perform compilation in memory - no need to use temp files. But it looks more complex. There are most likely other pros, would be glad to hear them.</p>
+<p>Я использовал <code>cljs.closure/build</code> функцию, которая делает оба этих шага за меня. Джонас в cljsfiddle выбрал другой способ: он использует кложурскрипт компилятор только для того, чтобы выполнить шаг 1, и потом делает шаг 2 вручную: <a href="https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L33">шаг 1</a> и <a href="https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L47">шаг 2</a>. Это позволяет ему компилировать в памяти, не используя файлы. Но выглядит это более сложно. Скорее всего есть и другие преимущества такого подхода, буду рад услышать о них в комментариях.</p>
 
-<p>Code from this post is available on <a href="https://github.com/nbeloglazov/blog-projects/tree/master/cljsbin">GitHub</a>.</p>
+<p>Код из данного поста доступен на <a href="https://github.com/nbeloglazov/blog-projects/tree/master/cljsbin.">GitHub</a></p>
 
   </div>
   <div class="colophon">
     <p>
       <span id="pub-date">
         
-          Published on
+          Опубликовано
         
         16 Aug 2014
       </span>
     </p>
   </div>
   <div id="social-buttons">
-    <g:plusone href="http://nbeloglazov.com/2014/08/16/poor-mans-cljsfiddle.html"></g:plusone>
-    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/2014/08/16/poor-mans-cljsfiddle.html">Tweet</a>
+    <g:plusone href="http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html"></g:plusone>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html">Tweet</a>
     <script>
       !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
     </script>
-    <div class="fb-like" data-href="http://nbeloglazov.com/2014/08/16/poor-mans-cljsfiddle.html" data-layout="button_count"
+    <div class="fb-like" data-href="http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html" data-layout="button_count"
          data-action="like" data-show-faces="true" data-share="false"></div>
   </div>
   <!-- AddThis Button END -->
   <div id="disqus_thread"></div>
   <script type="text/javascript">
     var disqus_shortname = 'nbeloglazovblog';
-    var disqus_identifier = '/2014/08/16/poor-mans-cljsfiddle';
-    var disqus_title = 'Poor Mans Cljsfiddle';
-    var disqus_url = 'http://nbeloglazov.com/2014/08/16/poor-mans-cljsfiddle.html';
+    var disqus_identifier = '/ru/2014/08/16/poor-mans-cljsfiddle';
+    var disqus_title = 'Cljsfiddle для бедных';
+    var disqus_url = 'http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html';
 
     (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
