@@ -305,3 +305,7 @@ a:hover {
 .post h3 {
     margin-top: 1.45em;
 }
+
+#title {
+    line-height: 2em;
+}
