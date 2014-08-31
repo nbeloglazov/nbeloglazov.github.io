@@ -1,34 +1,39 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <meta charset="utf-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Clojure Dojo and PubSub</title>
-      <meta name="viewport" content="width=device-width">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Clojure Dojo and PubSub</title>
+    <meta name="viewport" content="width=device-width">
 
-      <!-- syntax highlighting CSS -->
-      <link rel="stylesheet" href="/css/syntax.css">
+    <!-- syntax highlighting CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
 
-      <!-- Custom CSS -->
-      <link rel="stylesheet" href="/css/main.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/main.css">
 
-      <!-- Responsive CSS -->
-      <link rel="stylesheet" href="/css/responsive.css">
+    <!-- Responsive CSS -->
+    <link rel="stylesheet" href="/css/responsive.css">
 
-      <!-- Google Fonts -->
-      <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700' rel='stylesheet' type='text/css'>
-      <link href='http://fonts.googleapis.com/css?family=Raleway:300,400,700' rel='stylesheet' type='text/css'>
+    <!-- Google Fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Raleway:300,400,700' rel='stylesheet' type='text/css'>
 
-      <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    <!-- Link to RSS feed -->
+    
+      <link rel="home" type="application/atom+xml" href="/feed.xml">
+    
 
-        ga('create', 'UA-51485241-1', 'nbeloglazov.com');
-        ga('send', 'pageview');
-      </script>
-      <script type="text/javascript" src="https://apis.google.com/js/plusone.js" async="true"></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-51485241-1', 'nbeloglazov.com');
+      ga('send', 'pageview');
+    </script>
+    <script type="text/javascript" src="https://apis.google.com/js/plusone.js" async="true"></script>
   </head>
   <body>
     <div class="site">
@@ -76,8 +81,16 @@
        </div>
         <div class="footer">
           <span id="footer-links">
-            <a href="https://github.com/nbeloglazov" class="footer-link">GitHub</a> <span class="separator">&bull;</span>
+            <a href="https://github.com/nbeloglazov" class="footer-link">GitHub</a>
+            <span class="separator">&bull;</span>
             <a href="https://www.linkedin.com/in/nikitabeloglazov/" class="footer-link">LinkedIn</a>
+            <span class="separator">&bull;</span>
+            <a href="/myfirstrss.xml" rel="home">
+            
+            <a href="/feed.xml">
+            
+              <img class="rss" src="/images/rss.png"/>
+            </a>
           </span>
         </div>
       </div>
@@ -129,7 +142,7 @@
 <p>As you can see the library should not have concept of addresses, queues or topics. The library should not have concept of a server: clients should be able to communicate to each other without connecting to some kind of server.</p>
 
 <p>For implementation we decided to use <a href="http://en.wikipedia.org/wiki/IP_multicast">IP multicast</a>. We didn&#39;t dig deep into specification and technical details, just googled how to do it in java. We found <code>java.net.MulticastSocket</code> class which does exactly what we want. Even more, <a href="http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html">javadoc</a> for that class contains nice example of how to use it. We translated it into clojure and enhanced a little bit. Here what we got:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
   <span class="p">(</span><span class="ss">:import</span> <span class="p">[</span><span class="nv">java.net</span> <span class="nv">InetAddress</span> <span class="nv">DatagramPacket</span> <span class="nv">MulticastSocket</span><span class="p">]))</span>
 
 
@@ -163,7 +176,7 @@
 </ul>
 
 <p>Here is the code:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; is a recursive function used to process messages</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; is a recursive function used to process messages</span>
 <span class="c1">; Parameters</span>
 <span class="c1">;   socket - socket object to receive message from</span>
 <span class="c1">;   predicate - user-provided function which decides whether process message or not</span>
@@ -194,7 +207,7 @@
       <span class="nv">finished</span><span class="p">)))</span>
 </code></pre></div>
 <p>That&#39;s all. The library is ready to use. Here is how to use it:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
 
 <span class="c1">; subscribe to all messages</span>
 <span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Simplest subscribe&quot;</span> <span class="nv">%</span><span class="p">))</span>
