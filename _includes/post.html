@@ -1,4 +1,4 @@
-<div class="content" id="home">
+<article class="content" id="home">
   <div id="fb-root"></div>
   <script>(function(d, s, id) {
     var js, fjs = d.getElementsByTagName(s)[0];
@@ -21,7 +21,7 @@
         <p class="lang-link">En</p>
       {% endif %}
       <h1 id="title">{{ page.title }}</h1>
-      <span id="date">{{ page.date | date_to_string }}</span>
+      <time datetime="{{ page.date | date: "%F" }}" id="date" pubdate>{{ page.date | date_to_string }}</time>
     </div>
   </div>
 
@@ -65,4 +65,4 @@
   </script>
   <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
   <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-</div>
+</article>
