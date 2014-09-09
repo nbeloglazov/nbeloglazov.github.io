@@ -7,6 +7,79 @@
     <atom:link href="http://nbeloglazov.com/ru/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Равновесие</title>
+      <description>&lt;h3&gt;Хаос&lt;/h3&gt;
+
+&lt;p&gt;Сегодня я хочу показать интересную модель хаоса и равновесия. Правила следующие:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;есть n точек на плоскости.&lt;/li&gt;
+&lt;li&gt;Каждая точка выбирает себе 2 случайные точки, которые будут её лидерами.&lt;/li&gt;
+&lt;li&gt;Каждая точка должна стараться быть всегда равноудалённой от своих лидеров.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Вот пример системы, состоящей из 4 точек:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/equilibrium/screenshot.png&quot; alt=&quot;Simulation screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;У зелёной точки лидеры - это 2 красные точки. Красная линия - линия, равноудалённая от лидеров. Цель зелёной точки - попасть и оставаться на красной линии. У всех точек лидеры различны, и их перемещения получаются весьма хаотичными. Но спустя некоторое время всё устаканивается, точки останавливаются, и наступает состояние равновесия. Теперь вопрос: что случится, если мы немного передвинем какую-либо точку? Как много потребуется времени, чтобы система опять пришла в состояние равновесия?&lt;/p&gt;
+
+&lt;p&gt;Я не настолько хорошо разбираюсь в математике, чтобы описать систему по-умному, но я всё же программист, так что давайте смоделируем это на Quil! Quil уже поддерживает кложурскрипт, так что скетчи могут быть легко добавлены на веб-страницу. Я не буду приводить исходные код в этом посте, только готовые скетчи. Ссылка на исходники будет в конце поста. Скетчи ориентированы на десктоп, так что вероятно они не будут работать адекватно на мобильных.&lt;/p&gt;
+
+&lt;h3&gt;Скетч №1&lt;/h3&gt;
+
+&lt;p&gt;&lt;canvas id=&quot;first_sketch&quot; style=&quot;width: 500px; height: 500px;&quot;&gt;&lt;/canvas&gt;&lt;/p&gt;
+
+&lt;p&gt;Наведение мышкой на любую точку показывает лидеров этой точки. Так же можно перемещать точки, перетаскивая мышкой. Доступны следующий кейбиндинги:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;space - пауза/продолжить;&lt;/li&gt;
+&lt;li&gt;r - перегенерировать точки;&lt;/li&gt;
+&lt;li&gt;стрелки вверх и вних - уменьшить/увеличить число точек и перегенерировать точки.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Не забудьте эмпирически получить ответы на вопросы, сформулированные ранее. Так же можно попробовать конфигурацию, состояющую только из 3 точек и увидеть, как она всегда собирается в равносторонний треугольник. Достаточно забавно.&lt;/p&gt;
+
+&lt;h3&gt;Скетч №2&lt;/h3&gt;
+
+&lt;p&gt;После какого-то времени скетч надокучивает. Сделаем его более динамичным, добавив постоянную скорость: каждая точка, кроме того, что она движется в сторону равноудаления, также будет постоянно двигаться в определённую сторону. Направление и скорость выбирается случайно. Ещё мы сделаем поверхность тороидальной: если точка выходит за левую границу - она появляется справа, за нижнюю - сверху. Вот скетч №2, которые реализует эти фичи:&lt;/p&gt;
+
+&lt;p&gt;&lt;canvas id=&quot;second_sketch&quot; style=&quot;width: 500px; height: 500px;&quot;&gt;&lt;/canvas&gt;&lt;/p&gt;
+
+&lt;p&gt;Теперь мы наблюдаем вечный хаос: точки в постоянном движении тщетно пытающиеся достичь равновесия.&lt;/p&gt;
+
+&lt;h3&gt;Скетч №3&lt;/h3&gt;
+
+&lt;p&gt;До сих пор мы оперировали только точками, скучными чёрными кругами. Как на счёт того, чтобы добавить им хвосты? Хвост - это последние k позиций точки. И сделаем их цветными, потому что чёрные черви, хаотично ползающие по экрану - депрессивное зрелище. Время червей:&lt;/p&gt;
+
+&lt;p&gt;&lt;canvas id=&quot;third_sketch&quot; style=&quot;width: 500px; height: 500px;&quot;&gt;&lt;/canvas&gt;&lt;/p&gt;
+
+&lt;p&gt;Используей левые и правую стрелку, чтобы изменить k - число точек в хвостах. Эти клавиши работают и в предыдущих скетчах тоже, так что можно превратить точки в червей там тоже.&lt;/p&gt;
+
+&lt;h3&gt;Откуда взялась модель?&lt;/h3&gt;
+
+&lt;p&gt;Я увидел её на лекции, посвящённой искусственному интеллекту. Моделирование происходило на самой аудитории: n человек собрались в центре комнаты, каждый выбрал себе по 2 лидера и начали движение. После нескольких минут всех наконец остановились. Потом лектор передвинул одного человека и всем пришлось менять свои позиции. Это заняло ещё пару минут. Лектор хотел показать, что окружающая среда ведёт себя подобным образом: если вывести из баланса какую-то его часть, то вся система превратиться в непредсказуемый хаос на какое-то время. Но наша модель показала обратное: если передвинешь точку - она в большинстве случаев быстро возвращается в исходную позицию, в то время как остальные точки не сильно двигаются. Так что в идеальных условиях равновесия достаточно устойчивое.&lt;/p&gt;
+
+&lt;h3&gt;Детали реализации&lt;/h3&gt;
+
+&lt;p&gt;Скетчи используют функциональный мод для Quil, так что все обновления состояния обрабатываются Quil&amp;#39;ом (я не вообще не использую атомов!). Ещё одна приятная фича - скетч полностью совместим с кложуром и кложурскриптом: если файл назвать файл equilibrium.clj - можно запускать его на кложуре, переименовать в equilibrium.cljs, скомпилировать и можно запускать в браузере! Но не так всё хорошо. Мне удобно работать над скетчем в кложуре, которые поддерживает перезагрузку на лету и позволяет менять части скетча не останавливая его. Но в конце мне нужно запускать скетч на кложурскрипте, чтобы можно добавить его в пост. И весьма утомительно постоянно копировать clj в cljs, когда поменял любую часть скетча и хочешь проверить в браузере. В результате я остановился на стрёмной комбинации линуксового &lt;code&gt;watch&lt;/code&gt;, который копирует clj в cljs каждую секунду, и cljsbuild, который автокомпилирует cljs в js. Это работает, но смотрится достаточно ужасно. Интересно, можно ли как-то иметь один файл, которые будет распознаваться и кложуром и кложурскриптом? Я знаю, что можно использовать cljx для этих целей, но смотрится достаточно тяжело для такой несложной задачи. Или может надо просто нормально настроить emacs/cider + cljx интеграцию.&lt;/p&gt;
+
+&lt;p&gt;Исходный код доступен &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/tree/master/equilibrium&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;script src=&quot;/scripts/equilibrium.js&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+    equilibrium.sketch({&quot;host&quot;: &quot;first_sketch&quot;, &quot;tail-size&quot;: 0});
+    equilibrium.sketch({&quot;host&quot;: &quot;second_sketch&quot;, &quot;tail-size&quot;: 0, &quot;constant-velocity?&quot;: true, &quot;toroidal-board?&quot;: true});
+    equilibrium.sketch({&quot;host&quot;: &quot;third_sketch&quot;, &quot;tail-size&quot;: 15, &quot;colourful?&quot;: true});
+&lt;/script&gt;
+</description>
+      <pubDate>Tue, 09 Sep 2014 00:00:00 +0100</pubDate>
+      <link>http://nbeloglazov.com/ru/2014/09/09/equilibrium.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/09/09/equilibrium.html</guid>
+    </item>
+    
+    <item>
       <title>Cljsfiddle для бедных</title>
       <description>&lt;h3&gt;Введение&lt;/h3&gt;
 
@@ -507,7 +580,7 @@
 &lt;p&gt;project.clj&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
   &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.2&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;И собственно сам код quil_intro.clj:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt;
