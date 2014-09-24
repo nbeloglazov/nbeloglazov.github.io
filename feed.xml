@@ -7,6 +7,99 @@
     <atom:link href="http://nbeloglazov.com/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Clojure Google Summer of Code Results</title>
+      <description>&lt;p&gt;Google Summer of Code is over and here is a summary of great work Clojure students have done this summer!&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Aleksandr Sorokoumov&lt;br&gt;
+Project: &lt;a href=&quot;http://www.google-melange.com/gsoc/project/details/google/gsoc2014/gerrrr/5693417237512192&quot;&gt;Incanter and core.matrix integration&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;I introduced core.matrix as a martix backend for Incanter, instead of clatrix (one of the core.matrix backends). This resulted in a possibility to choose the most appropriate matrix backend for the particular project and transparently switch between them if necessary. Besides, Incanter dataset implementation was replaced by core.matrix one. Due to this, most of the dataset functions are available through core.matrix without a need to install Incanter. More details about Incanter changes can be found in &lt;a href=&quot;https://github.com/incanter/incanter/wiki/Incanter-2.0-change-log&quot;&gt;change log&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Alexander Yakushev&lt;br&gt;
+Project: &lt;a href=&quot;http://www.google-melange.com/gsoc/project/details/google/gsoc2014/unlogic/5732278101606400&quot;&gt;Lean Clojure/JVM runtime&lt;/a&gt;  &lt;/p&gt;
+
+&lt;p&gt;During this summer I modified Clojure compiler in a separate branch to produce lean bytecode where all Var objects are replaced with static fields of the namespace class. This simultaneously decreased the time required to load the compiled namespace, the memory footprint of that namespace in memory and the added time cost of dereferencing a var each time it is used. The patched compiler also doesn&amp;#39;t emit the bytecode for macros (as they are used only during the macroexpansion and are not needed in runtime) and intelligently elides metadata (so that it is used during compilation but then is not emitted). Some of the observations and thoughts accumulated during this summer were featured in the &lt;a href=&quot;http://clojure-android.info/blog/&quot;&gt;blog&lt;/a&gt; under &amp;quot;gsoc&amp;quot; tag.&lt;/p&gt;
+
+&lt;p&gt;Lean compilation is now tested to correctly compile Clojure, core.async and few small libraries. The easiest way to try it out is to use &lt;a href=&quot;https://github.com/alexander-yakushev/lein-skummet&quot;&gt;lein-skummet&lt;/a&gt; plugin as described &lt;a href=&quot;http://clojure-android.info/blog/2014/08/12/gsoc-2014-skummet-alpha1/&quot;&gt;here&lt;/a&gt;. The compiler was also trialled with Clojure on Android where it showed significant loading time improvements. The easy-to-use way of using lean compilation in CoA will follow soon with the release of the new lein-droid version (and will be announced in the blog).&lt;/p&gt;
+
+&lt;p&gt;Additional resources: &lt;a href=&quot;https://github.com/ndr-qef/light-aleph&quot;&gt;README&lt;/a&gt;, &lt;a href=&quot;https://groups.google.com/forum/#!msg/light-table-discussion/gu5RvYS7j94/E7ozA7xJgPYJ&quot;&gt;announcement thread&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Andrea Marchiori&lt;br&gt;
+Project: &lt;a href=&quot;https://www.google-melange.com/gsoc/project/details/google/gsoc2014/ndr_qef/5757334940811264&quot;&gt;Aleph, a BOT browser and introspector for Light Table&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Light Table leverages the BOT architecture to create a platform designed around extensibility. In BOT, working components are defined by several elements. How these elements are combined, how they interact, and how they affect the application state is a source of complexity that makes BOT opaque. Aleph aims to make BOT accessible by providing a uniform interface for querying and recording state at runtime.&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Di Xu&lt;br&gt;
+Project: &lt;a href=&quot;https://www.google-melange.com/gsoc/project/details/google/gsoc2014/xudifsd/5717271485874176&quot;&gt;Typed Clojure: Heterogeneous operations &amp;amp; Dotted Polymorphism&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;I added two more function type to Typed Clojure, which can be used to annotate some built-in and/or user-defined functions like &lt;code&gt;assoc&lt;/code&gt; and &lt;code&gt;hash-map&lt;/code&gt;. Without those two types, type checking some custom variants accurately becomes impossible without hard-coding each variant into the type checker.&lt;/p&gt;
+
+&lt;p&gt;I&amp;#39;ve written documentation under doc of my git tree, including document about &lt;a href=&quot;https://github.com/xudifsd/core.typed/blob/repeat-support/docs/infer-detail.md&quot;&gt;my implementation&lt;/a&gt;, and general &lt;a href=&quot;https://github.com/xudifsd/core.typed/blob/repeat-support/docs/tutorial-on-inference.md&quot;&gt;introduction&lt;/a&gt; of type inference used in Typed Clojure.&lt;/p&gt;
+
+&lt;p&gt;I also published a &lt;a href=&quot;http://xudifsd.org/blog/2014/08/%E5%85%B3%E4%BA%8Etyped-clojure/&quot;&gt;blog post&lt;/a&gt; to introduce Typed Clojure in Chinese.&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Maksim Karandashov&lt;br&gt;
+Project: &lt;a href=&quot;https://www.google-melange.com/gsoc/project/details/google/gsoc2014/norgat/5676830073815040&quot;&gt;Quil on ClojureScript&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Quil is a library for creating animated sketches. It is based on a very popular Java library Processing. During this summer I&amp;#39;ve added ClojureScript support to Quil. I used cljx to make Quil crossplatform and Processing.js for ClojureScript version. Current version of Quil allows you to create a sketch that can be run on Clojure or ClojureScript without modifications (or even both using cljx). I&amp;#39;ve also created Processing.js &lt;a href=&quot;https://github.com/quil/processing-js/tree/master/resources/externs&quot;&gt;externs&lt;/a&gt; for Google Closure Compiler and Leiningen &lt;a href=&quot;https://github.com/quil/quil-templates&quot;&gt;templates&lt;/a&gt; for Quil (for Clojure and ClojureScript).&lt;/p&gt;
+
+&lt;p&gt;For more information check Quil ClojureScript &lt;a href=&quot;https://github.com/quil/quil/wiki/ClojureScript&quot;&gt;wiki page&lt;/a&gt; and my &lt;a href=&quot;http://norgat.blogspot.ru/2014/06/alpha-version-of-quil-on-clojurescript.html&quot;&gt;blog post&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Minori Yamashita&lt;br&gt;
+Project: &lt;a href=&quot;http://www.google-melange.com/gsoc/project/details/google/gsoc2014/ympbyc/5676830073815040&quot;&gt;Typed ClojureScript Library Annotations&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;I added core.typed annotations to cljs.core functions and made some changes to the checker to make them pass. I also started work on TypeScript d.ts to core.typed annotation transpiler and in order to do so I worked on a type called jsnominal to represent TypeScript interface.  I&amp;#39;m willing to continue working on this project but I gotta get myself sorted with the fall semester.&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Nicola Mometto&lt;br&gt;
+Project: &lt;a href=&quot;http://www.google-melange.com/gsoc/project/details/google/gsoc2014/bronsa/5776756782923776&quot;&gt;tools.analyzer extensions: cljs port, documentation&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;During my GSOC I wrote the tools.analyzer.js contrib library, an analyzer for clojurescript code written on top of the tools.analyzer infrastructure. The advantages tools.analyzer.js has over the default clojurescript analyzer are: increased modularity, simpler implementation, pluggable extension points and an AST format compatible between all the tools.analyzer analyzers (tools.analyzer.jvm is the main one, but a tools.analyzer.clr port is being worked on by David Miller)
+making it possible to write analyzer passes that are host agnostic and can work with every tools.analyzer analyzer.&lt;/p&gt;
+
+&lt;p&gt;I also kept on working extensively on all my other contrib libraries, enhancing tools.emitter.jvm and tools.reader and reworking tools.analyzer and thus tools.analyzer.jvm to share as much code/infrastructure as possible with tools.analyzer.js and the AST format has been documented via an AST quickref that can be found in the README of each repo.&lt;/p&gt;
+
+&lt;p&gt;I wrote a &lt;a href=&quot;https://groups.google.com/forum/#!searchin/clojure/tools.emitter.jvm/clojure/Mzakv8NHuO4/RsWeiBdvcz4J&quot;&gt;mail post&lt;/a&gt; describing in detail what has been going on for each project in the last months.&lt;/p&gt;
+
+&lt;p&gt;Usage examples and a detailed changelog can be found in the readme of each repo: &lt;a href=&quot;https://github.com/clojure/tools.reader&quot;&gt;tools.reader&lt;/a&gt;, &lt;a href=&quot;https://github.com/clojure/tools.analyzer&quot;&gt;tools.analyzer&lt;/a&gt;, &lt;a href=&quot;https://github.com/clojure/tools.analyzer.jvm&quot;&gt;tools.analyzer.jvm&lt;/a&gt;, &lt;a href=&quot;https://github.com/clojure/tools.analyzer.js&quot;&gt;tools.analyzer.js&lt;/a&gt;, &lt;a href=&quot;https://github.com/clojure/tools.emitter.jvm&quot;&gt;tools.emitter.jvm&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Prasant Chidella&lt;br&gt;
+Project: &lt;a href=&quot;http://www.google-melange.com/gsoc/project/details/google/gsoc2014/prasant94/5750085036015616&quot;&gt;Linear Algebra for Clojure – Adding linear algebra tools to core.matrix&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;I added some linear algebra functions like LU Decomposition, QR decomposition, SVD, least  squares, norm, rank etc. to vectorz which is a Linear algebra library in java. This is the backend for vectorz-clj, one of core.matrix&amp;#39;s implementations. These functions are very close to their counterparts in other java based libraries like EJML, jblas etc in terms of performance, with a lot of scope for optimizations. I also extended &lt;a href=&quot;https://code.google.com/p/java-matrix-benchmark/&quot;&gt;Java matrix benchmark&lt;/a&gt; to run benchmarks for vectorz against the many other libraries like ejml, jama, colt etc. That can be found here: https://github.com/prasant94/JavaMatrixBenchmark-for-Vectorz&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;Student: Reid McKenzie&lt;br&gt;
+Project: &lt;a href=&quot;http://www.google-melange.com/gsoc/project/details/google/gsoc2014/arrdem/5676830073815040&quot;&gt;Lean Clojure: An agressive compiler for lighter weight Clojure programs&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;In my work on the Oxcart project, I implemented program loading infrastructure to generate a single datastructure representing an entire program and all loaded libraries. I then build analysis infrastructure for examining how definitions in a program are used if they are used and implemented an emitter which where possible would use static function invocation rather than var indirection. The last item I was working on when GSoC ended was AOT compiling all used clojure.core, library and program code to static classes which do not depend on clojure.lang.Compiler and a fork of the Clojure language which breaks the Clojure bootstrapping infrastructure appart from the datastructure libraries. The hope was that Oxcart would be able not only to statically AOT user programs but that by AOTing the Clojure standard library itself that all use of the standard Clojure compiler to generate dynamically linked non-AOT bytecode could be escaped.&lt;/p&gt;
+
+&lt;p&gt;The future of the Oxcart project is uncertain at best, in that I am reluctant to commit to the hard fork of the Clojure language required to support the whole-program AOT work I was contemplating at the end of GSoC. However as whole program compilation of the type that Oxcart was designed for can only be approximated by lazy var loading optimizations and other techniques and as Oxcart demonstrated that speedups of 17-24% are possible using static linking I&amp;#39;m convinced that the Oxcart project itself was a worthwhile experiment forget a facinating summer.&lt;/p&gt;
+
+&lt;p&gt;More info: &lt;a href=&quot;https://github.com/oxlang/oxcart&quot;&gt;GitHub repo&lt;/a&gt;, &lt;a href=&quot;http://arrdem.com/2014/06/26/oxcart_and_clojure/&quot;&gt;blog post 1&lt;/a&gt;, &lt;a href=&quot;http://arrdem.com/2014/08/05/of_oxen,_carts_and_ordering/&quot;&gt;blog post 2&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Tue, 23 Sep 2014 00:00:00 +0100</pubDate>
+      <link>http://nbeloglazov.com/2014/09/23/gsoc-results.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/2014/09/23/gsoc-results.html</guid>
+    </item>
+    
+    <item>
       <title>Equilibrium</title>
       <description>&lt;h3&gt;Let&amp;#39;s make chaos&lt;/h3&gt;
 
