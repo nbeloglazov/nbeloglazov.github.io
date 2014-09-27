@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 
+title: Половина ClojureCup позади
 date: "2014-09-27 00:00:00"
 ---
 
