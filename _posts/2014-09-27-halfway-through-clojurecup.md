@@ -38,4 +38,4 @@ Currently worker server can only submit emails on user request: when you create 
 
 ### Conclusion
 
-I'm having a lot of fun! I don't remember when I wrote so much code last time. Lately I've been coding less at work so ClojureCup came just in time. Especially when you have an excuse to not write tons of tests and just code for the sake of coding. If you're interested in what we have so far - check our [github repo](https://github.com/clojurecup2014/hatnik/tree/master/web-server). And of course check out our app when the contest is over.
+I'm having a lot of fun! I don't remember when I wrote so much code last time. Lately I've been coding less at work so ClojureCup came just in time. Especially when you have an excuse to not write tons of tests and just code for the sake of coding. If you're interested in what we have so far - check our [github repo](https://github.com/clojurecup2014/hatnik/). And of course check out our app when the contest is over.
