@@ -67,3 +67,5 @@ Currently all actions have to be created manually one by one. It would be cool t
 ### Afterwords
 
 Few words about the project name. Hatnik is a house spirit in Slavic folklore. There are different versions of what he does and whether he good or not, but in my environment Hatnik is a good grandpa-looking-like spirit which helps with household. So we wanted the app to do the same - help with some simple tasks which help to keep project dependencies or documentation in order. I hope it will be useful for you. If you liked Hatnik you can [vote for us](https://clojurecup.com/#/apps/hatnik). Also have a look at [other projects](https://clojurecup.com/#/apps), they're pretty interesting. And they also needs votes ;)
+
+Hatnik is open-sourced and here is [GitHub Repo](https://github.com/nbeloglazov/hatnik).
