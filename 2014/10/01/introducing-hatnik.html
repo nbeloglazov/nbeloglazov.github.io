@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Halfway Through ClojureCup</title>
+    <title>Introducing Hatnik</title>
     <meta name="viewport" content="width=device-width">
 
     <!-- syntax highlighting CSS -->
@@ -139,53 +139,84 @@
     <div id="info-container">
       
       
-        <a href="/ru/2014/09/27/halfway-through-clojurecup.html" class="lang-link">Ru</a>
+        <a href="/ru/2014/10/01/introducing-hatnik.html" class="lang-link">Ru</a>
         <p class="lang-link">En</p>
       
       
-      <h1 id="title">Halfway Through ClojureCup</h1>
-      <time datetime="2014-09-27" id="date" pubdate>27 Sep 2014</time>
+      <h1 id="title">Introducing Hatnik</h1>
+      <time datetime="2014-10-01" id="date" pubdate>01 Oct 2014</time>
     </div>
   </div>
 
   <div class="post">
-    <h3>Hatnik</h3>
+    <p>Yet another blog post about a ClojureCup 2014 project. But this time from me. About Hatnik!</p>
 
-<p>As you might have guessed, this year I&#39;m participating in <a href="http://clojurecup.com">ClojureCup</a>. We (<a href="https://github.com/nbeloglazov">me</a> and <a href="https://github.com/norgat">Maksim</a>) are working on a project called Hatnik. It&#39;s a web app which aims to help you to track library releases. The idea is pretty simple: setup actions to be performed once some library is released. An action consists of 2 parts: library to watch and an instruction to perform. Example: send email to <code>me@nbeloglazov.com</code> when <code>org.clojure/clojurescript</code> releases. It is somewhat similar to <a href="https://ifttt.com/">IFTTT</a> (but more specialized) and pretty similar to <a href="https://www.artifact-listener.org/">Artifact Listener</a> (but obviously cooler!). We have plans to support following actions: email, github issue, github pull request, change wiki on github. Initially we&#39;re going to support only email and add others if we have enough time during the contest.
-<br><br>
-Organizers provided quite a few additional services like private github repo, a server for hosting app, CI servers, error-tracking utility, team chat and some other stuff. We&#39;ve been using only few of them: github repo, server for hosting app and Flowdock for communication: it has integration with github and trello so we can see everything that happens in repo or task list in realtime. Though other services looked intersting I felt we&#39;d spent too much time setting them up instead of working on the project.</p>
+<h3>Don&#39;t miss a release</h3>
 
-<h3>Architecture</h3>
+<p>Hatnik is a web app we created during ClojureCup weekend. It can notify you about new library releases (currently via email only). It supports Clojure/Maven libraries which are hosted on Clojars or Maven Central. How to use it: sign in, create an action in which you specify which library you want to watch and template for the email and that&#39;s all. Next the library is released we&#39;ll send you an email. Try it out: <a href="http://hatnik.clojurecup.com">hatnik.clojurecup.com</a>. If you don&#39;t like signing in unfamiliar websites which you might never visit again, here is a screenshots-demonstration:</p>
 
-<p>The app consists of 3 parts:</p>
+<p><br>
+Initial page after you logged in</p>
+
+<p><img src="/images/hatnik/hatnik_0.png" alt="Initial page"></p>
+
+<p><br>
+<br>
+Create new action</p>
+
+<p><img src="/images/hatnik/hatnik_1.png" alt="Create new action"></p>
+
+<p><br>
+<br>
+Action created</p>
+
+<p><img src="/images/hatnik/hatnik_2.png" alt="The action created"></p>
+
+<p><br>
+<br>
+Libraries used by Hatnik</p>
+
+<p><img src="/images/hatnik/hatnik_3.png" alt="All libraries"></p>
+
+<p>You can also group actions to projects. Projects is just a named group of actions. Each user by default has &quot;Default&quot; project (see screenshots) so you might ignore it.</p>
+
+<h3>Future plans</h3>
+
+<p>We did the project over 2 days so obviously there are a lot of things to improve.</p>
+
+<h4>More actions</h4>
+
+<p>Currently Hatnik supports only email notifications. We&#39;re planning to add more. Here is the initial list:</p>
 
 <ul>
-<li>Web client - that&#39;s what user sees and interacts with.</li>
-<li>Web server - provides API for web client and stores data to DB.</li>
-<li>Worker server - periodically checks versions of all registered libraries and performs actions.</li>
+<li>Noop - does nothing. Might be useful for creating dashboard-like project that simply displays latest versions.</li>
+<li>GitHub Issue - creates an issue on GitHub repo.</li>
+<li>GitHub Wiki Page - changes GitHub wiki page using simple find-and-replace mechanism.</li>
+<li>GitHub Pull Request - creates pull request that modifies some files using find-and-replace mechanism.</li>
 </ul>
 
-<p>I work on servers while Maksim works on the web client. For the web client we decided to use ClojureScript + Om and Twitter Bootstrap for fancy styling. Server side libraries are pretty standard: ring, compojure, monger and few other libs for emails, github api, and other stuff. You can find more details about the project in <a href="https://docs.google.com/document/d/1-Ad0h22qkmLARB7T8TfokJYonOlPZzZ-cuDzz6tW7hU/edit?usp=sharing">design doc</a> which we prepared beforehand so we can concentrate on coding!</p>
+<h4>Cleanup</h4>
 
-<h3>What we have so far</h3>
+<p>We developed Hatnik in hurry so there is some technical debt.</p>
 
-<p>I would say we have quite enough:</p>
+<ul>
+<li>Improve web client. We used Om for the web client but we didn&#39;t know it good enough so in some places code is not Om-like at all. For example we spend few hours at the end of the contest trying to fix a bug, which made library textfield read-only. Looks like the bug is described in <a href="https://github.com/swannodette/om/wiki/Basic-Tutorial#dealing-with-text-input-fields">tutorial</a>, but even using the tutorial we couldn&#39;t make it work. So we ended up with horrible hack that sets value to textfield using <code>setTimeout</code>.</li>
+<li>Add more validation. Currently REST API is not strict, it does very little validation. It should do more. We&#39;re looking at Prismatic <a href="https://github.com/Prismatic/schema">schema</a> for that.</li>
+<li>Add core.typed. At work I&#39;m using Google Closure Compiler quite heaviliy. Among other features it introduces type system to JavaScript. It makes much easier to write correct code. So I&#39;d like to try core.typed for same reasons and see whether it helps or not me.</li>
+<li>Add tests. Currently we have some DB tests. We should add integration-like tests for API and ideally sending emails, creating github issues. Tests for client side would be nice, may be something WebDriver-based.</li>
+</ul>
 
-<h4>Web client</h4>
+<h4>Other plans</h4>
 
-<p>Client can load and display projects together with actions. You can add new projects. What&#39;s left to do: actions adding/modifying, login (everything is ready, only need to add buttons), nice &quot;About&quot; page that describes how to use Hatnik.</p>
+<p>Hatnik currently supports only maven-compatible libraries. Nothing stops it from supporting libraries from other languages/platforms, like Ruby, JavaScript, Python. I think most tools in other languages also use HTTP for downloading libraries from central repository, so it should be pretty easy to implement in Clojure.</p>
 
-<h4>Web server</h4>
+<p>Currently all actions have to be created manually one by one. It would be cool to be able to provide a link to <code>project.clj</code> and it will be parsed automatically. Again, nothing prevents us from supporting other projects files like <code>pom.xml</code>, <code>build.sbt</code>, <code>Gemfile</code>. Some of them just harder to parse as they&#39;re written in DSL, but still, should be fun task to do.</p>
 
-<p>Web server is mostly done. REST API is implemented, everything is stored in DB. DB is represented as a protocol that has 2 implementations: in-memory and mongo. It might be overkill but I found it&#39;s quite useful to be able to run everything in memory. I even had time to add tests for DB! I used <a href="https://chrome.google.com/webstore/detail/postman-rest-client/fdmmgilgnpjigdojojpjoooidkmcomcm?hl=en">Postman</a> for testing REST API. It is quite cool as it allows you to save requests and reuse them later. I probably should have added some tests for REST instead but due to the time limit I decided to go with Postman: it is easier to setup and use.</p>
+<h3>Afterwords</h3>
 
-<h4>Worker server</h4>
+<p>Few words about the project name. Hatnik is a house spirit in Slavic folklore. There are different versions of what he does and whether he good or not, but in my environment Hatnik is a good grandpa-looking-like spirit which helps with household. So we wanted the app to do the same - help with some simple tasks which help to keep project dependencies or documentation in order. I hope it will be useful for you. If you liked Hatnik you can <a href="https://clojurecup.com/#/apps/hatnik">vote for us</a>. Also have a look at <a href="https://clojurecup.com/#/apps">other projects</a>, they&#39;re pretty interesting. And they also needs votes ;)</p>
 
-<p>Currently worker server can only submit emails on user request: when you create an action you have an option to test it, the test request is sent to the worker server to perform the action. What&#39;s left to do: add logic for checking versions of all registered libraries and perform actions for updated libraries, invoke this logic periodically.</p>
-
-<h3>Conclusion</h3>
-
-<p>I&#39;m having a lot of fun! I don&#39;t remember when I wrote so much code last time. Lately I&#39;ve been coding less at work so ClojureCup came just in time. Especially when you have an excuse to not write tons of tests and just code for the sake of coding. If you&#39;re interested in what we have so far - check our <a href="https://github.com/clojurecup2014/hatnik/">github repo</a>. And of course check out our app when the contest is over.</p>
+<p>Hatnik is open-sourced and here is <a href="https://github.com/nbeloglazov/hatnik">GitHub Repo</a>.</p>
 
   </div>
   <div class="colophon">
@@ -194,26 +225,26 @@ Organizers provided quite a few additional services like private github repo, a 
         
           Published on
         
-        27 Sep 2014
+        01 Oct 2014
       </span>
     </p>
   </div>
   <div id="social-buttons">
-    <g:plusone href="http://nbeloglazov.com/2014/09/27/halfway-through-clojurecup.html"></g:plusone>
-    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/2014/09/27/halfway-through-clojurecup.html">Tweet</a>
+    <g:plusone href="http://nbeloglazov.com/2014/10/01/introducing-hatnik.html"></g:plusone>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/2014/10/01/introducing-hatnik.html">Tweet</a>
     <script>
       !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
     </script>
-    <div class="fb-like" data-href="http://nbeloglazov.com/2014/09/27/halfway-through-clojurecup.html" data-layout="button_count"
+    <div class="fb-like" data-href="http://nbeloglazov.com/2014/10/01/introducing-hatnik.html" data-layout="button_count"
          data-action="like" data-show-faces="true" data-share="false"></div>
   </div>
   <!-- AddThis Button END -->
   <div id="disqus_thread"></div>
   <script type="text/javascript">
     var disqus_shortname = 'nbeloglazovblog';
-    var disqus_identifier = '/2014/09/27/halfway-through-clojurecup';
-    var disqus_title = 'Halfway Through ClojureCup';
-    var disqus_url = 'http://nbeloglazov.com/2014/09/27/halfway-through-clojurecup.html';
+    var disqus_identifier = '/2014/10/01/introducing-hatnik';
+    var disqus_title = 'Introducing Hatnik';
+    var disqus_url = 'http://nbeloglazov.com/2014/10/01/introducing-hatnik.html';
 
     (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
