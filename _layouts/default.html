@@ -55,7 +55,7 @@
         </div>
         <div class="posts">
           <ul class="posts-list">
-            {% for post in site.posts %}
+            {% for post in site.posts limit:4 %}
               <li class="post-link">
                 <a class="post-title" href="{{ site.version }}{{ post.url }}">
                   <span class="post-date">{{ post.date | date_to_string }}</span>
@@ -65,13 +65,19 @@
             {% endfor %}
           </ul>
        </div>
+       <p class="all-posts-link">
+         {% if site.version == '/ru' %}
+         <a href="/ru/all.html">Все посты</a>
+         {% else %}
+         <a href="/all.html">All posts</a>
+         {% endif %}
+        </p>
         <div class="footer">
           <span id="footer-links">
             <a href="https://github.com/nbeloglazov" class="footer-link">GitHub</a>
             <span class="separator">&bull;</span>
             <a href="https://www.linkedin.com/in/nikitabeloglazov/" class="footer-link">LinkedIn</a>
             <span class="separator">&bull;</span>
-            <a href="/myfirstrss.xml" rel="home">
             {% if site.version == '/ru' %}
             <a href="/ru/feed.xml" rel="home">
             {% else %}

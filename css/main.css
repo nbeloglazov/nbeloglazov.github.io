@@ -52,15 +52,15 @@ a:hover {
   max-width: 128px;
 }
 
-.posts a {
+.posts a, .all-posts a {
   color: #444;
 }
 
-.posts a:hover {
+.posts a:hover, .all-posts a:hover {
   color: #777;
 }
 
-.posts-list {
+.posts-list, .all-posts {
   list-style-type: none;
 }
 
@@ -237,9 +237,27 @@ a:hover {
   margin-bottom: 0.75em;
 }
 
-.post-title {
+.post-title{
   font-weight: 600;
   font-size: 1.4em;
+}
+
+.all-posts-link {
+    text-align: center;
+}
+
+.all-posts-link a {
+    color: #444;
+    font-weight: 600;
+    font-size: 1.2em;
+}
+
+.all-posts-link a:hover {
+    color: #555;
+}
+
+.all-posts li {
+    line-height: 2em;
 }
 
 .post-date {
@@ -249,6 +267,17 @@ a:hover {
   font-size: 0.65em;
   display: block;
   text-transform: lowercase;
+}
+
+@media (min-width: 641px) {
+    .all-posts .post-date {
+        display: inline;
+        margin-right: 0.7em;
+    }
+
+   .all-posts {
+        margin-top: 3.45em;
+    }
 }
 
 #sidebar-button {

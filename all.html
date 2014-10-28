@@ -1,0 +1,20 @@
+---
+layout: default
+title: nbeloglazov blog
+---
+<div class="content" id="home">
+  <div id="sidebar-button">
+    <img src="/images/sidebar-button.png">
+  </div>
+
+  <ul class="all-posts">
+    {% for post in site.posts %}
+    <li class="post-link">
+      <a class="post-title" href="{{ site.version }}{{ post.url }}">
+        <span class="post-date">{{ post.date | date_to_string }}</span>
+        {{ post.title }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
