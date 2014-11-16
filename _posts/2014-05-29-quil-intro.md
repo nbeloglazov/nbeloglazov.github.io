@@ -99,7 +99,7 @@ And here is the flower (together with some other plots of random functions):
 
 ### Animation
 
-Now we'll look at another quil feature. Up to this point we drew static images which weren't changing over time. But in fact `draw` function is called repeatedly in short intervals. That means we can draw moving objects and do real animation! Let's modify our sketch so on each iteration only a part of a plot is drawn: line from *f(t)* to *f(t+1)*. The only problem is that *t* should change on each iteration, to solve it we'll use [`frame-count`](http://quil.info/api/environment.html#frame-count) which returns current iteration number and we can use this number as *t*. Here is implementation:
+Now we'll look at another quil feature. Up to this point we drew static images which weren't changing over time. But in fact `draw` function is called repeatedly in short intervals. That means we can draw moving objects and do real animation! Let's modify our sketch so on each iteration only a part of a plot is drawn: line from *f(t)* to *f(t+1)*. The only problem is that *t* should change on each iteration, to solve it we'll use [`frame-count`](http://quil.info/api/environment#frame-count) which returns current iteration number and we can use this number as *t*. Here is implementation:
 
 ```clojure
 (defn draw []
