@@ -7,6 +7,39 @@
     <atom:link href="http://nbeloglazov.com/ru/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Гитхаб действия в Хатнике</title>
+      <description>&lt;p&gt;&lt;a href=&quot;http://hatnik.com&quot;&gt;Hatnik&lt;/a&gt; - это веб проект, позволяющий отслеживать релизы библиотек: хочешь знать, когда зарелизилась новая версия кложурскрипта - настраиваешь действие в хатнике, и при следующем релизе действие будет автоматически выполнено. Изначально была поддержка только посылки емейла. Рад сообщить, что теперь также поддерживается создание гитхаб issue и pull request&amp;#39;а.&lt;/p&gt;
+
+&lt;h3&gt;Issue&lt;/h3&gt;
+
+&lt;p&gt;Тут достаточно просто: создаём issue в выбранном репозитории каждый раз, когда релизится библиотека. Можно настраивать репозиторий, название и тело issue. Название и тело поддерживают несколько шаблонных переменных, например &amp;quot;Релиз {{library}} {{version}}&amp;quot; в финале будет выглядеть как &amp;quot;Релиз org.clojure/clojurescript 0.0-2371&amp;quot;.&lt;/p&gt;
+
+&lt;p&gt;Данный тип действия может быть полезен, например, самим разработчикам библиотек. Обычно во время релиза нужно сделать кучу небольших задач, например обновить вики, туториалы, может провести какое пост-релизное тестирование. И что-нибудь из этого всего легко забыть. Issue могут помочь с этим: для каждой задачи настроить по действию, чтобы при релизе посоздавались issue и потом уже их выполнять. Так же кто-нибудь другой может подхватить и сделать её.&lt;/p&gt;
+
+&lt;h3&gt;Pull request&lt;/h3&gt;
+
+&lt;p&gt;Pull request действие может изменять файлы в публичном репозитории и создавать pull request с этими изменениями. Каждая операция на изменение - это простой find-and-replace. Операция состоит из 3 полей: пути к файлу, который нужно изменить, регэкспа того, что нужно заменить и собственно строки замены. Поля регэкспа и замены поддерживают шаблонные переменные, упомянутые ранее.&lt;/p&gt;
+
+&lt;p&gt;Pull request может использоваться например для того, чтобы поддерживать зависимости в актуальном состоянии: нужно создать действие, которое будет обновлять версию зависимости X в &lt;code&gt;project.clj&lt;/code&gt; каждый раз, когда X релизится. Особенно удобно, когда параллельно с этим настроен CI (например &lt;a href=&quot;https://travis-ci.org/&quot;&gt;Travis&lt;/a&gt;, который тестирует все входящие pull request&amp;#39;ы: можно просто посмотреть, проходят ли тесты и если да - то смержить. Таким образом нужен всего один клик для обновления зависимости! Ещё один вариант использования полезен для разработчиков библиотек. Обычно в README библиотеки указывается последняя версия библиотеки и пользователь может просто скопировать её в свой &lt;code&gt;project.clj&lt;/code&gt; и сразу начать использовать. Иногда эта версия устаревает, т.к. разработчики просто забывают её обновлять. Тут и может помочь Хатник: нужно настроить действие, которое будет обновлять README. Например я настроил пару действий для Quil, которые обновляют README, примеры использования и lein шаблоны. Вот &lt;a href=&quot;https://github.com/quil/quil-templates/pull/4&quot;&gt;пример&lt;/a&gt; подобного pull request&amp;#39;а. Последнее замечание: если в результате выполнения действия никакие файлы не были изменены (например целевой файл был перемещён или версия в README уже изменена на последнюю), то pull request создан не будет, вместо него Хатник пошлёт емейл, в котором будут описаны причины того, почему ничего не получилось.&lt;/p&gt;
+
+&lt;h3&gt;TODO&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Импорт билд файлов. На текущий момент Хатник не предоставляет возможности импортировать билд файлы, например &lt;code&gt;project.clj&lt;/code&gt;. Если проект использует много зависимостей, то создание для каждого из них отдельного действия - занятие достаточно занудное. Поэтому Хатник должен поддерживать импорт билд файлов.&lt;/li&gt;
+&lt;li&gt;Возможность потыкать Хатника без полного логина. Хатник не должен требовать пользователя залогиниться через гитхаб для того, чтобы посмотреть что Хатник может. Должна быть возможность залогиниться как гость, возможно с ограниченым набором действий.&lt;/li&gt;
+&lt;li&gt;Поддержка других языков. На данный момент только мавен-совместимые библиотеки поддерживаются (Java, Clojure, Scala, Groovy). Нужно добавить поддержку других языков.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;Участие&lt;/h3&gt;
+
+&lt;p&gt;Хатник - опен-сорсный проект. Можно взглянуть на &lt;a href=&quot;https://github.com/nbeloglazov/hatnik&quot;&gt;репозиторий&lt;/a&gt;. Баги и pull request&amp;#39;ы приветствуются!&lt;/p&gt;
+</description>
+      <pubDate>Mon, 24 Nov 2014 00:00:00 +0000</pubDate>
+      <link>http://nbeloglazov.com/ru/2014/11/24/github-actions-in-hatnik.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/11/24/github-actions-in-hatnik.html</guid>
+    </item>
+    
+    <item>
       <title>ClojureCup: Хатник</title>
       <description>&lt;h3&gt;Не пропусти релиз!&lt;/h3&gt;
 
@@ -699,7 +732,7 @@
 &lt;p&gt;project.clj&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
   &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.2&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.4&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;И собственно сам код quil_intro.clj:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt;
