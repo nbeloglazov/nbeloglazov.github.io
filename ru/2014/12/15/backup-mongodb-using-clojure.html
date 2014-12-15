@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>nbeloglazov blog</title>
+    <title>Бэкапим монгу используя кложур</title>
     <meta name="viewport" content="width=device-width">
 
     <!-- syntax highlighting CSS -->
@@ -21,7 +21,7 @@
 
     <!-- Link to RSS feed -->
     
-      <link rel="home" type="application/atom+xml" href="/feed.xml">
+      <link rel="home" type="application/atom+xml" href="/ru/feed.xml">
     
 
     <script>
@@ -40,9 +40,9 @@
       <aside class="sidebar" id="sidebar">
         <div class="header">
           
-            <h1 class="title"><a href="/"><img id="avatar" src="/images/avatar.jpg"></a></h1>
+            <h1 class="title"><a href="/ru"><img id="avatar" src="/images/avatar.jpg"></a></h1>
             <span class="tagline">
-              Quil, Сlojure and programming in general
+              Блог о Quil, Clojure и программировании
             </span>
           
         </div>
@@ -50,30 +50,30 @@
           <ul class="posts-list">
             
               <li class="post-link">
-                <a class="post-title" href="/2014/12/15/backup-mongodb-using-clojure.html">
+                <a class="post-title" href="/ru/2014/12/15/backup-mongodb-using-clojure.html">
                   <span class="post-date">15 Dec 2014</span>
-                  Mongo Backup With Clojure
+                  Бэкапим монгу используя кложур
                 </a>
               </li>
             
               <li class="post-link">
-                <a class="post-title" href="/2014/11/24/github-actions-in-hatnik.html">
+                <a class="post-title" href="/ru/2014/11/24/github-actions-in-hatnik.html">
                   <span class="post-date">24 Nov 2014</span>
-                  GitHub Actions in Hatnik
+                  Гитхаб действия в Хатнике
                 </a>
               </li>
             
               <li class="post-link">
-                <a class="post-title" href="/2014/10/01/introducing-hatnik.html">
+                <a class="post-title" href="/ru/2014/10/01/introducing-hatnik.html">
                   <span class="post-date">01 Oct 2014</span>
-                  Introducing Hatnik
+                  ClojureCup: Хатник
                 </a>
               </li>
             
               <li class="post-link">
-                <a class="post-title" href="/2014/09/27/halfway-through-clojurecup.html">
+                <a class="post-title" href="/ru/2014/09/27/halfway-through-clojurecup.html">
                   <span class="post-date">27 Sep 2014</span>
-                  Halfway Through ClojureCup
+                  Половина ClojureCup позади
                 </a>
               </li>
             
@@ -81,7 +81,7 @@
        </div>
        <p class="all-posts-link">
          
-         <a href="/all.html">All posts</a>
+         <a href="/ru/all.html">Все посты</a>
          
         </p>
         <div class="footer">
@@ -91,16 +91,14 @@
             <a href="https://www.linkedin.com/in/nikitabeloglazov/" class="footer-link">LinkedIn</a>
             <span class="separator">&bull;</span>
             
-            <a href="/feed.xml">
+            <a href="/ru/feed.xml" rel="home">
             
               <img class="rss" src="/images/rss.png"/>
             </a>
           </span>
         </div>
       </aside>
-        
-
-<article class="content" id="home">
+        <article class="content" id="home">
   <div id="fb-root"></div>
   <script>(function(d, s, id) {
     var js, fjs = d.getElementsByTagName(s)[0];
@@ -117,60 +115,60 @@
     <div id="info-container">
       
       
-        <a href="/ru/2014/12/15/backup-mongodb-using-clojure.html" class="lang-link">Ru</a>
-        <p class="lang-link">En</p>
+        <p class="lang-link">Ru</p>
+        <a href="/2014/12/15/backup-mongodb-using-clojure.html" class="lang-link">En</a>
       
       
-      <h1 id="title">Mongo Backup With Clojure</h1>
+      <h1 id="title">Бэкапим монгу используя кложур</h1>
       <time datetime="2014-12-15" id="date" pubdate>15 Dec 2014</time>
     </div>
   </div>
 
   <div class="post">
-    <p>In this post I&#39;ll show a simple tool that creates Mongo backup and uploads it to <a href="https://cloud.google.com/storage/">Google Cloud Storage</a>. Suppose you have a small webproject that uses mongo. The project runs on a single machine on some cloud provider. And you want to have periodic mongo backups. Potentially you can achieve it using features of your provider like disk snapshots, but it may require shutting down the machine or unmounting disk and it feels heavy and not fun. Instead we&#39;ll create our own tool that periodically creates backups and uploads them to a file hosting service like Dropbox or Google Drive or (in my case) Google Cloud Storage. I use Google Cloud Storage because I&#39;m already using <a href="https://cloud.google.com/">Google Cloud Platform</a> as hosting for <a href="http://hatnik.com">Hatnik</a> so why not to use available services?</p>
+    <p>В этом посте я покажу простую тулу для создания бэкапов монги и закачки их на <a href="https://cloud.google.com/storage/">Google Cloud Storage</a>. Предположим есть небольшой веб-проект, который использует монгу. Проект запущен на одной машине на каком-нибудь из кучи облачных хостингов. И хочется периодически делать бэкапы монги. Некоторые провайдеры предоставляют сервисы для создания снапшотов дисков или что-нибудь подобное, но часто это требует отключения машины или демонтирования диска, а это звучит как-то тяжеловато. Вместо этого давайте напишем свою небольшую тулу, которая будет периодически запускаться, делая бэкап и закачивая его на файловый хостинг, такой как Dropbox, Google Drive или (в нашем случае) Google Cloud Storage. Я выбрал Cloud Storage, потому что уже использую <a href="https://cloud.google.com/">гугловую облачную платформу</a> в качестве хостинга для <a href="http://hatnik.com">Хатника</a> и почему не использовать один из сервисов это платформы?</p>
 
-<p>The tool is relatively small and consists of 2 parts: backup creation and uploading.</p>
+<p>Тула достаточно маленькая и состоит из 2 частей: создания бэкапа и закачки его в хранилище.</p>
 
-<h3>Create backup</h3>
+<h3>Создание бэкапа</h3>
 
-<p>Assumptions: mongo instance doesn&#39;t require authentication and OS is linux.</p>
+<p>Допустим монга не требует аутентификации, а ОС - линукс. Тогда код:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">clojure.java</span>
             <span class="p">[</span><span class="nv">shell</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">sh</span> <span class="nv">with-sh-dir</span><span class="p">]]</span>
             <span class="p">[</span><span class="nv">io</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">file</span><span class="p">]]])</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">clean</span>
-  <span class="s">&quot;Removes old dump from current folder if exists.&quot;</span>
+  <span class="s">&quot;Удаляет старый дамп из текущей папки, если он есть.&quot;</span>
   <span class="p">[]</span>
   <span class="p">(</span><span class="nf">sh</span> <span class="s">&quot;rm&quot;</span> <span class="s">&quot;-r&quot;</span> <span class="s">&quot;dump&quot;</span><span class="p">)</span>
   <span class="p">(</span><span class="nf">sh</span> <span class="s">&quot;rm&quot;</span> <span class="s">&quot;dump.zip&quot;</span><span class="p">))</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">create-dump</span>
-  <span class="s">&quot;Creates dump and pack it into dump.zip file in current folder.&quot;</span>
+  <span class="s">&quot;Создаёт дамп и пакует его в dump.zip файл в текущей папке.&quot;</span>
   <span class="p">[]</span>
   <span class="p">(</span><span class="nf">clean</span><span class="p">)</span>
   <span class="p">(</span><span class="nf">sh</span> <span class="s">&quot;mongodump&quot;</span><span class="p">)</span>
   <span class="p">(</span><span class="nf">sh</span> <span class="s">&quot;zip&quot;</span> <span class="s">&quot;-r&quot;</span> <span class="s">&quot;dump.zip&quot;</span> <span class="s">&quot;dump&quot;</span><span class="p">))</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">archive-name</span>
-  <span class="s">&quot;Generates name for dump file. That&#39;s how it will be saved in Cloud Storage.&quot;</span>
+  <span class="s">&quot;Генерирует имя для дампа. Под таким именем он будет сохранён в хранилище.&quot;</span>
   <span class="p">[]</span>
   <span class="p">(</span><span class="nb">-&gt; </span><span class="p">(</span><span class="nf">java.text.SimpleDateFormat.</span> <span class="s">&quot;yyyy-MM-dd_kk-mm&quot;</span><span class="p">)</span>
       <span class="p">(</span><span class="nf">.format</span> <span class="p">(</span><span class="nf">java.util.Date.</span><span class="p">))</span>
       <span class="p">(</span><span class="nb">str </span><span class="s">&quot;.zip&quot;</span><span class="p">)))</span>
 </code></pre></div>
-<p>As you can see it is pretty trivial. We use <code>mongodump</code> utility for creating dump from running mongo instance. Mongo <a href="http://docs.mongodb.org/manual/core/backups/#backup-with-mongodump">docs</a> say that it should be used only for small deployments as it hurts performance.</p>
+<p>Как можно видеть, код достаточно тривиальный. Для создания бэкапа используется <code>mongodump</code>. Согласно монговским <a href="http://docs.mongodb.org/manual/core/backups/#backup-with-mongodump">докам</a> такой способ подходит для небольших по размеры баз, т.к. он влияет на производительность.</p>
 
-<h3>Uploading to cloud</h3>
+<h3>Закачиваем в облако</h3>
 
-<p>Now we&#39;re going to jump through Google API hoops in order to upload single zip file. First of all you should setup <a href="https://cloud.google.com/storage/docs/authentication#service_accounts">service account</a> that will allow the tool to upload to the storage. It will generate an email address and private key that will be used for authentication. Now let&#39;s go to code. To simplify things we will be using official java library for working with Google Cloud Storage (<a href="https://developers.google.com/resources/api-libraries/documentation/storage/v1/java/latest/">javadocs</a>). In the code I omit all imports as there are quite a few of them and you can get them from github project at the end of the post.</p>
+<p>Теперь мы будем мучаться с Google API, что закачать несчастный файл. Для начала нужно настроить <a href="https://cloud.google.com/storage/docs/authentication#service_accounts">service account</a>, который даст нашей программе доступ к хранилищу. После этого будет выдан специальный емейл и файл с приватным ключом, который и будут использоваться в качестве логина/пароля. Будем использовать официальную джава библиотеку для работы с API хранилища (<a href="https://developers.google.com/resources/api-libraries/documentation/storage/v1/java/latest/">javadocs</a>). Я не буду приводить все используемые импорты джава классов, т.к. их достаточно много и если надо, их можно посмотреть в проекте в конце поста. Собственно код:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="k">def </span><span class="nv">email-address</span> <span class="s">&quot;&lt;YOUR SERVICE ACCOUNT EMAIL HERE&gt;&quot;</span><span class="p">)</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">p12-file</span> <span class="p">(</span><span class="nf">file</span> <span class="s">&quot;&lt;PATH TO PRIVATE KEY FILE&gt;&quot;</span><span class="p">))</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">bucket-name</span> <span class="s">&quot;mongo-backups&quot;</span><span class="p">)</span>
-<span class="p">(</span><span class="k">def </span><span class="nv">app-name</span> <span class="s">&quot;&lt;YOUR GOOGLE CLOUD PROJECT NAME&gt;&quot;</span><span class="p">)</span> <span class="c1">; not sure if it&#39;s actually needed</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">app-name</span> <span class="s">&quot;&lt;YOUR GOOGLE CLOUD PROJECT NAME&gt;&quot;</span><span class="p">)</span> <span class="c1">; не уверен, что это вообще нужно</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">authorize</span>
-  <span class="s">&quot;Authorizes app and returns credentials object that will be used to</span>
-<span class="s">  create storage object.&quot;</span>
+  <span class="s">&quot;Авторизует и возвращает объект, который будет использоваться для создания</span>
+<span class="s">  объекта хранилища.&quot;</span>
   <span class="p">[]</span>
   <span class="p">(</span><span class="nb">.. </span><span class="p">(</span><span class="nf">GoogleCredential$Builder.</span><span class="p">)</span>
       <span class="p">(</span><span class="nf">setTransport</span> <span class="p">(</span><span class="nf">GoogleNetHttpTransport/newTrustedTransport</span><span class="p">))</span>
@@ -183,7 +181,7 @@
       <span class="p">(</span><span class="nf">build</span><span class="p">)))</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">get-storage</span>
-  <span class="s">&quot;Authorizes and creates storage object.&quot;</span>
+  <span class="s">&quot;Авторизует и возвращает объект хранилища.&quot;</span>
   <span class="p">[]</span>
   <span class="p">(</span><span class="nb">.. </span><span class="p">(</span><span class="nf">Storage$Builder.</span> <span class="nv">http-transport</span> <span class="nv">json-factory</span> <span class="p">(</span><span class="nf">authorize</span><span class="p">))</span>
       <span class="p">(</span><span class="nf">setApplicationName</span> <span class="nv">app-name</span><span class="p">)</span>
@@ -200,61 +198,62 @@
          <span class="p">(</span><span class="nf">insert</span> <span class="nv">bucket-name</span> <span class="nv">object</span> <span class="nv">content</span><span class="p">)</span>
          <span class="p">(</span><span class="nf">execute</span><span class="p">))))</span>
 </code></pre></div>
-<p>And finally glue both parts together:</p>
+<p>Теперь наконец объединим обе части вместе:</p>
 <div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">create-and-upload-dump</span> <span class="p">[]</span>
   <span class="p">(</span><span class="nf">with-sh-dir</span> <span class="s">&quot;/tmp&quot;</span>
     <span class="p">(</span><span class="nf">create-dump</span><span class="p">)</span>
     <span class="p">(</span><span class="nf">upload-zip-file</span> <span class="p">(</span><span class="nf">archive-name</span><span class="p">)</span> <span class="p">(</span><span class="nf">file</span> <span class="s">&quot;/tmp/dump.zip&quot;</span><span class="p">))</span>
     <span class="p">(</span><span class="nf">clean</span><span class="p">)))</span>
 
-<span class="c1">; main method needed to run the tool from command line</span>
+<span class="c1">; main метод нужен для того, чтобы тулу можно было запускать</span>
+<span class="c1">; из командной строк</span>
 <span class="p">(</span><span class="kd">defn </span><span class="nv">-main</span> <span class="p">[</span><span class="o">&amp;</span> <span class="nv">args</span><span class="p">]</span>
   <span class="p">(</span><span class="nf">create-and-upload-dump</span><span class="p">))</span>
 </code></pre></div>
-<p>That&#39;s all. You can test the tool by executing <code>create-and-upload-dump</code> function from repl.</p>
+<p>Вот и всё. Чтобы протестировать тулу нужно выполнить <code>create-and-upload-dump</code> функцию.</p>
 
-<h3>Create cron job</h3>
+<h3>Создаём cron задачу</h3>
 
-<p>Now we can generate executable jar using <code>lein uberjar</code>, copy it to some directory on the server together with private key file and create daily cron job by creating script in <code>/etc/cron.daily</code> folder. My cron job looks like this:</p>
+<p>Осталось создать исполняемый jar файл с помощью <code>lein uberjar</code>, скопировать его на сервер вместе с приватным ключом и настроить cron задачу которая будет запускать его ежедневно. Для настройки задачи создадим скрипт в папке <code>/etc/cron.daily</code>. Пример скрипта:</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c">#!/bin/sh</span>
 <span class="c">#</span>
-<span class="c"># Daily mongo backups</span>
+<span class="c"># Ежедневный бэкап монги</span>
 
 <span class="nv">WORKING_DIR</span><span class="o">=</span>/home/nbeloglazov/backup
 <span class="nb">cd</span> <span class="nv">$WORKING_DIR</span>
 java -jar <span class="nv">$WORKING_DIR</span>/backup.jar
 </code></pre></div>
-<p>I suspect that if Dropbox or something else is used instead of Google Cloud Storage then code should be simpler. Authentication in Google APIs is kinda messy and it&#39;s not easy to find correct combination and order of methods to call to make it work.</p>
+<p>Подозреваю, что если использовать Dropbox или какой другой сервис, то код может быть проще. Аутентификация в гугловом API запутанная и достаточно непросто подобрать правильную комбинацию и порядок вызовов методов, чтобы всё заработало.</p>
 
-<p>For reference here is a complete working version of the tool: <a href="https://github.com/nbeloglazov/hatnik/tree/master/tools/backup">project on GitHub</a>.</p>
+<p>Пример законченной тулы: <a href="https://github.com/nbeloglazov/hatnik/tree/master/tools/backup">проект на гитхабе</a>.</p>
 
   </div>
   <div class="colophon">
     <p>
       <span id="pub-date">
         
-          Published on
+          Опубликовано
         
         15 Dec 2014
       </span>
     </p>
   </div>
   <div id="social-buttons">
-    <g:plusone href="http://nbeloglazov.com/2014/12/15/backup-mongodb-using-clojure.html"></g:plusone>
-    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/2014/12/15/backup-mongodb-using-clojure.html">Tweet</a>
+    <g:plusone href="http://nbeloglazov.com/ru/2014/12/15/backup-mongodb-using-clojure.html"></g:plusone>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-text="http://nbeloglazov.com/ru/2014/12/15/backup-mongodb-using-clojure.html">Tweet</a>
     <script>
       !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
     </script>
-    <div class="fb-like" data-href="http://nbeloglazov.com/2014/12/15/backup-mongodb-using-clojure.html" data-layout="button_count"
+    <div class="fb-like" data-href="http://nbeloglazov.com/ru/2014/12/15/backup-mongodb-using-clojure.html" data-layout="button_count"
          data-action="like" data-show-faces="true" data-share="false"></div>
   </div>
   <!-- AddThis Button END -->
   <div id="disqus_thread"></div>
   <script type="text/javascript">
     var disqus_shortname = 'nbeloglazovblog';
-    var disqus_identifier = '/2014/12/15/backup-mongodb-using-clojure';
-    var disqus_title = 'Mongo Backup With Clojure';
-    var disqus_url = 'http://nbeloglazov.com/2014/12/15/backup-mongodb-using-clojure.html';
+    var disqus_identifier = '/ru/2014/12/15/backup-mongodb-using-clojure';
+    var disqus_title = 'Бэкапим монгу используя кложур';
+    var disqus_url = 'http://nbeloglazov.com/ru/2014/12/15/backup-mongodb-using-clojure.html';
 
     (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

@@ -7,6 +7,115 @@
     <atom:link href="http://nbeloglazov.com/ru/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Бэкапим монгу используя кложур</title>
+      <description>&lt;p&gt;В этом посте я покажу простую тулу для создания бэкапов монги и закачки их на &lt;a href=&quot;https://cloud.google.com/storage/&quot;&gt;Google Cloud Storage&lt;/a&gt;. Предположим есть небольшой веб-проект, который использует монгу. Проект запущен на одной машине на каком-нибудь из кучи облачных хостингов. И хочется периодически делать бэкапы монги. Некоторые провайдеры предоставляют сервисы для создания снапшотов дисков или что-нибудь подобное, но часто это требует отключения машины или демонтирования диска, а это звучит как-то тяжеловато. Вместо этого давайте напишем свою небольшую тулу, которая будет периодически запускаться, делая бэкап и закачивая его на файловый хостинг, такой как Dropbox, Google Drive или (в нашем случае) Google Cloud Storage. Я выбрал Cloud Storage, потому что уже использую &lt;a href=&quot;https://cloud.google.com/&quot;&gt;гугловую облачную платформу&lt;/a&gt; в качестве хостинга для &lt;a href=&quot;http://hatnik.com&quot;&gt;Хатника&lt;/a&gt; и почему не использовать один из сервисов это платформы?&lt;/p&gt;
+
+&lt;p&gt;Тула достаточно маленькая и состоит из 2 частей: создания бэкапа и закачки его в хранилище.&lt;/p&gt;
+
+&lt;h3&gt;Создание бэкапа&lt;/h3&gt;
+
+&lt;p&gt;Допустим монга не требует аутентификации, а ОС - линукс. Тогда код:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;clojure.java&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;shell&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;with-sh-dir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;io&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]])&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;clean&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;&amp;quot;Удаляет старый дамп из текущей папки, если он есть.&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;rm&amp;quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;-r&amp;quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;dump&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;rm&amp;quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;dump.zip&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-dump&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;&amp;quot;Создаёт дамп и пакует его в dump.zip файл в текущей папке.&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;clean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;mongodump&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;zip&amp;quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;-r&amp;quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;dump.zip&amp;quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;dump&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;archive-name&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;&amp;quot;Генерирует имя для дампа. Под таким именем он будет сохранён в хранилище.&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;java.text.SimpleDateFormat.&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;yyyy-MM-dd_kk-mm&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.format&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;java.util.Date.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;.zip&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Как можно видеть, код достаточно тривиальный. Для создания бэкапа используется &lt;code&gt;mongodump&lt;/code&gt;. Согласно монговским &lt;a href=&quot;http://docs.mongodb.org/manual/core/backups/#backup-with-mongodump&quot;&gt;докам&lt;/a&gt; такой способ подходит для небольших по размеры баз, т.к. он влияет на производительность.&lt;/p&gt;
+
+&lt;h3&gt;Закачиваем в облако&lt;/h3&gt;
+
+&lt;p&gt;Теперь мы будем мучаться с Google API, что закачать несчастный файл. Для начала нужно настроить &lt;a href=&quot;https://cloud.google.com/storage/docs/authentication#service_accounts&quot;&gt;service account&lt;/a&gt;, который даст нашей программе доступ к хранилищу. После этого будет выдан специальный емейл и файл с приватным ключом, который и будут использоваться в качестве логина/пароля. Будем использовать официальную джава библиотеку для работы с API хранилища (&lt;a href=&quot;https://developers.google.com/resources/api-libraries/documentation/storage/v1/java/latest/&quot;&gt;javadocs&lt;/a&gt;). Я не буду приводить все используемые импорты джава классов, т.к. их достаточно много и если надо, их можно посмотреть в проекте в конце поста. Собственно код:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;email-address&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;YOUR SERVICE ACCOUNT EMAIL HERE&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;p12-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;PATH TO PRIVATE KEY FILE&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;bucket-name&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;mongo-backups&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;app-name&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;YOUR GOOGLE CLOUD PROJECT NAME&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;; не уверен, что это вообще нужно&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;authorize&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;&amp;quot;Авторизует и возвращает объект, который будет использоваться для создания&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  объекта хранилища.&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.. &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GoogleCredential$Builder.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setTransport&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GoogleNetHttpTransport/newTrustedTransport&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setJsonFactory&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;JacksonFactory/getDefaultInstance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setServiceAccountId&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;email-address&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setServiceAccountScopes&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;StorageScopes/DEVSTORAGE_FULL_CONTROL&lt;/span&gt;
+                                &lt;span class=&quot;nv&quot;&gt;StorageScopes/DEVSTORAGE_READ_ONLY&lt;/span&gt;
+                                &lt;span class=&quot;nv&quot;&gt;StorageScopes/DEVSTORAGE_READ_WRITE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setServiceAccountPrivateKeyFromP12File&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;p12-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;get-storage&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;&amp;quot;Авторизует и возвращает объект хранилища.&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.. &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Storage$Builder.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;http-transport&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;json-factory&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;authorize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setApplicationName&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app-name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;upload-zip-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;zip-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;client&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;get-storage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;object&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;doto &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;StorageObject.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.setName&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.setContentType&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;application/zip&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;content&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;FileContent.&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;application/zip&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;zip-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.. &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;client&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;insert&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;bucket-name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;object&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;content&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Теперь наконец объединим обе части вместе:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-and-upload-dump&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;with-sh-dir&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/tmp&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;create-dump&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;upload-zip-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;archive-name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/tmp/dump.zip&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;clean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;; main метод нужен для того, чтобы тулу можно было запускать&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;; из командной строк&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;-main&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;create-and-upload-dump&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Вот и всё. Чтобы протестировать тулу нужно выполнить &lt;code&gt;create-and-upload-dump&lt;/code&gt; функцию.&lt;/p&gt;
+
+&lt;h3&gt;Создаём cron задачу&lt;/h3&gt;
+
+&lt;p&gt;Осталось создать исполняемый jar файл с помощью &lt;code&gt;lein uberjar&lt;/code&gt;, скопировать его на сервер вместе с приватным ключом и настроить cron задачу которая будет запускать его ежедневно. Для настройки задачи создадим скрипт в папке &lt;code&gt;/etc/cron.daily&lt;/code&gt;. Пример скрипта:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Ежедневный бэкап монги&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;WORKING_DIR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/home/nbeloglazov/backup
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;
+java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Подозреваю, что если использовать Dropbox или какой другой сервис, то код может быть проще. Аутентификация в гугловом API запутанная и достаточно непросто подобрать правильную комбинацию и порядок вызовов методов, чтобы всё заработало.&lt;/p&gt;
+
+&lt;p&gt;Пример законченной тулы: &lt;a href=&quot;https://github.com/nbeloglazov/hatnik/tree/master/tools/backup&quot;&gt;проект на гитхабе&lt;/a&gt;.&lt;/p&gt;
+</description>
+      <pubDate>Mon, 15 Dec 2014 00:00:00 -0800</pubDate>
+      <link>http://nbeloglazov.com/ru/2014/12/15/backup-mongodb-using-clojure.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/12/15/backup-mongodb-using-clojure.html</guid>
+    </item>
+    
+    <item>
       <title>Гитхаб действия в Хатнике</title>
       <description>&lt;p&gt;&lt;a href=&quot;http://hatnik.com&quot;&gt;Hatnik&lt;/a&gt; - это веб проект, позволяющий отслеживать релизы библиотек: хочешь знать, когда зарелизилась новая версия кложурскрипта - настраиваешь действие в хатнике, и при следующем релизе действие будет автоматически выполнено. Изначально была поддержка только посылки емейла. Рад сообщить, что теперь также поддерживается создание гитхаб issue и pull request&amp;#39;а.&lt;/p&gt;
 
@@ -34,7 +143,7 @@
 
 &lt;p&gt;Хатник - опен-сорсный проект. Можно взглянуть на &lt;a href=&quot;https://github.com/nbeloglazov/hatnik&quot;&gt;репозиторий&lt;/a&gt;. Баги и pull request&amp;#39;ы приветствуются!&lt;/p&gt;
 </description>
-      <pubDate>Mon, 24 Nov 2014 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 24 Nov 2014 00:00:00 -0800</pubDate>
       <link>http://nbeloglazov.com/ru/2014/11/24/github-actions-in-hatnik.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/11/24/github-actions-in-hatnik.html</guid>
     </item>
@@ -108,7 +217,7 @@
 
 &lt;p&gt;Кот Хатника можно посмотреть на &lt;a href=&quot;https://github.com/nbeloglazov/hatnik&quot;&gt;гитхабе&lt;/a&gt;.&lt;/p&gt;
 </description>
-      <pubDate>Wed, 01 Oct 2014 00:00:00 +0100</pubDate>
+      <pubDate>Wed, 01 Oct 2014 00:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/ru/2014/10/01/introducing-hatnik.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/10/01/introducing-hatnik.html</guid>
     </item>
@@ -153,7 +262,7 @@
 
 &lt;p&gt;Я получаю кучу удовольствия от соревнования! Я не помню, когда в последний раз писал так много кода. В последнее время я кожу/кодю на работе гораздо меньше, так что ClojureCup очень кстати. Особенно, когда есть отмазка, чтобы не писать кучу тестов, а кодить просто ради кодинга. Если интересно посмотреть на то, что у нас есть на данный момент - &lt;a href=&quot;https://github.com/clojurecup2014/hatnik/&quot;&gt;гитхаб репо&lt;/a&gt;, там конечно всё без комментов, так что наверное непонятно. И конечно не забудьте проверить наше приложение после окончания контеста!&lt;/p&gt;
 </description>
-      <pubDate>Sat, 27 Sep 2014 00:00:00 +0100</pubDate>
+      <pubDate>Sat, 27 Sep 2014 00:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/ru/2014/09/27/halfway-through-clojurecup.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/09/27/halfway-through-clojurecup.html</guid>
     </item>
@@ -226,7 +335,7 @@
     equilibrium.sketch({&quot;host&quot;: &quot;third_sketch&quot;, &quot;tail-size&quot;: 15, &quot;colourful?&quot;: true});
 &lt;/script&gt;
 </description>
-      <pubDate>Tue, 09 Sep 2014 00:00:00 +0100</pubDate>
+      <pubDate>Tue, 09 Sep 2014 00:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/ru/2014/09/09/equilibrium.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/09/09/equilibrium.html</guid>
     </item>
@@ -499,7 +608,7 @@
 
 &lt;p&gt;Код из данного поста доступен на &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/tree/master/cljsbin.&quot;&gt;GitHub&lt;/a&gt;&lt;/p&gt;
 </description>
-      <pubDate>Sat, 16 Aug 2014 22:00:00 +0100</pubDate>
+      <pubDate>Sat, 16 Aug 2014 22:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/08/16/poor-mans-cljsfiddle.html</guid>
     </item>
@@ -621,7 +730,7 @@
 
 &lt;p&gt;Если интересно поиграться с кодом - он доступен на &lt;a href=&quot;https://github.com/nbeloglazov/dojo-pubsub&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
 </description>
-      <pubDate>Tue, 15 Jul 2014 23:00:00 +0100</pubDate>
+      <pubDate>Tue, 15 Jul 2014 23:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/07/15/clojure-dojo-and-pubsub.html</guid>
     </item>
@@ -720,7 +829,7 @@
 
 &lt;p&gt;Если вы хотите поиграться с middleware, но не хватает идей, что бы такого реализовать - посмотрите статью на вики, указанную выше. Там есть несколько идей, можно взять их за основу.&lt;/p&gt;
 </description>
-      <pubDate>Sun, 22 Jun 2014 23:00:00 +0100</pubDate>
+      <pubDate>Sun, 22 Jun 2014 23:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/ru/2014/06/22/quil-age-of-middleware.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/06/22/quil-age-of-middleware.html</guid>
     </item>
@@ -855,7 +964,7 @@
 
 &lt;p&gt;Любые коментарии приветствуются&lt;/p&gt;
 </description>
-      <pubDate>Thu, 29 May 2014 00:00:00 +0100</pubDate>
+      <pubDate>Thu, 29 May 2014 00:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/ru/2014/05/29/quil-intro.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/ru/2014/05/29/quil-intro.html</guid>
     </item>
