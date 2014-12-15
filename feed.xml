@@ -7,7 +7,7 @@
     <atom:link href="http://nbeloglazov.com/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
-      <title>Mongo Backup With Clojure</title>
+      <title>Mongo Backup Using Clojure</title>
       <description>&lt;p&gt;In this post I&amp;#39;ll show a simple tool that creates Mongo backup and uploads it to &lt;a href=&quot;https://cloud.google.com/storage/&quot;&gt;Google Cloud Storage&lt;/a&gt;. Suppose you have a small webproject that uses mongo. The project runs on a single machine on some cloud provider. And you want to have periodic mongo backups. Potentially you can achieve it using features of your provider like disk snapshots, but it may require shutting down the machine or unmounting disk and it feels heavy and not fun. Instead we&amp;#39;ll create our own tool that periodically creates backups and uploads them to a file hosting service like Dropbox or Google Drive or (in my case) Google Cloud Storage. I use Google Cloud Storage because I&amp;#39;m already using &lt;a href=&quot;https://cloud.google.com/&quot;&gt;Google Cloud Platform&lt;/a&gt; as hosting for &lt;a href=&quot;http://hatnik.com&quot;&gt;Hatnik&lt;/a&gt; so why not to use available services?&lt;/p&gt;
 
 &lt;p&gt;The tool is relatively small and consists of 2 parts: backup creation and uploading.&lt;/p&gt;
