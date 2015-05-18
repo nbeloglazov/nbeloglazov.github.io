@@ -50,6 +50,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/2015/05/18/trees-quil-and-random.html">
+                  <span class="post-date">18 May 2015</span>
+                  Trees, Quil and Random
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/2014/12/15/backup-mongodb-using-clojure.html">
                   <span class="post-date">15 Dec 2014</span>
                   Mongo Backup Using Clojure
@@ -67,13 +74,6 @@
                 <a class="post-title" href="/2014/10/01/introducing-hatnik.html">
                   <span class="post-date">01 Oct 2014</span>
                   Introducing Hatnik
-                </a>
-              </li>
-            
-              <li class="post-link">
-                <a class="post-title" href="/2014/09/27/halfway-through-clojurecup.html">
-                  <span class="post-date">27 Sep 2014</span>
-                  Halfway Through ClojureCup
                 </a>
               </li>
             
@@ -132,7 +132,7 @@
 <h3>Create backup</h3>
 
 <p>Assumptions: mongo instance doesn&#39;t require authentication and OS is linux.</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">clojure.java</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">clojure.java</span>
             <span class="p">[</span><span class="nv">shell</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">sh</span> <span class="nv">with-sh-dir</span><span class="p">]]</span>
             <span class="p">[</span><span class="nv">io</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">file</span><span class="p">]]])</span>
 
@@ -161,7 +161,7 @@
 <h3>Uploading to cloud</h3>
 
 <p>Now we&#39;re going to jump through Google API hoops in order to upload single zip file. First of all you should setup <a href="https://cloud.google.com/storage/docs/authentication#service_accounts">service account</a> that will allow the tool to upload to the storage. It will generate an email address and private key that will be used for authentication. Now let&#39;s go to code. To simplify things we will be using official java library for working with Google Cloud Storage (<a href="https://developers.google.com/resources/api-libraries/documentation/storage/v1/java/latest/">javadocs</a>). In the code I omit all imports as there are quite a few of them and you can get them from github project at the end of the post.</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="k">def </span><span class="nv">email-address</span> <span class="s">&quot;&lt;YOUR SERVICE ACCOUNT EMAIL HERE&gt;&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="k">def </span><span class="nv">email-address</span> <span class="s">&quot;&lt;YOUR SERVICE ACCOUNT EMAIL HERE&gt;&quot;</span><span class="p">)</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">p12-file</span> <span class="p">(</span><span class="nf">file</span> <span class="s">&quot;&lt;PATH TO PRIVATE KEY FILE&gt;&quot;</span><span class="p">))</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">bucket-name</span> <span class="s">&quot;mongo-backups&quot;</span><span class="p">)</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">app-name</span> <span class="s">&quot;&lt;YOUR GOOGLE CLOUD PROJECT NAME&gt;&quot;</span><span class="p">)</span> <span class="c1">; not sure if it&#39;s actually needed</span>
@@ -199,7 +199,7 @@
          <span class="p">(</span><span class="nf">execute</span><span class="p">))))</span>
 </code></pre></div>
 <p>And finally glue both parts together:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">create-and-upload-dump</span> <span class="p">[]</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">create-and-upload-dump</span> <span class="p">[]</span>
   <span class="p">(</span><span class="nf">with-sh-dir</span> <span class="s">&quot;/tmp&quot;</span>
     <span class="p">(</span><span class="nf">create-dump</span><span class="p">)</span>
     <span class="p">(</span><span class="nf">upload-zip-file</span> <span class="p">(</span><span class="nf">archive-name</span><span class="p">)</span> <span class="p">(</span><span class="nf">file</span> <span class="s">&quot;/tmp/dump.zip&quot;</span><span class="p">))</span>
@@ -214,7 +214,7 @@
 <h3>Create cron job</h3>
 
 <p>Now we can generate executable jar using <code>lein uberjar</code>, copy it to some directory on the server together with private key file and create daily cron job by creating script in <code>/etc/cron.daily</code> folder. My cron job looks like this:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c">#!/bin/sh</span>
+<div class="highlight"><pre><code class="bash language-bash" data-lang="bash"><span class="c">#!/bin/sh</span>
 <span class="c">#</span>
 <span class="c"># Daily mongo backups</span>
 
