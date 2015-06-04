@@ -130,7 +130,7 @@
 <h3>Rotating middleware</h3>
 
 <p>The rotating middleware&#39;s job is pretty simple: replace user-provided <code>draw</code> function with it own special version of <code>draw</code>. This special <code>draw</code> function does two things: first, it rotates sketch some angle, and second, calls original <code>draw</code>. But code is worth a thousand words, so here it is:</p>
-<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="c1">; rotated-draw is the special draw function,</span>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; rotated-draw is the special draw function,</span>
 <span class="c1">; which rotates sketch some angle depending on current frame number,</span>
 <span class="c1">; and then calls original user-provided &#39;draw&#39; function.</span>
 <span class="c1">; period is a number of frames to rotate sketch a full 360 degrees</span>
@@ -179,7 +179,7 @@
 <p><img src="/images/quil-middleware/rect-rotating.gif" alt="Static squares"></p>
 
 <p>Let&#39;s say we want to change rotation period now. We can always modify <code>rotate-me</code> function and change period there. But that&#39;s not very customizable, what if user wants to change it? We don&#39;t want user to dive into middleware and modify it. Even more, middleware may be shipped as a library and modifying a third-party library is not an easy task. Fortunately our problem is easy to solve: let&#39;s read rotation period from <code>options</code> map:</p>
-<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">rotate-me</span> <span class="p">[</span><span class="nv">options</span><span class="p">]</span>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">rotate-me</span> <span class="p">[</span><span class="nv">options</span><span class="p">]</span>
   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">draw</span> <span class="p">(</span><span class="ss">:draw</span> <span class="nv">options</span> <span class="p">(</span><span class="k">fn </span><span class="p">[]))</span>
         <span class="c1">; read period as :rotate-period value</span>
         <span class="c1">; or fallback to 200 if not provided</span>

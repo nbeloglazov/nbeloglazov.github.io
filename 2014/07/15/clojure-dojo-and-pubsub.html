@@ -148,7 +148,7 @@
 <p>As you can see the library should not have concept of addresses, queues or topics. The library should not have concept of a server: clients should be able to communicate to each other without connecting to some kind of server.</p>
 
 <p>For implementation we decided to use <a href="http://en.wikipedia.org/wiki/IP_multicast">IP multicast</a>. We didn&#39;t dig deep into specification and technical details, just googled how to do it in java. We found <code>java.net.MulticastSocket</code> class which does exactly what we want. Even more, <a href="http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html">javadoc</a> for that class contains nice example of how to use it. We translated it into clojure and enhanced a little bit. Here what we got:</p>
-<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
   <span class="p">(</span><span class="ss">:import</span> <span class="p">[</span><span class="nv">java.net</span> <span class="nv">InetAddress</span> <span class="nv">DatagramPacket</span> <span class="nv">MulticastSocket</span><span class="p">]))</span>
 
 
@@ -182,7 +182,7 @@
 </ul>
 
 <p>Here is the code:</p>
-<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; is a recursive function used to process messages</span>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; is a recursive function used to process messages</span>
 <span class="c1">; Parameters</span>
 <span class="c1">;   socket - socket object to receive message from</span>
 <span class="c1">;   predicate - user-provided function which decides whether process message or not</span>
@@ -213,7 +213,7 @@
       <span class="nv">finished</span><span class="p">)))</span>
 </code></pre></div>
 <p>That&#39;s all. The library is ready to use. Here is how to use it:</p>
-<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
 
 <span class="c1">; subscribe to all messages</span>
 <span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Simplest subscribe&quot;</span> <span class="nv">%</span><span class="p">))</span>

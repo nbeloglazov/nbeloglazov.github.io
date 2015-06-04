@@ -142,7 +142,7 @@
 </ol>
 
 <p>Last part is especially easy to do in clojure and each step corresponds to one line:</p>
-<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">generate-tree</span> <span class="p">[</span><span class="nb">root </span><span class="nv">levels</span><span class="p">]</span>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">generate-tree</span> <span class="p">[</span><span class="nb">root </span><span class="nv">levels</span><span class="p">]</span>
   <span class="p">(</span><span class="nf">-&gt;&gt;</span> <span class="p">[</span><span class="nv">root</span><span class="p">]</span>
        <span class="p">(</span><span class="nb">iterate </span><span class="o">#</span><span class="p">(</span><span class="nb">mapcat </span><span class="nv">branch-off</span> <span class="nv">%</span><span class="p">))</span>
        <span class="p">(</span><span class="nb">take </span><span class="nv">levels</span><span class="p">)</span>
@@ -173,7 +173,7 @@
 <p>Initially I used a simple approach and was redrawing all branches on each frame. It works well when you have small number of branches but tree with 14 levels has 7000-10000 branches and drawing 10000 elements on each frame is well... slow. FPS drops from 60 to 10. So I optimized it a little, removed clearing background and changed <code>draw-branch</code> function to skip branches that are already fully drawn. That helped drastically bringing FPS back to 60. The big drawback that you can&#39;t do nice transformations now that may require redrawing everything. For example after tree is drawn I wanted to zoom into smallest branch and start drawing new tree from that branch, but it requires redrawing everything during zoom and I gave up this idea.</p>
 
 <p>Another trick I did is around fading background color into tree color (see animations below). The idea is that screen background gradually turns to the same color as tree essentially clearing the tree. To achieve this the tree is drawn on a separate <a href="http://quil.info/api/image/rendering#create-graphics">graphics</a> object. Graphics object is transparent and when you copy it to main screen you can see background. With this technique <code>draw</code> function looks like the following:</p>
-<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">draw</span> <span class="p">[</span><span class="nv">state</span><span class="p">]</span>
+<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">draw</span> <span class="p">[</span><span class="nv">state</span><span class="p">]</span>
   <span class="c1">; Clear screen using calculated background screen. Background depends</span>
   <span class="c1">; on tree state: if tree is fully drawn it gradually changes to match the</span>
   <span class="c1">; tree color.</span>
