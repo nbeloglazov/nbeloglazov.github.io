@@ -7,6 +7,31 @@
     <atom:link href="http://nbeloglazov.com/ru/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Перезагрузка кода в Quil cljs</title>
+      <description>&lt;p&gt;Испокон веков Quil поддерживал перезагрузку кода на лету. Но только в кложур версии. В то время как поддержка таковой в кложурскрипт версии отсутствовала. Но эта проблема была устранена в последней версии (2.2.6). Так что теперь, при использовании плагинов для перезагрузки кода в кложурскрипт, например &lt;a href=&quot;https://github.com/bhauman/lein-figwheel&quot;&gt;figwheel&lt;/a&gt;, Quil тоже будет вести себя прилично: при изменении функций (draw, update, обработчиков клавиш) - изменения будут отображаться мгновенно без необходимости обновлять страницу. Вот 3-шаговая инструкция как создать такой проект:&lt;/p&gt;
+
+&lt;p&gt;1 Создать новый cljs проект: &lt;code&gt;lein new quil-cljs hello&lt;/code&gt; и перейти в папку &lt;code&gt;hello&lt;/code&gt;.&lt;br&gt;
+2 Настроить figwheel в &lt;code&gt;project.clj&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:plugins&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lein-cljsbuild&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.0.6&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+              &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lein-figwheel&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.3.3&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:cljsbuild&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:builds&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:source-paths&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;src&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                          &lt;span class=&quot;ss&quot;&gt;:figwheel&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;
+                          &lt;span class=&quot;ss&quot;&gt;:compiler&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}}]}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;3 Запустить figwheel: &lt;code&gt;lein figwheel&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;И всё. Теперь можно открыть &lt;code&gt;index.html&lt;/code&gt; и вы должны увидеть вращающийся круг. Теперь измените &lt;code&gt;core.clj&lt;/code&gt; и сохраните - все изменения должны (почти) мгновенно отобразиться в браузере. Например давайте изменим направление вращение круга - в функции &lt;code&gt;update&lt;/code&gt; замените плюс на минус: &lt;code&gt;(- (:angle state) 0.1)&lt;/code&gt; и сохраните файл. Круг должен начать вращаться против часовой стрелки.&lt;/p&gt;
+
+&lt;p&gt;Перезагрузка на лету работает только при использовании &lt;code&gt;defsketch&lt;/code&gt;. Если использовать &lt;code&gt;sketch&lt;/code&gt; - это не сработает (так же как и в кложур версии). При использовании &lt;code&gt;defsketch&lt;/code&gt; все переданные функции (draw, update) оборачиваются в анонимные функции, так чтобы они вызывались по имени, а не по значению. Когда figwheel перезагружает &lt;code&gt;hello.core/draw&lt;/code&gt; - Quil вызовет анонимную обёртку над draw, которая в свою очередь уже вызовет &lt;code&gt;hello.core/draw&lt;/code&gt;. Без обёртки, Quil бы всегда использовал начальную версию draw и понятия не имел бы о том, значение в переменной &lt;code&gt;draw&lt;/code&gt; на самом деле изменилось.&lt;/p&gt;
+</description>
+      <pubDate>Mon, 15 Jun 2015 00:00:00 -0700</pubDate>
+      <link>http://nbeloglazov.com/ru/2015/06/15/live-reloading-in-quil-cljs.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/ru/2015/06/15/live-reloading-in-quil-cljs.html</guid>
+    </item>
+    
+    <item>
       <title>Бэкапим монгу используя кложур</title>
       <description>&lt;p&gt;В этом посте я покажу простую тулу для создания бэкапов монги и закачки их на &lt;a href=&quot;https://cloud.google.com/storage/&quot;&gt;Google Cloud Storage&lt;/a&gt;. Предположим есть небольшой веб-проект, который использует монгу. Проект запущен на одной машине на каком-нибудь из кучи облачных хостингов. И хочется периодически делать бэкапы монги. Некоторые провайдеры предоставляют сервисы для создания снапшотов дисков или что-нибудь подобное, но часто это требует отключения машины или демонтирования диска, а это звучит как-то тяжеловато. Вместо этого давайте напишем свою небольшую тулу, которая будет периодически запускаться, делая бэкап и закачивая его на файловый хостинг, такой как Dropbox, Google Drive или (в нашем случае) Google Cloud Storage. Я выбрал Cloud Storage, потому что уже использую &lt;a href=&quot;https://cloud.google.com/&quot;&gt;гугловую облачную платформу&lt;/a&gt; в качестве хостинга для &lt;a href=&quot;http://hatnik.com&quot;&gt;Хатника&lt;/a&gt; и почему не использовать один из сервисов это платформы?&lt;/p&gt;
 
