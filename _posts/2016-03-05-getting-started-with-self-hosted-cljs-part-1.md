@@ -57,7 +57,7 @@ And output in logs:
 console.log("Hello, world");
 ```
 
-You can that the last (fifth) argument is changed from `identity` to `#(println (:value %))`. This argument is a callback function that will be invoked once cljs finished compiling. The result will be passed to the provided callback. In the first example with `eval-str` we don't really care about result, we just wanted `console.log` to be callled. But now we use `compile-str` and we want to see result of compilation, so we pass a function that takes that result and prints it to console.
+The last (fifth) argument is changed from `identity` to `#(println (:value %))`. This argument is a callback function that will be invoked once cljs finished compiling. The result will be passed to the provided callback. In the first example with `eval-str` we didn't really care about the result, we just wanted `console.log` to be evaluated. But now we use `compile-str` and we want to see result of compilation, so we pass a function that takes that result and prints it to console.
 
 Now let's compile real namespace with multiple functions. Also I'm going to introduce helper `compile` function to omit default arguments:
 
