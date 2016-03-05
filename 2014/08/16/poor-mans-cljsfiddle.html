@@ -50,6 +50,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html">
+                  <span class="post-date">05 Mar 2016</span>
+                  Getting Started with Self-Hosted ClojureScript. Part 1.
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/2015/06/15/live-reloading-in-quil-cljs.html">
                   <span class="post-date">15 Jun 2015</span>
                   Live Reloading in Quil Cljs
@@ -67,13 +74,6 @@
                 <a class="post-title" href="/2014/12/15/backup-mongodb-using-clojure.html">
                   <span class="post-date">15 Dec 2014</span>
                   Mongo Backup Using Clojure
-                </a>
-              </li>
-            
-              <li class="post-link">
-                <a class="post-title" href="/2014/11/24/github-actions-in-hatnik.html">
-                  <span class="post-date">24 Nov 2014</span>
-                  GitHub Actions in Hatnik
                 </a>
               </li>
             
@@ -144,7 +144,7 @@
 <h3>Step 0 - Create Project</h3>
 
 <p>Project structure:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">├── project.clj
+<div class="highlight"><pre><code class="text language-text" data-lang="text">├── project.clj
 ├── src
 │   └── cljsbin.clj
 └── public
@@ -153,7 +153,7 @@
     └── styles.css
 </code></pre></div>
 <p>project.clj:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defproject </span><span class="nv">cljsbin</span> <span class="s">&quot;0.1.0-SNAPSHOT&quot;</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defproject </span><span class="nv">cljsbin</span> <span class="s">&quot;0.1.0-SNAPSHOT&quot;</span>
   <span class="ss">:dependencies</span> <span class="p">[[</span><span class="nv">org.clojure/clojure</span> <span class="s">&quot;1.6.0&quot;</span><span class="p">]</span>
                  <span class="p">[</span><span class="nv">compojure</span> <span class="s">&quot;1.1.8&quot;</span><span class="p">]</span>
                  <span class="p">[</span><span class="nv">hiccup</span> <span class="s">&quot;1.0.5&quot;</span><span class="p">]</span>
@@ -167,7 +167,7 @@
 <p>We start by creating a server that does only static files. The server will serve 3 static files: index.html, styles.css and script.js (we need a little bit of js to handle button click).</p>
 
 <p>cljsbin.clj:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">compojure.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">defroutes</span> <span class="nv">GET</span><span class="p">]]</span>
             <span class="p">[</span><span class="nv">compojure.route</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">files</span><span class="p">]]))</span>
 
@@ -181,7 +181,7 @@
   <span class="p">(</span><span class="nf">files</span> <span class="s">&quot;/&quot;</span><span class="p">))</span>
 </code></pre></div>
 <p>index.html:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;html&gt;</span>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;title&gt;</span>Cljsbin<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
@@ -198,7 +198,7 @@
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
 <p>script.js:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">send</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">send</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Not implemented. Wait for the Step 2.&#39;</span><span class="p">);</span>
 <span class="p">}</span>
 
@@ -209,14 +209,14 @@
 <p>Use <a href="https://github.com/nbeloglazov/blog-projects/blob/master/cljsbin/public/styles.css">this</a> styles.css.</p>
 
 <p>Run server using jetty:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">ring.adapter.jetty/run-jetty</span> <span class="nv">cljsbin/app</span> <span class="p">{</span><span class="ss">:port</span> <span class="mi">8080</span><span class="p">})</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">ring.adapter.jetty/run-jetty</span> <span class="nv">cljsbin/app</span> <span class="p">{</span><span class="ss">:port</span> <span class="mi">8080</span><span class="p">})</span>
 </code></pre></div>
 <p>Open <a href="http://localhost:8080">http://localhost:8080</a>, click button and check js console - you should see &quot;Not implemented&quot; message.</p>
 
 <h3>Step 2 - Serve Iframe Files</h3>
 
 <p>Time to serve html and js files which will be loaded by the iframe. Result js file will be static for now as we&#39;re not sending code from the page.</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="nv">...</span>
             <span class="p">[</span><span class="nv">ring.util.response</span> <span class="ss">:as</span> <span class="nv">resp</span><span class="p">]</span>
             <span class="p">[</span><span class="nv">hiccup.page</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">html5</span><span class="p">]]))</span>
@@ -247,13 +247,13 @@
 <h3>Step 3 - Implement Send</h3>
 
 <p>We&#39;re almost there! Let&#39;s implement <code>/create</code> request now and update js <code>send</code> function. No cljs-&gt;js compilation yet, just store source and serve it without modification. Format of request (json):</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;Some cljs code here.&quot;</span><span class="p">}</span>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;Some cljs code here.&quot;</span><span class="p">}</span>
 </code></pre></div>
 <p>And response (json):</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="o">:</span> <span class="s2">&quot;12345&quot;</span><span class="p">}</span>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="o">:</span> <span class="s2">&quot;12345&quot;</span><span class="p">}</span>
 </code></pre></div>
 <p>Update for cljsbin.clj:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">compojure.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">defroutes</span> <span class="nv">GET</span> <span class="nv">POST</span><span class="p">]]</span>
             <span class="nv">...</span>
             <span class="p">[</span><span class="nv">ring.middleware.json</span> <span class="ss">:as</span> <span class="nv">json</span><span class="p">]))</span>
@@ -293,7 +293,7 @@
       <span class="nv">json/wrap-json-response</span><span class="p">))</span>
 </code></pre></div>
 <p>Update script.js:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">send</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">send</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span><span class="nx">source</span><span class="o">:</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#source&#39;</span><span class="p">).</span><span class="nx">val</span><span class="p">()};</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
         <span class="nx">url</span><span class="o">:</span> <span class="s1">&#39;/create&#39;</span><span class="p">,</span>
@@ -310,7 +310,7 @@
 <span class="p">...</span>
 </code></pre></div>
 <p>I&#39;m very sorry for using unholy javascript here instead of blessed clojurescript, but I couldn&#39;t make myself setup all cljsbuild stuff for mere 16 lines of js. Now restart the server, but using <code>cljsbin/handler</code> instead of <code>cljsbin/app</code> this time. Open <a href="http://localhost:8080">http://localhost:8080</a> and try to send following code:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s1">&#39;I am alive!&#39;</span><span class="p">;</span>
 <span class="p">});</span>
 </code></pre></div>
@@ -319,7 +319,7 @@
 <h3>Step 4 - Clojurescript Compilation</h3>
 
 <p>Finally, the most interesting part - cljs-&gt; js compilation. Let&#39;s go straight to code:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">cljsbin</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="nv">...</span>
             <span class="p">[</span><span class="nv">cljs.closure</span> <span class="ss">:as</span> <span class="nv">cljs</span><span class="p">]</span>
             <span class="p">[</span><span class="nv">me.raynes.fs</span> <span class="ss">:as</span> <span class="nv">fs</span><span class="p">]))</span>
@@ -361,7 +361,7 @@
     <span class="p">(</span><span class="nf">resp/response</span> <span class="p">{</span><span class="ss">:id</span> <span class="nv">id</span><span class="p">})))</span>
 </code></pre></div>
 <p>Restart the server for the last time and try sending cljs code (you might need to wait a little while cljs is compiled):</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">hello</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">hello</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">clojure.browser.dom</span> <span class="ss">:as</span> <span class="nv">dom</span><span class="p">]))</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">say-hello</span> <span class="p">[]</span>

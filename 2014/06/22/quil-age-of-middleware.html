@@ -50,6 +50,13 @@
           <ul class="posts-list">
             
               <li class="post-link">
+                <a class="post-title" href="/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html">
+                  <span class="post-date">05 Mar 2016</span>
+                  Getting Started with Self-Hosted ClojureScript. Part 1.
+                </a>
+              </li>
+            
+              <li class="post-link">
                 <a class="post-title" href="/2015/06/15/live-reloading-in-quil-cljs.html">
                   <span class="post-date">15 Jun 2015</span>
                   Live Reloading in Quil Cljs
@@ -67,13 +74,6 @@
                 <a class="post-title" href="/2014/12/15/backup-mongodb-using-clojure.html">
                   <span class="post-date">15 Dec 2014</span>
                   Mongo Backup Using Clojure
-                </a>
-              </li>
-            
-              <li class="post-link">
-                <a class="post-title" href="/2014/11/24/github-actions-in-hatnik.html">
-                  <span class="post-date">24 Nov 2014</span>
-                  GitHub Actions in Hatnik
                 </a>
               </li>
             
@@ -132,7 +132,7 @@
 <h3>Rotating middleware</h3>
 
 <p>The rotating middleware&#39;s job is pretty simple: replace user-provided <code>draw</code> function with it own special version of <code>draw</code>. This special <code>draw</code> function does two things: first, it rotates sketch some angle, and second, calls original <code>draw</code>. But code is worth a thousand words, so here it is:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; rotated-draw is the special draw function,</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="c1">; rotated-draw is the special draw function,</span>
 <span class="c1">; which rotates sketch some angle depending on current frame number,</span>
 <span class="c1">; and then calls original user-provided &#39;draw&#39; function.</span>
 <span class="c1">; period is a number of frames to rotate sketch a full 360 degrees</span>
@@ -181,7 +181,7 @@
 <p><img src="/images/quil-middleware/rect-rotating.gif" alt="Static squares"></p>
 
 <p>Let&#39;s say we want to change rotation period now. We can always modify <code>rotate-me</code> function and change period there. But that&#39;s not very customizable, what if user wants to change it? We don&#39;t want user to dive into middleware and modify it. Even more, middleware may be shipped as a library and modifying a third-party library is not an easy task. Fortunately our problem is easy to solve: let&#39;s read rotation period from <code>options</code> map:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">rotate-me</span> <span class="p">[</span><span class="nv">options</span><span class="p">]</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">rotate-me</span> <span class="p">[</span><span class="nv">options</span><span class="p">]</span>
   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">draw</span> <span class="p">(</span><span class="ss">:draw</span> <span class="nv">options</span> <span class="p">(</span><span class="k">fn </span><span class="p">[]))</span>
         <span class="c1">; read period as :rotate-period value</span>
         <span class="c1">; or fallback to 200 if not provided</span>
