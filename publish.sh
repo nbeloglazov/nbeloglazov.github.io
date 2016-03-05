@@ -1,7 +1,7 @@
 #!/bin/bash
 rm -r _site
 echo "Building en version"
-jekyll build -d _site
+bundle exec jekyll build -d _site
 
 RESOURCES=(_posts)
 for res in ${RESOURCES[@]}
@@ -13,7 +13,7 @@ done
 
 echo "Building ru version"
 cp -r _posts-ru _posts
-jekyll build --config _config-ru.yml -d _site/ru
+bundle exec jekyll build --config _config-ru.yml -d _site/ru
 for res in ${RESOURCES[@]}
 do
     echo "Restoring en for $res"
