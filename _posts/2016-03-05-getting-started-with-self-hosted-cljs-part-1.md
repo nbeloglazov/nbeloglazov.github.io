@@ -2,6 +2,7 @@
 layout: post
 title: Getting Started with Self-Hosted ClojureScript. Part 1.
 date: "2016-03-05 00:00:00"
+single_language: true
 ---
 
 ClojureScript is a compiler for Clojure that targets JavaScript. About [7 months ago](https://groups.google.com/forum/#!searchin/clojurescript/1.7.28/clojurescript/Z6xD9UthbvQ/gsLMbURGAgAJ) it got a nice feature that allows you to compile ClojureScript code using ClojureScript: self-hosting. That means that we can now compile ClojureScript fully in browser! That's pretty cool for creating various interactive in-browser tutorials/repls/workspaces/whatever. I've been working on compiling Quil using self-hosted cljs (including macros) and decided to write basic tutorial of how to work with self-hosted cljs. This tutorial uses vanilla cljs without any additional libraries or features like reading files from disk, sending XHR so all you need is to understand basic ClojureScript syntax. In these articles I'll be using latest ClojureScript currently available: 1.7.228.
