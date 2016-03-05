@@ -132,7 +132,7 @@
 <h3>Вращательное middleware</h3>
 
 <p>Работа у нашего middleware довольно проста: нужно заменить определённую пользователем <code>draw</code> специальной вращательной <code>draw</code>, которая будет делать 2 вещи: поворачивать скетч на какой-то угол, а потом вызывать оригинальную <code>draw</code>. Как известно, код стоит больше тысячи слов, так что код (и тысяча слов):</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; rotated-draw - вышеупомянутая вращательная функция draw</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="c1">; rotated-draw - вышеупомянутая вращательная функция draw</span>
 <span class="c1">; она вращает скетч на определённый угол в зависимости от текущей итерации</span>
 <span class="c1">; и потом вызывает исходную пользовательскую draw</span>
 <span class="c1">; period - число итераций, за которую скетч повернётся на 360 градусов</span>
@@ -181,7 +181,7 @@
 <p><img src="/images/quil-middleware/rect-rotating.gif" alt="Static squares"></p>
 
 <p>Предположим, что теперь нам понадобилось изменить период вращения. Мы конечно можем изменить <code>rotate-me</code> функцию напрямую, но это не очень красиво, что если пользователь захочет изменить период? Не очень хочется, чтобы ему пришлось лезть внутрь middleware и что-то там изменять. К тому же, middleware могла быть подключена как сторонняя библиотека, и изменение внутренностей библиотек вообще задача не из простых. К счастью, нашу проблему можно решить проще: можно задать период в опциях и middleware его прочитает:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">rotate-me</span> <span class="p">[</span><span class="nv">options</span><span class="p">]</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">rotate-me</span> <span class="p">[</span><span class="nv">options</span><span class="p">]</span>
   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">draw</span> <span class="p">(</span><span class="ss">:draw</span> <span class="nv">options</span> <span class="p">(</span><span class="k">fn </span><span class="p">[]))</span>
         <span class="c1">; берём период как значение :rotate-period</span>
         <span class="c1">; если такого нет, то используем 200 по умолчанию</span>

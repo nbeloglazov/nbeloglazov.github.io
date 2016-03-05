@@ -134,7 +134,7 @@
 <h3>Создание бэкапа</h3>
 
 <p>Допустим монга не требует аутентификации, а ОС - линукс. Тогда код:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">clojure.java</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">clojure.java</span>
             <span class="p">[</span><span class="nv">shell</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">sh</span> <span class="nv">with-sh-dir</span><span class="p">]]</span>
             <span class="p">[</span><span class="nv">io</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">file</span><span class="p">]]])</span>
 
@@ -163,7 +163,7 @@
 <h3>Закачиваем в облако</h3>
 
 <p>Теперь мы будем мучаться с Google API, что закачать несчастный файл. Для начала нужно настроить <a href="https://cloud.google.com/storage/docs/authentication#service_accounts">service account</a>, который даст нашей программе доступ к хранилищу. После этого будет выдан специальный емейл и файл с приватным ключом, который и будут использоваться в качестве логина/пароля. Будем использовать официальную джава библиотеку для работы с API хранилища (<a href="https://developers.google.com/resources/api-libraries/documentation/storage/v1/java/latest/">javadocs</a>). Я не буду приводить все используемые импорты джава классов, т.к. их достаточно много и если надо, их можно посмотреть в проекте в конце поста. Собственно код:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="k">def </span><span class="nv">email-address</span> <span class="s">&quot;&lt;YOUR SERVICE ACCOUNT EMAIL HERE&gt;&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="k">def </span><span class="nv">email-address</span> <span class="s">&quot;&lt;YOUR SERVICE ACCOUNT EMAIL HERE&gt;&quot;</span><span class="p">)</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">p12-file</span> <span class="p">(</span><span class="nf">file</span> <span class="s">&quot;&lt;PATH TO PRIVATE KEY FILE&gt;&quot;</span><span class="p">))</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">bucket-name</span> <span class="s">&quot;mongo-backups&quot;</span><span class="p">)</span>
 <span class="p">(</span><span class="k">def </span><span class="nv">app-name</span> <span class="s">&quot;&lt;YOUR GOOGLE CLOUD PROJECT NAME&gt;&quot;</span><span class="p">)</span> <span class="c1">; не уверен, что это вообще нужно</span>
@@ -201,7 +201,7 @@
          <span class="p">(</span><span class="nf">execute</span><span class="p">))))</span>
 </code></pre></div>
 <p>Теперь наконец объединим обе части вместе:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">create-and-upload-dump</span> <span class="p">[]</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">defn </span><span class="nv">create-and-upload-dump</span> <span class="p">[]</span>
   <span class="p">(</span><span class="nf">with-sh-dir</span> <span class="s">&quot;/tmp&quot;</span>
     <span class="p">(</span><span class="nf">create-dump</span><span class="p">)</span>
     <span class="p">(</span><span class="nf">upload-zip-file</span> <span class="p">(</span><span class="nf">archive-name</span><span class="p">)</span> <span class="p">(</span><span class="nf">file</span> <span class="s">&quot;/tmp/dump.zip&quot;</span><span class="p">))</span>
@@ -217,7 +217,7 @@
 <h3>Создаём cron задачу</h3>
 
 <p>Осталось создать исполняемый jar файл с помощью <code>lein uberjar</code>, скопировать его на сервер вместе с приватным ключом и настроить cron задачу которая будет запускать его ежедневно. Для настройки задачи создадим скрипт в папке <code>/etc/cron.daily</code>. Пример скрипта:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c">#!/bin/sh</span>
+<div class="highlight"><pre><code class="bash language-bash" data-lang="bash"><span class="c">#!/bin/sh</span>
 <span class="c">#</span>
 <span class="c"># Ежедневный бэкап монги</span>
 

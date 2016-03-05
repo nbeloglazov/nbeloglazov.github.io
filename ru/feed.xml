@@ -12,7 +12,7 @@
 
 &lt;p&gt;1 Создать новый cljs проект: &lt;code&gt;lein new quil-cljs hello&lt;/code&gt; и перейти в папку &lt;code&gt;hello&lt;/code&gt;.&lt;br&gt;
 2 Настроить figwheel в &lt;code&gt;project.clj&lt;/code&gt;:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
   &lt;span class=&quot;ss&quot;&gt;:plugins&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lein-cljsbuild&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.0.6&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
               &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lein-figwheel&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.3.3&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
   &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
@@ -40,7 +40,7 @@
 &lt;h3&gt;Создание бэкапа&lt;/h3&gt;
 
 &lt;p&gt;Допустим монга не требует аутентификации, а ОС - линукс. Тогда код:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;clojure.java&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;clojure.java&lt;/span&gt;
             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;shell&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;sh&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;with-sh-dir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;io&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]])&lt;/span&gt;
 
@@ -69,7 +69,7 @@
 &lt;h3&gt;Закачиваем в облако&lt;/h3&gt;
 
 &lt;p&gt;Теперь мы будем мучаться с Google API, что закачать несчастный файл. Для начала нужно настроить &lt;a href=&quot;https://cloud.google.com/storage/docs/authentication#service_accounts&quot;&gt;service account&lt;/a&gt;, который даст нашей программе доступ к хранилищу. После этого будет выдан специальный емейл и файл с приватным ключом, который и будут использоваться в качестве логина/пароля. Будем использовать официальную джава библиотеку для работы с API хранилища (&lt;a href=&quot;https://developers.google.com/resources/api-libraries/documentation/storage/v1/java/latest/&quot;&gt;javadocs&lt;/a&gt;). Я не буду приводить все используемые импорты джава классов, т.к. их достаточно много и если надо, их можно посмотреть в проекте в конце поста. Собственно код:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;email-address&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;YOUR SERVICE ACCOUNT EMAIL HERE&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;email-address&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;YOUR SERVICE ACCOUNT EMAIL HERE&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;p12-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;PATH TO PRIVATE KEY FILE&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;bucket-name&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;mongo-backups&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;app-name&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;YOUR GOOGLE CLOUD PROJECT NAME&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;; не уверен, что это вообще нужно&lt;/span&gt;
@@ -107,7 +107,7 @@
          &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Теперь наконец объединим обе части вместе:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-and-upload-dump&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-and-upload-dump&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;with-sh-dir&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/tmp&amp;quot;&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;create-dump&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;upload-zip-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;archive-name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/tmp/dump.zip&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
@@ -123,7 +123,7 @@
 &lt;h3&gt;Создаём cron задачу&lt;/h3&gt;
 
 &lt;p&gt;Осталось создать исполняемый jar файл с помощью &lt;code&gt;lein uberjar&lt;/code&gt;, скопировать его на сервер вместе с приватным ключом и настроить cron задачу которая будет запускать его ежедневно. Для настройки задачи создадим скрипт в папке &lt;code&gt;/etc/cron.daily&lt;/code&gt;. Пример скрипта:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;# Ежедневный бэкап монги&lt;/span&gt;
 
@@ -384,7 +384,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;h3&gt;Шаг 0 - Создание проекта&lt;/h3&gt;
 
 &lt;p&gt;Структура проекта:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;├── project.clj
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;├── project.clj
 ├── src
 │   └── cljsbin.clj
 └── public
@@ -393,7 +393,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
     └── styles.css
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;project.clj:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
   &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
                  &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.1.8&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
                  &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hiccup&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.0.5&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
@@ -407,7 +407,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;p&gt;Начнём мы с создания сервера, который умеет только отдавать статику. У сервера есть целых 3 файла: index.html, styles.css и script.js (нам нужно немного джаваскрипта, чтобы обрабатывать нажатие на кнопку).&lt;/p&gt;
 
 &lt;p&gt;cljsbin.clj:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.route&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
 
@@ -421,7 +421,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;files&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;index.html:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&amp;gt;&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;html language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&amp;gt;&lt;/span&gt;
   &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
     &lt;span class=&quot;nt&quot;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;Cljsbin&lt;span class=&quot;nt&quot;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
     &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
@@ -438,7 +438,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;script.js:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;Not implemented. Wait for the Step 2.&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
@@ -450,14 +450,14 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;p&gt;Тривиальный styles.css можно взять &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/blob/master/cljsbin/public/styles.css&quot;&gt;отсюда&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Запускам сервер при помощи jetty:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ring.adapter.jetty/run-jetty&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljsbin/app&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:port&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ring.adapter.jetty/run-jetty&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljsbin/app&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:port&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Открываем &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt;, нажимаем на кнопку и проверяем js консоль - мы должны увидеть &amp;quot;Not implemented&amp;quot; сообщение.&lt;/p&gt;
 
 &lt;h3&gt;Шаг 2 - Раздаём файлы для iframe&lt;/h3&gt;
 
 &lt;p&gt;Теперь давайте научим сервер отдавать html и js файлы, которые будут загружаться в iframe. js файл будет на данном этапе статическим, т.к. мы ещё не посылаем код со страницы.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring.util.response&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hiccup.page&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;html5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
@@ -489,13 +489,13 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;h3&gt;Шаг 3 - Реализуем посылку кода&lt;/h3&gt;
 
 &lt;p&gt;Осталось чуть-чуть! Теперь добавим поддержку &lt;code&gt;/create&lt;/code&gt; запроса и изменим джаваскриптовую &lt;code&gt;send&lt;/code&gt; функцию. Компиляцию cljs-&amp;gt;js мы пока не делаем, просто сохраняем исходники без изменениея. Формат запроса (json):&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Some cljs code here.&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Some cljs code here.&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;И ответ (json):&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;12345&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;12345&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Изменяем cljsbin.clj:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;POST&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
             &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring.middleware.json&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
@@ -538,7 +538,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
       &lt;span class=&quot;nv&quot;&gt;json/wrap-json-response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Изменяем script.js:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#source&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()};&lt;/span&gt;
     &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ajax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
         &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/create&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
@@ -555,7 +555,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Я очень извиняюсь за то, что использую неправославный джаваскрипт вместо благословлённого кложурскрипта, но у меня рука не поднялась настраивать cljsbuild и прочую штуку для несчастных 16 строк. Теперь опять перезапускаем сервер, только в этот раз используем &lt;code&gt;cljsbin/handler&lt;/code&gt; вместо &lt;code&gt;cljsbin/app&lt;/code&gt;. Открываем &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt; и пробуем послать следующий код:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nb&quot;&gt;window&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;addEventListener&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nb&quot;&gt;window&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;addEventListener&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;innerHTML&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;I am alive!&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
@@ -564,7 +564,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;h3&gt;Шаг 4 - Компиляция кложурскрипта&lt;/h3&gt;
 
 &lt;p&gt;Наконец-то, самая интересная часть - компиляция cljs-&amp;gt;js. Перейдём сразу к коду:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs.closure&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;me.raynes.fs&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
@@ -606,7 +606,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Перезапускаем сервер в последний раз и пробуем послать следующий код (возможно придётся немного подождать, пока он компилируется):&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hello&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hello&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;clojure.browser.dom&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
 
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;say-hello&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
@@ -663,7 +663,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;p&gt;Как можно видеть, у библиотеки не должно быть концепции адресов, очередей или топиков. Также не должно быть концепции сервера: клиенты должны быть способны общаться друг с другом без надобности подсоединения к какому-либо серверу.&lt;/p&gt;
 
 &lt;p&gt;Для реализации мы решили воспользоваться &lt;a href=&quot;http://en.wikipedia.org/wiki/IP_multicast&quot;&gt;IP мультикастом&lt;/a&gt;. Мы не лезли глубоко в дебри спецификации и технических деталей, просто нагуглили, как это сделать в джаве. Нашли &lt;code&gt;java.net.MulticastSocket&lt;/code&gt; класс, который делает как раз то, что нам и надо. Более того, &lt;a href=&quot;http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html&quot;&gt;джавадок&lt;/a&gt; для этого класса содержит пример, как его использовать. Фактически, мы просто переписали пример на кложур и немного расширили. Собственно код:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pubsub.core&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pubsub.core&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;java.net&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;InetAddress&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;DatagramPacket&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;MulticastSocket&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
 
 
@@ -697,7 +697,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;/ul&gt;
 
 &lt;p&gt;И теперь код:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; &amp;#39;process-message&amp;#39; - рекурсивная функция для обработки 1 сообщения&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; &amp;#39;process-message&amp;#39; - рекурсивная функция для обработки 1 сообщения&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;; Аргументы&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;;   socket - сокет, из которого мы будем считывать сообщение&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;;   predicate - предикат, заданный пользователем&lt;/span&gt;
@@ -726,7 +726,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
       &lt;span class=&quot;nv&quot;&gt;finished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Вот и всё. Библиотека готова к использованию. Далее пример использования:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pubsub.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;subscribe-with&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pubsub.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;send-it&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;subscribe-with&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
 
 &lt;span class=&quot;c1&quot;&gt;; подписаться на все сообщения&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;subscribe-with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Simplest subscribe&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
@@ -767,7 +767,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;h3&gt;Вращательное middleware&lt;/h3&gt;
 
 &lt;p&gt;Работа у нашего middleware довольно проста: нужно заменить определённую пользователем &lt;code&gt;draw&lt;/code&gt; специальной вращательной &lt;code&gt;draw&lt;/code&gt;, которая будет делать 2 вещи: поворачивать скетч на какой-то угол, а потом вызывать оригинальную &lt;code&gt;draw&lt;/code&gt;. Как известно, код стоит больше тысячи слов, так что код (и тысяча слов):&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; rotated-draw - вышеупомянутая вращательная функция draw&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; rotated-draw - вышеупомянутая вращательная функция draw&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;; она вращает скетч на определённый угол в зависимости от текущей итерации&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;; и потом вызывает исходную пользовательскую draw&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;; period - число итераций, за которую скетч повернётся на 360 градусов&lt;/span&gt;
@@ -816,7 +816,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;p&gt;&lt;img src=&quot;/images/quil-middleware/rect-rotating.gif&quot; alt=&quot;Static squares&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;Предположим, что теперь нам понадобилось изменить период вращения. Мы конечно можем изменить &lt;code&gt;rotate-me&lt;/code&gt; функцию напрямую, но это не очень красиво, что если пользователь захочет изменить период? Не очень хочется, чтобы ему пришлось лезть внутрь middleware и что-то там изменять. К тому же, middleware могла быть подключена как сторонняя библиотека, и изменение внутренностей библиотек вообще задача не из простых. К счастью, нашу проблему можно решить проще: можно задать период в опциях и middleware его прочитает:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rotate-me&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:draw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fn &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]))&lt;/span&gt;
         &lt;span class=&quot;c1&quot;&gt;; берём период как значение :rotate-period&lt;/span&gt;
         &lt;span class=&quot;c1&quot;&gt;; если такого нет, то используем 200 по умолчанию&lt;/span&gt;
@@ -864,12 +864,12 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
       <description>&lt;p&gt;Данный пост является введением в Quil. Quil - это библиотека для создания интерактивной анимации в Clojure. Попросту говоря она позволяет рисовать на экране всё, что душе угодно. Quil предоставляет множество полезных функций для рисования в 2D и 3D. В это посте я покажу, как создавать и запускать эскизы (скетчи). Начнём с чего-нибудь простого, например с тригонометрии... Все её любят: синусы, косинусы, тангенсы, что может быть лучше? Наш первый скетч будет просто рисовать спираль используя функции sin и cos.&lt;/p&gt;
 
 &lt;p&gt;project.clj&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
-  &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.2.6&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.7.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;2.3.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;И собственно сам код quil_intro.clj:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil-intro&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;quil.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
 
 &lt;span class=&quot;c1&quot;&gt;; определяем функцию, которая рисует спираль&lt;/span&gt;
@@ -896,7 +896,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;p&gt;&lt;img src=&quot;/images/quil-intro/spiral.png&quot; alt=&quot;Plot of spiral&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;Теперь давайте немного порефакторим &lt;code&gt;draw&lt;/code&gt;, чтобы сделать построение графиков функций чуть проще. Для этого мы зададим функцию &lt;code&gt;draw-plot&lt;/code&gt;, которая принимает параметрическую функцию &lt;em&gt;f(t) = (x, y)&lt;/em&gt; и границы параметра &lt;em&gt;t&lt;/em&gt; на которых нужно построить график. Вот какой получился код:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; задаём f&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; задаём f&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;* &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/sin&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;* &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/cos&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))])&lt;/span&gt;
@@ -919,7 +919,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;h3&gt;Перезагрузка на лету&lt;/h3&gt;
 
 &lt;p&gt;В большинстве языков, после изменения кода нам бы понадобилось закрыть текущий скетч, скомпилировать изменения и запустить скетч заново. В Quil мы можем изменить все функции на лету и увидеть изменения немедленно. Вообще, можно запрограммировать весь скетч, от начала до конца, ни разу его не закрыв, а постепенно наращивая его функционал. Конечно, не всё можно изменить на лету, например, невозможно зарегистрировать обработчики событий мыши и клавиатуры. Но это не мешает изменить существующие, т.е. можно изначально зарегистрировать пустые обработчики, а, потом в процессе творчества, добавить в них логику. Теперь давайте вернёмся обратно к коду и изменим функцию &lt;code&gt;f&lt;/code&gt;:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; можно получить кучу интересных графиков пробуя&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;c1&quot;&gt;; можно получить кучу интересных графиков пробуя&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;; произвольные комбинации тригонометрических функций,&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;; например f, представленная, ниже рисует цветок&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
@@ -945,7 +945,7 @@ java -jar &lt;span class=&quot;nv&quot;&gt;$WORKING_DIR&lt;/span&gt;/backup.jar
 &lt;h3&gt;Анимация&lt;/h3&gt;
 
 &lt;p&gt;Теперь рассмотрим ещё одну фичу Quil. До этого момента мы рисовали только статичные изображения, которые не изменялись с течением времени. На самом деле функция &lt;code&gt;draw&lt;/code&gt; вызывается периодически с короткими интервалами, что позволяет рисовать движущиеся объекты и настоящую анимацию! Сейчас мы изменим &lt;code&gt;draw&lt;/code&gt; так, чтобы на каждой итерации рисовалась только небольшая часть графика: линия от &lt;em&gt;f(t)&lt;/em&gt; до &lt;em&gt;f(t+1)&lt;/em&gt;. Единственная проблема - то, что на каждой итерации &lt;em&gt;t&lt;/em&gt; должно меняться. Для этого мы воспользуемся функцией &lt;a href=&quot;http://quil.info/api/environment#frame-count&quot;&gt;&lt;code&gt;frame-count&lt;/code&gt;&lt;/a&gt;, которая возвращает номер текущей итерации. Этот номер и будет служить числом &lt;em&gt;t&lt;/em&gt;. Теперь cобственно реализация:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;draw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/with-translation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;/ &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/width&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;/ &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;q/height&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
     &lt;span class=&quot;c1&quot;&gt;; заметьте, что мы не используем draw-plot здесь,&lt;/span&gt;
     &lt;span class=&quot;c1&quot;&gt;; т.к. нам нужно отрисовывать только небольшую часть&lt;/span&gt;

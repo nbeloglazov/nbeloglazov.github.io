@@ -150,7 +150,7 @@
 <p>Как можно видеть, у библиотеки не должно быть концепции адресов, очередей или топиков. Также не должно быть концепции сервера: клиенты должны быть способны общаться друг с другом без надобности подсоединения к какому-либо серверу.</p>
 
 <p>Для реализации мы решили воспользоваться <a href="http://en.wikipedia.org/wiki/IP_multicast">IP мультикастом</a>. Мы не лезли глубоко в дебри спецификации и технических деталей, просто нагуглили, как это сделать в джаве. Нашли <code>java.net.MulticastSocket</code> класс, который делает как раз то, что нам и надо. Более того, <a href="http://docs.oracle.com/javase/7/docs/api/java/net/MulticastSocket.html">джавадок</a> для этого класса содержит пример, как его использовать. Фактически, мы просто переписали пример на кложур и немного расширили. Собственно код:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="kd">ns </span><span class="nv">pubsub.core</span>
   <span class="p">(</span><span class="ss">:import</span> <span class="p">[</span><span class="nv">java.net</span> <span class="nv">InetAddress</span> <span class="nv">DatagramPacket</span> <span class="nv">MulticastSocket</span><span class="p">]))</span>
 
 
@@ -184,7 +184,7 @@
 </ul>
 
 <p>И теперь код:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; - рекурсивная функция для обработки 1 сообщения</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="c1">; &#39;process-message&#39; - рекурсивная функция для обработки 1 сообщения</span>
 <span class="c1">; Аргументы</span>
 <span class="c1">;   socket - сокет, из которого мы будем считывать сообщение</span>
 <span class="c1">;   predicate - предикат, заданный пользователем</span>
@@ -213,7 +213,7 @@
       <span class="nv">finished</span><span class="p">)))</span>
 </code></pre></div>
 <p>Вот и всё. Библиотека готова к использованию. Далее пример использования:</p>
-<div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
+<div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">pubsub.core</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">send-it</span> <span class="nv">subscribe-with</span><span class="p">]])</span>
 
 <span class="c1">; подписаться на все сообщения</span>
 <span class="p">(</span><span class="nf">subscribe-with</span> <span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Simplest subscribe&quot;</span> <span class="nv">%</span><span class="p">))</span>
