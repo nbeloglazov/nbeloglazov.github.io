@@ -5,6 +5,9 @@ date: "2016-03-05 00:00:00"
 single_language: true
 ---
 
+ * Part 1
+ * [Part 2](/2016/03/05/getting-started-with-self-hosted-cljs-part-2.html)
+
 ClojureScript is a compiler for Clojure that targets JavaScript. About [7 months ago](https://groups.google.com/forum/#!searchin/clojurescript/1.7.28/clojurescript/Z6xD9UthbvQ/gsLMbURGAgAJ) it got a nice feature that allows you to compile ClojureScript code using ClojureScript: self-hosting. That means that we can now compile ClojureScript fully in browser! That's pretty cool for creating various interactive in-browser tutorials/repls/workspaces/whatever. I've been working on compiling Quil using self-hosted cljs (including macros) and decided to write basic tutorial of how to work with self-hosted cljs. This tutorial uses vanilla cljs without any additional libraries or features like reading files from disk, sending XHR so all you need is to understand basic ClojureScript syntax. In these articles I'll be using latest ClojureScript currently available: 1.7.228.
 
 ### Prepare
@@ -59,7 +62,7 @@ console.log("Hello, world");
 ```
 
 The last (fifth) argument is changed from `identity` to `#(println (:value %))`. This argument is a callback function that will be invoked once cljs finished compiling. The result will be passed to the provided callback. In the first example with `eval-str` we didn't really care about the result, we just wanted `console.log` to be evaluated. But now we use `compile-str` and we want to see result of compilation, so we pass a function that takes that result and prints it to console.
-
+<br><br>
 Now let's compile real namespace with multiple functions. Also I'm going to introduce helper `compile` function to omit default arguments:
 
 ```clojure
@@ -86,5 +89,5 @@ my.test.triple.call(null,(5));
 ```
 
 Compiled code readable and you can pretty easily relate cljs source with compiled js. It has some `goog.provide` and `goog.require` magic which comes from Google Closure compiler used by ClojureScript, but it is quite simple: compiled code declares namespace `my.test` and uses namespace `cljs.core`. Everything else is standard javascript.
-
+<br><br>
 Thats all for now. Now we can compile basic cljs namespaces. In the next article we'll be compiling code consisting from multiple namespaces/files and using macros.
