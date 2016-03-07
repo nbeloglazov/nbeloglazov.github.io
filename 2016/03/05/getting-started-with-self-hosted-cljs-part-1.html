@@ -124,7 +124,7 @@
   <div class="post">
     <ul>
 <li>Part 1</li>
-<li><a href="/2016/03/05/getting-started-with-self-hosted-cljs-part-2.html">Part 2</a></li>
+<li><a href="/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html">Part 2</a></li>
 </ul>
 
 <p>ClojureScript is a compiler for Clojure that targets JavaScript. About <a href="https://groups.google.com/forum/#!searchin/clojurescript/1.7.28/clojurescript/Z6xD9UthbvQ/gsLMbURGAgAJ">7 months ago</a> it got a nice feature that allows you to compile ClojureScript code using ClojureScript: self-hosting. That means that we can now compile ClojureScript fully in browser! That&#39;s pretty cool for creating various interactive in-browser tutorials/repls/workspaces/whatever. I&#39;ve been working on compiling Quil using self-hosted cljs (including macros) and decided to write basic tutorial of how to work with self-hosted cljs. This tutorial uses vanilla cljs without any additional libraries or features like reading files from disk, sending XHR so all you need is to understand basic ClojureScript syntax. In these articles I&#39;ll be using latest ClojureScript currently available: 1.7.228.</p>
@@ -196,7 +196,7 @@ Now let&#39;s compile real namespace with multiple functions. Also I&#39;m going
 </code></pre></div>
 <p>Compiled code readable and you can pretty easily relate cljs source with compiled js. It has some <code>goog.provide</code> and <code>goog.require</code> magic which comes from Google Closure compiler used by ClojureScript, but it is quite simple: compiled code declares namespace <code>my.test</code> and uses namespace <code>cljs.core</code>. Everything else is standard javascript.
 <br><br>
-Thats all for now. Now we can compile basic cljs namespaces. In the next article we&#39;ll be compiling code consisting from multiple namespaces/files and using macros.</p>
+Thats all for now. Now we can compile basic cljs namespaces. In <a href="/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html">the next article</a> we&#39;ll be compiling code consisting from multiple namespaces/files and using macros.</p>
 
   </div>
   <div class="colophon">
