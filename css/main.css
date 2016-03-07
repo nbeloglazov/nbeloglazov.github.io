@@ -141,14 +141,13 @@ a:hover {
   line-height: 24px;
   max-width: 725px;
   clear: both;
-  font-size: 1.1em;
+  font-size: 1.4em;
   text-align: justify;
 }
 
 .content .highlight {
   line-height: 18px;
-  font-size: 13px;
-  margin-bottom: 1em;
+  margin: 1em 0em;
 }
 
 .post h2 {
@@ -181,7 +180,7 @@ a:hover {
 .post code {
   border: 1px solid #ddd;
   background-color: #eef;
-  padding: 0 .2em;
+  padding: 0;
 }
 
 .post pre code {
@@ -229,7 +228,7 @@ a:hover {
 .header {
   text-align: center;
   padding-top: 2.5em;
-  font-size: 1.1em;
+  font-size: 1.4em;
 }
 
 .post-link {

@@ -7,8 +7,206 @@
     <atom:link href="http://nbeloglazov.com/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Getting Started with Self-Hosted ClojureScript. Part 2.</title>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html&quot;&gt;Part 1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Part 2&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In &lt;a href=&quot;/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html&quot;&gt;Part 1&lt;/a&gt; we learned how to compile simple cljs namespaces. Here is what we had at the end of the previous article:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;my.main&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs.js&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cjs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs.pprint&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pprint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;enable-console-print!&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cjs/empty-state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cjs/compile-str&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;bla&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:value&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (ns my.test)&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (defn triple [x] (* x 3))&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (triple 5)&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cjs/js-eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let&amp;#39;s modify callback function in &lt;code&gt;compile&lt;/code&gt; function so it prints compiled code if it was successful or error otherwise:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;print-result&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:value&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:value&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;pprint&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cjs/compile-str&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;bla&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;print-result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Adding some :require&lt;/h3&gt;
+
+&lt;p&gt;Now we&amp;#39;re going to use functions from other namespaces. We&amp;#39;re going to move function &lt;code&gt;triple&lt;/code&gt; into separate namespace &lt;code&gt;my.math&lt;/code&gt; and require &lt;code&gt;my.math&lt;/code&gt; from &lt;code&gt;my.test&lt;/code&gt;. When cljs compiles namespace and sees that it requires another namespace - the compiler needs to get the source of that dependancy namespace as well. The compiler doesn&amp;#39;t know how to get them (all it knows is how to compile). So we have to provide a &lt;code&gt;load&lt;/code&gt; function that given namespace name loads source of the namespace. Usually, this &lt;code&gt;load&lt;/code&gt; function fetches clj/cljs/cljc files from disk. We want to keep it simple so we&amp;#39;re going to inline source of &lt;code&gt;my.math&lt;/code&gt; in our file without loading it from anywhere. Here is the code:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;&amp;#39;my.math&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;(ns my.math) (defn triple [x] (* 3 x))&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (ns my.test (:require my.math))&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (my.math/triple 5)&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Loading dependency&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;if-let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;dep-source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cb&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:lang&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:clj&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dep-source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js/Error.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Unknown namespace &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cjs/js-eval&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:load&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Console output:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;Loading dependency {:name my.math, :path my/math}
+
+goog.provide(&amp;#39;my.test&amp;#39;);
+goog.require(&amp;#39;cljs.core&amp;#39;);
+goog.require(&amp;#39;my.math&amp;#39;);
+my.math.triple.call(null,(5));
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note that final output contains only compiled &lt;code&gt;source&lt;/code&gt;, it doesn&amp;#39;t include compiled &lt;code&gt;my.math&lt;/code&gt; which is a dependency. Compiler didn&amp;#39;t actually compile &lt;code&gt;my.math&lt;/code&gt;, just analyzed it. If you try adding a typo, e.g. change &lt;code&gt;(my.math/triple 5)&lt;/code&gt; to &lt;code&gt;(my.math/truple 5)&lt;/code&gt; you&amp;#39;ll get an warning in console:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;Loading dependency {:name my.math, :path my/math}
+WARNING: Use of undeclared Var my.math/truple at line 3
+
+goog.provide(&amp;#39;my.test&amp;#39;);
+goog.require(&amp;#39;cljs.core&amp;#39;);
+goog.require(&amp;#39;my.math&amp;#39;);
+my.math.truple.call(null,(5));
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You see that source is still compiled with &lt;code&gt;truple&lt;/code&gt; but the compiler warned us that it haven&amp;#39;t found &lt;code&gt;truple&lt;/code&gt; function in &lt;code&gt;my.math&lt;/code&gt; namespace. Note that content of &lt;code&gt;my.math&lt;/code&gt; namespace doesn&amp;#39;t affect compilation of source in any way. We could even return an empty string for &lt;code&gt;my.math&lt;/code&gt;. In that case, &lt;code&gt;source&lt;/code&gt; would still be compiled the same way, but the compiler would warn us that we&amp;#39;re using undeclared functions.
+&lt;br&gt;&lt;br&gt;
+You can add more dependencies. For example &lt;code&gt;my.math&lt;/code&gt; might require additional namespaces and compiler will try to load them using the &lt;code&gt;load&lt;/code&gt; function we provided. Even if you require some standard namespaces like &lt;code&gt;clojure.string&lt;/code&gt; - compiler still asks us to provide the source. We can either load real source file from ClojureScript jar file or just return an empty string and ignore compiler warnings about calling undeclared functions &lt;code&gt;clojure.string&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3&gt;How about macros?&lt;/h3&gt;
+
+&lt;p&gt;One really cool feature of self-hosted cljs is that it can compile and expand macros. Macros are an important part of Clojure/ClojureScript ecosystem and without this feature, self-hosted cljs can&amp;#39;t be truly self-hosted. Macros in self-hosted cljs work similar to regular ClojureScript: &lt;code&gt;source&lt;/code&gt; is a regular cljs file that contains definitions of functions, variables, calls functions from other namespaces and also may call macros. But it cannot define macros: if you add &lt;code&gt;defmacro&lt;/code&gt; to cljs source it will be ignored and you won&amp;#39;t be able to use it. Macros must be defined in separate &amp;quot;macros&amp;quot; namespaces. With regular ClojureScript you put macros in .clj files not .cljs. In self-hosted cljs it is similar but instead of .clj vs .cljs files there is macros vs regular namespaces. How does compiler load macros namespaces? Using the &lt;code&gt;load&lt;/code&gt; function we passed in compile options map. For macros namespaces, it adds &lt;code&gt;:macros true&lt;/code&gt; so we (implementors of &lt;code&gt;load&lt;/code&gt; function) can understand which type of namespaces compiler needs. Let&amp;#39;s see it in practice.
+&lt;br&gt;&lt;br&gt;
+We&amp;#39;re going to turn &lt;code&gt;triple&lt;/code&gt; function into a macro: it&amp;#39;s going to perform multiplication during compile time instead of runtime. This macro is going to work only if you pass a number. Code hasn&amp;#39;t changed much:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;&amp;#39;my.math&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;(ns my.math) (defmacro triple [x] (* 3 x))&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (ns my.test (:require-macros my.math))&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (def foo (my.math/triple 5))&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Loading dependency&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;if-let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;dep-source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cb&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:lang&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:clj&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dep-source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js/Error.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Unknown namespace &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cjs/js-eval&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:load&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note that we now use &lt;code&gt;:require-macros&lt;/code&gt; instead of &lt;code&gt;:require&lt;/code&gt; in &lt;code&gt;my.test&lt;/code&gt; and &lt;code&gt;triple&lt;/code&gt; is now defined as &lt;code&gt;defmacro&lt;/code&gt;, not &lt;code&gt;defn&lt;/code&gt;. Console output:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;Loading dependency {:name my.math, :macros true, :path my/math}
+
+goog.provide(&amp;#39;my.test&amp;#39;);
+goog.require(&amp;#39;cljs.core&amp;#39;);
+my.test.foo = (15);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Compiler applied &lt;code&gt;triple&lt;/code&gt; macro to number 5 during compilation and we got &lt;code&gt;15&lt;/code&gt; even without evaluating compiled code! Also take closer look at &lt;code&gt;Loading dependency {:name my.math, :macros true, :path my/math}&lt;/code&gt;. It now has &lt;code&gt;:macros true&lt;/code&gt; which wasn&amp;#39;t there before. This means that compiler asked us to load macros &lt;code&gt;my.math&lt;/code&gt; namespace, not a regular namespace. It is possible that same namespace is loaded &amp;quot;twice&amp;quot;: as macros and as regular namespace. But it doesn&amp;#39;t mean that we have to return the same source for both cases. On the contrary, usually &amp;quot;macros&amp;quot; namespace has, well, some &lt;code&gt;defmacro&lt;/code&gt; in it and regular namespaces has regular cljs functions. We&amp;#39;ll see such example in a little bit.
+&lt;br&gt;&lt;br&gt;
+How does cljs apply macros? Roughly the process is following: the compiler compiles macros namespace to js, &lt;code&gt;defmacro&lt;/code&gt; becomes js functions with additional properties, then it uses these freshly evaluated js function whenever it finds macro calls. So far we&amp;#39;ve seen only final compiled js from &lt;code&gt;source&lt;/code&gt;, but under the hood the compiler also compiles &lt;code&gt;my.math&lt;/code&gt; namespace because now it&amp;#39;s macro namespace. Is there a way to see it so we can better understand how it works? Fortunately, there is. You can add &lt;code&gt;:verbose true&lt;/code&gt; to compile options and it will enable internal debug logs. It is super useful if you&amp;#39;re trying to debug some issue with compilation in dependencies. Let&amp;#39;s see what we get:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cjs/js-eval&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:load&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:verbose&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Console output:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;Namespace side effects for my.test
+Processing :use-macros for my.test
+Processing :require-macros for my.test
+Loading my.math macros namespace
+Loading dependency {:name my.math, :macros true, :path my/math}
+Evaluating my.math
+Namespace side effects for my.math
+Processing :use-macros for my.math
+Processing :require-macros for my.math
+
+goog.provide(&amp;quot;my.math$macros&amp;quot;);
+my.math$macros.triple = (function my$math$macros$triple(_AMPERSAND_form,_AMPERSAND_env,x){
+return ((3) * x);
+});
+my.math$macros.triple.cljs$lang$macro = true;
+
+goog.provide(&amp;#39;my.test&amp;#39;);
+goog.require(&amp;#39;cljs.core&amp;#39;);
+my.test.foo = (15);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It might be somewhat noisy but take a look at the last 2 chunks of code. The first defines &lt;code&gt;my.math$macros&lt;/code&gt; namespace which is our macros namespace that compiler used under the hood. You can see that it has special &lt;code&gt;$macros&lt;/code&gt; suffix that helps to keep it separate from regular namespaces. The last chunk of code is compiled &lt;code&gt;source&lt;/code&gt; which we already saw, so nothing interesting here. With &lt;code&gt;:verbose&lt;/code&gt; output compiler prints all code it compiles and evaluates which is cool.
+&lt;br&gt;&lt;br&gt;
+Let&amp;#39;s try now load the same namespace twice: as macro and as regular namespace. We&amp;#39;re going to fix &lt;code&gt;triple&lt;/code&gt; macro so it does following: if the argument is a number - perform multiplication during compile time, otherwise (if it is a variable or call to other function) defer calculation to &lt;code&gt;triple-fn&lt;/code&gt; function. In order to do that, we need to fix our &lt;code&gt;load-inlined&lt;/code&gt; function. Right now it is dumb and cannot distinguish between macros and regular namespaces, but in real life you should distinguish between these two cases. Actually, &lt;a href=&quot;https://github.com/cljsinfo/cljs-api-docs/blob/catalog/refs/cljs.js/STARload-fnSTAR.md&quot;&gt;documentation&lt;/a&gt; for &lt;code&gt;*load-fn*&lt;/code&gt; suggests that when loading macros namespace you should use only .clj or .cljc files and for regular namespaces .cljs or .cljc files. In our case, we&amp;#39;re going to have 2 maps of inlined namespaces: &lt;code&gt;deps-macros&lt;/code&gt; and &lt;code&gt;deps-regular&lt;/code&gt;. Here it is:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;deps-macros&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;&amp;#39;my.math&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (ns my.math)&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (defmacro triple [x]&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;    (if (number? x)&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;      (* 3 x)&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;      `(my.math/triple-fn ~x)))&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;deps-regular&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;&amp;#39;my.math&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;(ns my.math) (defn triple-fn [x] (* 3 x))&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (ns my.test (:require my.math) (:require-macros my.math))&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (def five 5)&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (+ (my.math/triple 5) (my.math/triple five))&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Loading dependency&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:macros&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;deps-macros&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;deps-regular&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cb&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:lang&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:clj&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js/Error.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Unknown namespace &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cjs/js-eval&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:load&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:verbose&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Console output (debug info omitted):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;Loading dependency {:name my.math, :macros nil, :path my/math}
+Loading dependency {:name my.math, :macros true, :path my/math}
+
+goog.provide(&amp;quot;my.test&amp;quot;);
+my.test.five = (5);
+((15) + my.math.triple_fn.call(null,my.test.five));
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It worked! You can see that &lt;code&gt;my.math&lt;/code&gt; was loaded twice. First as regular namespace and second time as macro namespaces. From compiled code we see that the first call to &lt;code&gt;triple&lt;/code&gt; was calculated in-place while the second was deferred to &lt;code&gt;triple-fn&lt;/code&gt;. Just like we expected. But to be honest, this example is not complete because even though &lt;code&gt;my.math&lt;/code&gt; was loaded twice, the compiler compiled only macro namespace and didn&amp;#39;t compile regular namespace, just analyzed it. To make it fully work replace &lt;code&gt;cjs/compile-str&lt;/code&gt; with &lt;code&gt;cjs/eval-str&lt;/code&gt; in &lt;code&gt;compile&lt;/code&gt; function and now it should fully compile and evaluate each namespace and produce &amp;quot;30&amp;quot; in console output. Also, with &lt;code&gt;verbose&lt;/code&gt; output you should see all 3 namespaces being compiled under the hood.
+&lt;br&gt;&lt;br&gt;
+Initially, I wanted to make this example more elegant by making &lt;code&gt;triple&lt;/code&gt; both macro and function. This way we can use &lt;code&gt;triple&lt;/code&gt; anywhere. Where possible compiler precomputes and where it is not possible - defers it to runtime &lt;code&gt;triple&lt;/code&gt; function. I tried following:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defmacro &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;triple&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;number?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;* &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;my.math/triple&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But the problem here that when compiler processes &lt;code&gt;(my.math/triple five)&lt;/code&gt; - it thinks that it is macro and expands it to &lt;code&gt;(my.math/triple five)&lt;/code&gt; and ... expands it again. And again. And again. And many more times until we&amp;#39;re out of stack. Basically, the compiler doesn&amp;#39;t know if we use &lt;code&gt;my.math/triple&lt;/code&gt; as macro or function. One way hack I found is to make &amp;quot;function&amp;quot; call look more like js call and not regular clojure:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defmacro &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;triple&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;number?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;* &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.triple&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js/my.math&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This way the compiler doesn&amp;#39;t try to expand result as macro. But it doesn&amp;#39;t look clojurish and I decided to go with more clunky &lt;code&gt;triple-fn&lt;/code&gt; instead. I don&amp;#39;t know if there is a better way to do it.
+&lt;br&gt;&lt;br&gt;
+That&amp;#39;s all for today. We learned how to compile both regular cljs and macros in self-hosted cljs! In the next article, I&amp;#39;ll show how to optimize compilation using cache.&lt;/p&gt;
+</description>
+      <pubDate>Sat, 05 Mar 2016 00:00:00 -0800</pubDate>
+      <link>http://nbeloglazov.com/2016/03/05/getting-started-with-self-hosted-cljs-part-2.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/2016/03/05/getting-started-with-self-hosted-cljs-part-2.html</guid>
+    </item>
+    
+    <item>
       <title>Getting Started with Self-Hosted ClojureScript. Part 1.</title>
-      <description>&lt;p&gt;ClojureScript is a compiler for Clojure that targets JavaScript. About &lt;a href=&quot;https://groups.google.com/forum/#!searchin/clojurescript/1.7.28/clojurescript/Z6xD9UthbvQ/gsLMbURGAgAJ&quot;&gt;7 months ago&lt;/a&gt; it got a nice feature that allows you to compile ClojureScript code using ClojureScript: self-hosting. That means that we can now compile ClojureScript fully in browser! That&amp;#39;s pretty cool for creating various interactive in-browser tutorials/repls/workspaces/whatever. I&amp;#39;ve been working on compiling Quil using self-hosted cljs (including macros) and decided to write basic tutorial of how to work with self-hosted cljs. This tutorial uses vanilla cljs without any additional libraries or features like reading files from disk, sending XHR so all you need is to understand basic ClojureScript syntax. In these articles I&amp;#39;ll be using latest ClojureScript currently available: 1.7.228.&lt;/p&gt;
+      <description>&lt;ul&gt;
+&lt;li&gt;Part 1&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;/2016/03/05/getting-started-with-self-hosted-cljs-part-2.html&quot;&gt;Part 2&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;ClojureScript is a compiler for Clojure that targets JavaScript. About &lt;a href=&quot;https://groups.google.com/forum/#!searchin/clojurescript/1.7.28/clojurescript/Z6xD9UthbvQ/gsLMbURGAgAJ&quot;&gt;7 months ago&lt;/a&gt; it got a nice feature that allows you to compile ClojureScript code using ClojureScript: self-hosting. That means that we can now compile ClojureScript fully in browser! That&amp;#39;s pretty cool for creating various interactive in-browser tutorials/repls/workspaces/whatever. I&amp;#39;ve been working on compiling Quil using self-hosted cljs (including macros) and decided to write basic tutorial of how to work with self-hosted cljs. This tutorial uses vanilla cljs without any additional libraries or features like reading files from disk, sending XHR so all you need is to understand basic ClojureScript syntax. In these articles I&amp;#39;ll be using latest ClojureScript currently available: 1.7.228.&lt;/p&gt;
 
 &lt;h3&gt;Prepare&lt;/h3&gt;
 
@@ -54,9 +252,9 @@ lein cljsbuild auto
 &lt;p&gt;And output in logs:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Hello, world&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;The last (fifth) argument is changed from &lt;code&gt;identity&lt;/code&gt; to &lt;code&gt;#(println (:value %))&lt;/code&gt;. This argument is a callback function that will be invoked once cljs finished compiling. The result will be passed to the provided callback. In the first example with &lt;code&gt;eval-str&lt;/code&gt; we didn&amp;#39;t really care about the result, we just wanted &lt;code&gt;console.log&lt;/code&gt; to be evaluated. But now we use &lt;code&gt;compile-str&lt;/code&gt; and we want to see result of compilation, so we pass a function that takes that result and prints it to console.&lt;/p&gt;
-
-&lt;p&gt;Now let&amp;#39;s compile real namespace with multiple functions. Also I&amp;#39;m going to introduce helper &lt;code&gt;compile&lt;/code&gt; function to omit default arguments:&lt;/p&gt;
+&lt;p&gt;The last (fifth) argument is changed from &lt;code&gt;identity&lt;/code&gt; to &lt;code&gt;#(println (:value %))&lt;/code&gt;. This argument is a callback function that will be invoked once cljs finished compiling. The result will be passed to the provided callback. In the first example with &lt;code&gt;eval-str&lt;/code&gt; we didn&amp;#39;t really care about the result, we just wanted &lt;code&gt;console.log&lt;/code&gt; to be evaluated. But now we use &lt;code&gt;compile-str&lt;/code&gt; and we want to see result of compilation, so we pass a function that takes that result and prints it to console.
+&lt;br&gt;&lt;br&gt;
+Now let&amp;#39;s compile real namespace with multiple functions. Also I&amp;#39;m going to introduce helper &lt;code&gt;compile&lt;/code&gt; function to omit default arguments:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cjs/compile-str&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;bla&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:value&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
 
@@ -75,9 +273,9 @@ lein cljsbuild auto
 &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
 &lt;span class=&quot;nx&quot;&gt;my&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;triple&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Compiled code readable and you can pretty easily relate cljs source with compiled js. It has some &lt;code&gt;goog.provide&lt;/code&gt; and &lt;code&gt;goog.require&lt;/code&gt; magic which comes from Google Closure compiler used by ClojureScript, but it is quite simple: compiled code declares namespace &lt;code&gt;my.test&lt;/code&gt; and uses namespace &lt;code&gt;cljs.core&lt;/code&gt;. Everything else is standard javascript.&lt;/p&gt;
-
-&lt;p&gt;Thats all for now. Now we can compile basic cljs namespaces. In the next article we&amp;#39;ll be compiling code consisting from multiple namespaces/files and using macros.&lt;/p&gt;
+&lt;p&gt;Compiled code readable and you can pretty easily relate cljs source with compiled js. It has some &lt;code&gt;goog.provide&lt;/code&gt; and &lt;code&gt;goog.require&lt;/code&gt; magic which comes from Google Closure compiler used by ClojureScript, but it is quite simple: compiled code declares namespace &lt;code&gt;my.test&lt;/code&gt; and uses namespace &lt;code&gt;cljs.core&lt;/code&gt;. Everything else is standard javascript.
+&lt;br&gt;&lt;br&gt;
+Thats all for now. Now we can compile basic cljs namespaces. In the next article we&amp;#39;ll be compiling code consisting from multiple namespaces/files and using macros.&lt;/p&gt;
 </description>
       <pubDate>Sat, 05 Mar 2016 00:00:00 -0800</pubDate>
       <link>http://nbeloglazov.com/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html</link>
@@ -634,274 +832,6 @@ Project: &lt;a href=&quot;http://www.google-melange.com/gsoc/project/details/goo
       <pubDate>Tue, 09 Sep 2014 00:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/2014/09/09/equilibrium.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/2014/09/09/equilibrium.html</guid>
-    </item>
-    
-    <item>
-      <title>Poor Man&#39;s Cljsfiddle</title>
-      <description>&lt;h3&gt;Intro&lt;/h3&gt;
-
-&lt;p&gt;In this post I&amp;#39;ll describe how to create poor man&amp;#39;s cljsfiddle in 4 steps. Rich man&amp;#39;s &lt;a href=&quot;http://cljsfiddle.net/&quot;&gt;cljsfiddle&lt;/a&gt; is a website similar to &lt;a href=&quot;http://jsfiddle.net/&quot;&gt;jsfiddle&lt;/a&gt; which allows you to try and test clojurescript snippets online. It was created by &lt;a href=&quot;https://github.com/jonase&quot;&gt;Jonas&lt;/a&gt; during &lt;a href=&quot;http://lispinsummerprojects.org/&quot;&gt;Lisp in Summer Projects&lt;/a&gt; (he took first place!). Cljsfiddle is pretty cool and I encourage you to try it out. But let&amp;#39;s get back to our own cljsfidle. Let&amp;#39;s call it cljsbin to avoid confusion. Cljsbin will have only 3 elements on a page: textarea for writing clojurescript, send button and iframe for running compiled cljs code. Minimalist design for the win!&lt;/p&gt;
-
-&lt;p&gt;How it should work:&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;User puts clojurescript to the textarea code and clicks &amp;quot;Send&amp;quot;.&lt;/li&gt;
-&lt;li&gt;A POST &lt;code&gt;/create&lt;/code&gt; request is sent. The request contains cljs source.&lt;/li&gt;
-&lt;li&gt;The server receives the request, generates unique id for the new snippet, compiles the source and responds with the id.&lt;/li&gt;
-&lt;li&gt;Upon receiving response browser extracts the id and sets &lt;code&gt;src&lt;/code&gt; attribute of the iframe to &lt;code&gt;/html/ID&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Iframe loads html file from the server. The file imports single script file: &lt;code&gt;/js/ID&lt;/code&gt;. The script contains compiled js which is executed inside the iframe.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3&gt;Step 0 - Create Project&lt;/h3&gt;
-
-&lt;p&gt;Project structure:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;├── project.clj
-├── src
-│   └── cljsbin.clj
-└── public
-    ├── index.html
-    ├── script.js
-    └── styles.css
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;project.clj:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defproject &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.1.0-SNAPSHOT&amp;quot;&lt;/span&gt;
-  &lt;span class=&quot;ss&quot;&gt;:dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.6.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.1.8&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hiccup&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.0.5&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.3.0&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring/ring-json&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.3.1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;org.clojure/clojurescript&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;0.0-2268&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-                 &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;me.raynes/fs&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;1.4.6&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]])&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h3&gt;Step 1 - Serve Static Siles&lt;/h3&gt;
-
-&lt;p&gt;We start by creating a server that does only static files. The server will serve 3 static files: index.html, styles.css and script.js (we need a little bit of js to handle button click).&lt;/p&gt;
-
-&lt;p&gt;cljsbin.clj:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.route&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
-
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;; Serve index.html as initial page when user requests&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;; http://localhost:8080/&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;slurp &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;public/index.html&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;; Serve static files. By default &amp;#39;public&amp;#39; directory is used.&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;; Example: public/script.js served when user requests&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;; http://localhost:8080/script.js&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;files&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;index.html:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;html language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;Cljsbin&lt;span class=&quot;nt&quot;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/script.js&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;link&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;rel=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;stylesheet&amp;quot;&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/styles.css&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/head&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;input-area&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;nt&quot;&gt;&amp;lt;textarea&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/textarea&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;nt&quot;&gt;&amp;lt;button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;send&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;Send&lt;span class=&quot;nt&quot;&gt;&amp;lt;/button&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;&amp;lt;iframe&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;result&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;script.js:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;Not implemented. Wait for the Step 2.&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#send&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;click&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Use &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/blob/master/cljsbin/public/styles.css&quot;&gt;this&lt;/a&gt; styles.css.&lt;/p&gt;
-
-&lt;p&gt;Run server using jetty:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ring.adapter.jetty/run-jetty&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljsbin/app&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:port&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Open &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt;, click button and check js console - you should see &amp;quot;Not implemented&amp;quot; message.&lt;/p&gt;
-
-&lt;h3&gt;Step 2 - Serve Iframe Files&lt;/h3&gt;
-
-&lt;p&gt;Time to serve html and js files which will be loaded by the iframe. Result js file will be static for now as we&amp;#39;re not sending code from the page.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring.util.response&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hiccup.page&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;html5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Create response for &amp;quot;/js/ID&amp;quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;console.log(&amp;#39;I am snippet &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;!&amp;#39;);&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/content-type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;application/javascript&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Create response for &amp;quot;/html/ID&amp;quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-html&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;; Html structure is dead simple so it is easier to use hiccup here&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;; then load/update html template.&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;list &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:head&lt;/span&gt;
-             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:title&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Snippet &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-             &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:script&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:src&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;/js/&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}]]&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-      &lt;span class=&quot;nv&quot;&gt;html5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/js/:id&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/html/:id&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;snippet-html&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Now reload the server and open &lt;a href=&quot;http://localhost:8080/html/42&quot;&gt;http://localhost:8080/html/42&lt;/a&gt;, you should see blank page and &amp;quot;I am snippet 42!&amp;quot; message in the js console.&lt;/p&gt;
-
-&lt;h3&gt;Step 3 - Implement Send&lt;/h3&gt;
-
-&lt;p&gt;We&amp;#39;re almost there! Let&amp;#39;s implement &lt;code&gt;/create&lt;/code&gt; request now and update js &lt;code&gt;send&lt;/code&gt; function. No cljs-&amp;gt;js compilation yet, just store source and serve it without modification. Format of request (json):&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Some cljs code here.&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;And response (json):&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;12345&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Update for cljsbin.clj:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compojure.core&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GET&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;POST&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
-            &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ring.middleware.json&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Save all snippets in an atom. We could use db,&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;; but we&amp;#39;re doing poor&amp;#39;s man cljsfiddle after all.&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;; Map structure: id -&amp;gt; js.&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;atom&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Unique id generator.&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;atom&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;next-id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;inc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Implementation of &amp;quot;/create&amp;quot;.&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;; Store source and return snippet id.&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;next-id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Updated snippet-js. Note that now it retrieves js from&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;; the snippet atom instead of using static string.&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippet-js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/content-type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;application/javascript&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;defroutes&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;POST&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;/create&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:body&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Use ring middleware to decode/encode json requests/response.&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;handler&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;-&amp;gt; &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;app&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;json/wrap-json-body&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:keywords?&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
-      &lt;span class=&quot;nv&quot;&gt;json/wrap-json-response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Update script.js:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#source&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()};&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ajax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/create&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;method&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;POST&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;contentType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;application/json&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;success&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/html/&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-            &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;#result&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;attr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;src&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;I&amp;#39;m very sorry for using unholy javascript here instead of blessed clojurescript, but I couldn&amp;#39;t make myself setup all cljsbuild stuff for mere 16 lines of js. Now restart the server, but using &lt;code&gt;cljsbin/handler&lt;/code&gt; instead of &lt;code&gt;cljsbin/app&lt;/code&gt; this time. Open &lt;a href=&quot;http://localhost:8080&quot;&gt;http://localhost:8080&lt;/a&gt; and try to send following code:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nb&quot;&gt;window&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;addEventListener&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;load&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;innerHTML&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;I am alive!&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;You should see &amp;#39;I am alive!&amp;#39; message in the iframe on the right. We got poor&amp;#39;s man &lt;a href=&quot;http://jsfiddle.net&quot;&gt;jsfiddle&lt;/a&gt;!&lt;/p&gt;
-
-&lt;h3&gt;Step 4 - Clojurescript Compilation&lt;/h3&gt;
-
-&lt;p&gt;Finally, the most interesting part - cljs-&amp;gt; js compilation. Let&amp;#39;s go straight to code:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljsbin&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs.closure&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-            &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;me.raynes.fs&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Create temp dir where cljs will be compiled.&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;; It is used to speed up compilation: clojurescript compiler stores&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;; intermediate results there. For example cljs.core and clojure.*&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;; namespaces compiled to js. The directory is optional.&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cljs-compilation-dir&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-dir&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-compilation&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compile-cljs&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;; Clojurescript compiler prefers to work with files as&lt;/span&gt;
-        &lt;span class=&quot;c1&quot;&gt;; input/outputs so we create temp files for the source&lt;/span&gt;
-        &lt;span class=&quot;c1&quot;&gt;; and compiled output&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-source&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/temp-file&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;cljs-compiled&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;; Write source into the temp file.&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;spit&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;; Compile source using :simple level of optimization.&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cljs/build&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt;
-                &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:optimizations&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:simple&lt;/span&gt;
-                 &lt;span class=&quot;ss&quot;&gt;:output-to&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.getAbsolutePath&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-                 &lt;span class=&quot;ss&quot;&gt;:output-dir&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.getAbsolutePath&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cljs-compilation-dir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-                 &lt;span class=&quot;ss&quot;&gt;:pretty-print&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;; Read compiled output and cleanup temp files.&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compiled&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;slurp &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/delete&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fs/delete&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;compiled-file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;nv&quot;&gt;compiled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;; Updated create-snippet&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;create-snippet&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;next-id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;js&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile-cljs&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;swap!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;snippets&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;assoc &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;resp/response&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:id&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Restart the server for the last time and try sending cljs code (you might need to wait a little while cljs is compiled):&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;ns &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hello&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;clojure.browser.dom&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:as&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))&lt;/span&gt;
-
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;say-hello&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;-&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello from ClojureScript!&amp;quot;&lt;/span&gt;
-       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;dom/element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;dom/append&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.-body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js/document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
-
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.addEventListener&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js/window&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;load&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;say-hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Enjoy greetings from clojurescript! Time to create an awesome promo video and launch Kickstarter campaign...&lt;/p&gt;
-
-&lt;h3&gt;Final thoughts&lt;/h3&gt;
-
-&lt;p&gt;We did simple cljsfiddle app in less than 60 lines of clojure code (and 16 lines of javascript), which is pretty cool, I think. Currently I&amp;#39;m working on cljsfiddle-kinda-clone for &lt;a href=&quot;https://github.com/quil/quil&quot;&gt;Quil&lt;/a&gt;: I want to create a website for sharing sketches written in Quil on ClojureScript. And that work inspired me to write this post. Nice thing about using clojurescript compiler is that it is very simple to add support for other cljs libraries when compiling cljs code: just include them into your &lt;code&gt;project.clj&lt;/code&gt; and compiler automatically discovers and compiles them.&lt;/p&gt;
-
-&lt;p&gt;Cljs compilation consists of 2 major steps:&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;Compile cljs files and their dependencies to separate js files.&lt;/li&gt;
-&lt;li&gt;Compile js files to a single js file using &lt;a href=&quot;https://developers.google.com/closure/compiler/&quot;&gt;Google Closure Compiler&lt;/a&gt;.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;I used &lt;code&gt;cljs.closure/build&lt;/code&gt; function which does both steps for me. Jonas in his cljsfiddle chose another way: he uses clojurescript compiler to perform only step 1 and then he does step 2 manually: &lt;a href=&quot;https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L33&quot;&gt;step 1&lt;/a&gt; and &lt;a href=&quot;https://github.com/jonase/cljsfiddle/blob/9565ccf0d256fdbf97bf524dafb499ed470f32cc/src/clj/cljsfiddle/closure.clj#L47&quot;&gt;step 2&lt;/a&gt;. It allows to perform compilation in memory - no need to use temp files. But it looks more complex. There are most likely other pros, would be glad to hear them.&lt;/p&gt;
-
-&lt;p&gt;Code from this post is available on &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/tree/master/cljsbin&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
-</description>
-      <pubDate>Sat, 16 Aug 2014 22:00:00 -0700</pubDate>
-      <link>http://nbeloglazov.com/2014/08/16/poor-mans-cljsfiddle.html</link>
-      <guid isPermaLink="true">http://nbeloglazov.com/2014/08/16/poor-mans-cljsfiddle.html</guid>
     </item>
     
   </channel>
