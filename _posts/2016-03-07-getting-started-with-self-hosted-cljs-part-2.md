@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Getting Started with Self-Hosted ClojureScript. Part 2.
-date: "2016-03-05 00:00:00"
+date: "2016-03-07 00:00:00"
 single_language: true
 ---
 
