@@ -194,9 +194,9 @@ Initially, I wanted to make this example more elegant by making &lt;code&gt;trip
 &lt;br&gt;&lt;br&gt;
 That&amp;#39;s all for today. We learned how to compile both regular cljs and macros in self-hosted cljs! In the next article, I&amp;#39;ll show how to optimize compilation using cache.&lt;/p&gt;
 </description>
-      <pubDate>Sat, 05 Mar 2016 00:00:00 -0800</pubDate>
-      <link>http://nbeloglazov.com/2016/03/05/getting-started-with-self-hosted-cljs-part-2.html</link>
-      <guid isPermaLink="true">http://nbeloglazov.com/2016/03/05/getting-started-with-self-hosted-cljs-part-2.html</guid>
+      <pubDate>Mon, 07 Mar 2016 00:00:00 -0800</pubDate>
+      <link>http://nbeloglazov.com/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html</guid>
     </item>
     
     <item>
