@@ -6,7 +6,7 @@ single_language: true
 ---
 
  * Part 1
- * [Part 2](/2016/03/05/getting-started-with-self-hosted-cljs-part-2.html)
+ * [Part 2](/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html)
 
 ClojureScript is a compiler for Clojure that targets JavaScript. About [7 months ago](https://groups.google.com/forum/#!searchin/clojurescript/1.7.28/clojurescript/Z6xD9UthbvQ/gsLMbURGAgAJ) it got a nice feature that allows you to compile ClojureScript code using ClojureScript: self-hosting. That means that we can now compile ClojureScript fully in browser! That's pretty cool for creating various interactive in-browser tutorials/repls/workspaces/whatever. I've been working on compiling Quil using self-hosted cljs (including macros) and decided to write basic tutorial of how to work with self-hosted cljs. This tutorial uses vanilla cljs without any additional libraries or features like reading files from disk, sending XHR so all you need is to understand basic ClojureScript syntax. In these articles I'll be using latest ClojureScript currently available: 1.7.228.
 
@@ -90,4 +90,4 @@ my.test.triple.call(null,(5));
 
 Compiled code readable and you can pretty easily relate cljs source with compiled js. It has some `goog.provide` and `goog.require` magic which comes from Google Closure compiler used by ClojureScript, but it is quite simple: compiled code declares namespace `my.test` and uses namespace `cljs.core`. Everything else is standard javascript.
 <br><br>
-Thats all for now. Now we can compile basic cljs namespaces. In the next article we'll be compiling code consisting from multiple namespaces/files and using macros.
+Thats all for now. Now we can compile basic cljs namespaces. In [the next article](/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html) we'll be compiling code consisting from multiple namespaces/files and using macros.
