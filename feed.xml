@@ -7,10 +7,153 @@
     <atom:link href="http://nbeloglazov.com/feed.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Getting Started with Self-Hosted ClojureScript. Part 3.</title>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html&quot;&gt;Part 1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html&quot;&gt;Part 2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Part 3&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In previous parts of this tutorial we learned how to compile ClojureScript code using only ClojureScript. In this article we&amp;#39;ll see how we can optimize this process by using compilation cache.&lt;/p&gt;
+
+&lt;h3&gt;Cache in self-hosted cljs&lt;/h3&gt;
+
+&lt;p&gt;If you read &lt;a href=&quot;https://github.com/cljsinfo/cljs-api-docs/blob/catalog/refs/cljs.js/STARload-fnSTAR.md&quot;&gt;documentation&lt;/a&gt; for &lt;code&gt;*load-fn*&lt;/code&gt; carefully you probably noticed that one of the values we can pass to to callback function is &lt;code&gt;:cache&lt;/code&gt; . When is it useful? A couple of use case come in mind:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;In jsfiddle-like service. Your service might provide a set of cljs libraries to use. It makes sense to precompile all these libraries as they don&amp;#39;t change from user to user. That&amp;#39;s what I do for Quil: I precompile &lt;code&gt;quil.core&lt;/code&gt; and load cache only, no source code. Fully compiling Quil using self-hosted js takes around 5 sec on my laptop which is quite a lot especially if you want to compile simple sketch.&lt;/li&gt;
+&lt;li&gt;Mike Fikes &lt;a href=&quot;http://blog.fikesfarm.com/posts/2016-02-03-planck-macros-aot.html&quot;&gt;uses&lt;/a&gt; caching capabilities to precompile macros for Planck, OS X ClojureScript REPL.&lt;/li&gt;
+&lt;li&gt;Going further I can imagine web IDE for ClojureScript. In such IDE project might consist of dozens of cljs files and compiling them might be long. To optimize cache of each source file compilation might be stored in browser local storage and reused.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Let&amp;#39;s cache now! The first question is where do we get cache from? Obviously, we need to compile source first and somehow get cache from that compilation. Here is the way I did it: you can pass &lt;code&gt;:cache-source&lt;/code&gt; function in compilation &lt;code&gt;opts&lt;/code&gt; map. This function will be called once each namespace is compiled and compiler passes a map that contains compiled source and analysis cache. For now, let&amp;#39;s simply log the map in console:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;&amp;#39;my.math&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;(ns my.math) (defmacro triple [x] (* 3 x))&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (ns my.test (:require-macros my.math))&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (def foo (my.math/triple 5))&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Loading dependency&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;if-let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;dep-source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;deps&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cb&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:lang&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:clj&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dep-source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js/Error.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Unknown namespace &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;print-cache&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;pprint&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cb&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:value&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cjs/js-eval&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:load&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;load-inlined&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:cache-source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;print-cache&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note that &lt;code&gt;print-cache&lt;/code&gt; takes 2 arguments: map with cache data and callback to call once we&amp;#39;re done with processing cache. In our case we print cache and call &lt;code&gt;cb&lt;/code&gt; immediately after that. Here is the cache we get in console:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:lang&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:clj&lt;/span&gt;,
+ &lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my.math&lt;/span&gt;,
+ &lt;span class=&quot;ss&quot;&gt;:path&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;my/math&amp;quot;&lt;/span&gt;,
+ &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt;
+ &lt;span class=&quot;s&quot;&gt;&amp;quot;goog.provide(\&amp;quot;my.math$macros\&amp;quot;);\nmy.math$macros.triple = (function my$math$macros$triple(_AMPERSAND_form,_AMPERSAND_env,x){\nreturn ((3) * x);\n});\n\nmy.math$macros.triple.cljs$lang$macro = true;\n&amp;quot;&lt;/span&gt;,
+ &lt;span class=&quot;ss&quot;&gt;:cache&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:use-macros&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;,
+  &lt;span class=&quot;ss&quot;&gt;:excludes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;,
+  &lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my.math$macros&lt;/span&gt;,
+  &lt;span class=&quot;ss&quot;&gt;:imports&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;,
+  &lt;span class=&quot;ss&quot;&gt;:requires&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;,
+  &lt;span class=&quot;ss&quot;&gt;:uses&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;,
+  &lt;span class=&quot;ss&quot;&gt;:defs&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;triple&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:protocol-inline&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:meta&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:file&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my.math&lt;/span&gt;,
+     &lt;span class=&quot;ss&quot;&gt;:line&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;,
+     &lt;span class=&quot;ss&quot;&gt;:column&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;,
+     &lt;span class=&quot;ss&quot;&gt;:end-line&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;,
+     &lt;span class=&quot;ss&quot;&gt;:end-column&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt;,
+     &lt;span class=&quot;ss&quot;&gt;:macro&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;,
+     &lt;span class=&quot;ss&quot;&gt;:arglists&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])}&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my.math$macros/triple&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:variadic&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;false&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:file&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:end-column&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:method-params&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;form&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;env&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:protocol-impl&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:arglists-meta&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:column&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;14&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:line&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:macro&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:end-line&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:max-fixed-arity&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:fn-var&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;,
+    &lt;span class=&quot;ss&quot;&gt;:arglists&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])}}&lt;/span&gt;,
+  &lt;span class=&quot;ss&quot;&gt;:require-macros&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;,
+  &lt;span class=&quot;ss&quot;&gt;:doc&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now is the time to compile using that cache. To achieve that we&amp;#39;re going to replace &lt;code&gt;load-inlined&lt;/code&gt; function with &lt;code&gt;load-cached&lt;/code&gt;. &lt;code&gt;load-cached&lt;/code&gt; is going to return cache data you saw above (I simply copy-pasted it):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cache&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;&amp;#39;my.math&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;goog.provide(\&amp;quot;my.math$macros\&amp;quot;);\nmy.math$macros.triple = (function my$math$macros$triple(_AMPERSAND_form,_AMPERSAND_env,x){\nreturn ((3) * x);\n});\n\nmy.math$macros.triple.cljs$lang$macro = true;\n&amp;quot;&lt;/span&gt;,
+              &lt;span class=&quot;ss&quot;&gt;:cache&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:use-macros&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:excludes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my.math$macros&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:imports&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:requires&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:uses&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:defs&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;triple&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:protocol-inline&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:meta&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:file&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my.math&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:line&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:column&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:end-line&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:end-column&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:macro&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:arglists&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;quote &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))}&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my.math$macros/triple&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:variadic&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;false&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:file&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:end-column&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:method-params&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;form&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;env&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:protocol-impl&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:arglists-meta&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:column&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;14&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:line&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:macro&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:end-line&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:max-fixed-arity&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:fn-var&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;true&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:arglists&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;quote &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]))}}&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:require-macros&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;, &lt;span class=&quot;ss&quot;&gt;:doc&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}}})&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (ns my.test (:require-macros my.math))&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;  (my.math/triple 5)&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;load-cached&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;println &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Loading cached dependency&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;if-let &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;dep&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cache&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:name&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cb&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:lang&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:js&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cache&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:cache&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)})&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js/Error.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Unknown namespace &amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;print-cache&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;pr &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;cb&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:value&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;compile&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;source&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;cjs/js-eval&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:load&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;load-cached&lt;/span&gt;
+                 &lt;span class=&quot;ss&quot;&gt;:cache-source&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;print-cache&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Console output:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;goog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;provide&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;my.test&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;goog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;cljs.core&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;my&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It works! Few notes:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;We never pass the source of &lt;code&gt;my.math&lt;/code&gt; to the compiler. Instead we pass compiled js and analysis cache.&lt;/li&gt;
+&lt;li&gt;When using cache we provide compiled js so &lt;code&gt;:lang&lt;/code&gt; must be set to &lt;code&gt;:js&lt;/code&gt;, not &lt;code&gt;:clj&lt;/code&gt; as we did before.&lt;/li&gt;
+&lt;li&gt;If experimenting with it yourself - don&amp;#39;t forget to add quote &lt;code&gt;&amp;#39;&lt;/code&gt; before cache map because it contains symbols and without quoting ClojureScript is going to try and resolve them thinking that they&amp;#39;re actual variables.&lt;/li&gt;
+&lt;li&gt;A map passed to &lt;code&gt;:cache-source&lt;/code&gt; doesn&amp;#39;t tell you if a namespace is macro or regular. Check the cache above and you&amp;#39;ll see that there is no &lt;code&gt;:macro true&lt;/code&gt; or similar in it. It might be problematic if you have some namespace compiled both as macros and as regular namespace. For example in Part 2 we had &lt;code&gt;my.math&lt;/code&gt; both as macro and regular namespace. In that case &lt;code&gt;:cache-source&lt;/code&gt; will be called twice and you&amp;#39;ll have to figure out if given cache is for macro or regular namespace. One workaround is to check &lt;code&gt;(:name (:cache opts))&lt;/code&gt; which has &lt;code&gt;$macros&lt;/code&gt; at the end  if it&amp;#39;s a macro namespace.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In your real application you probably want to gather caches of all namespaces and save them somewhere for later use. There are various ways to do it. For example, I collect all caches into an atom and once everything compiled I save the content of the atom in a file on disk (I&amp;#39;m running on nodejs so I have access to filesystem).&lt;/p&gt;
+
+&lt;h3&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I hope this tutorial was useful and helped to start working with self-hosted cljs. Personally, I believe it is important to have a way to experiment with self-hosted cljs without distractions of loading files from a filesystem, understanding the difference between clj, cljs, cljc files and other. The compiler doesn&amp;#39;t care about it at all.  That&amp;#39;s what I tried to do in this tutorial: having single file that contains all necessary data to play with self-hosted cljs. If you&amp;#39;re interested in more advanced/practical things here are some tips:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Checkout amazing Mike Fikes&amp;#39; blog: &lt;a href=&quot;http://blog.fikesfarm.com/&quot;&gt;http://blog.fikesfarm.com/&lt;/a&gt;. It contains a lot of insights on various self-hosted cljs things.&lt;/li&gt;
+&lt;li&gt;Checkout articles on ClojureScript &lt;a href=&quot;https://github.com/clojure/clojurescript/wiki&quot;&gt;wiki&lt;/a&gt; about bootstrapped cljs.&lt;/li&gt;
+&lt;li&gt;Checkout &lt;a href=&quot;https://github.com/Lambda-X/replumb&quot;&gt;replumb&lt;/a&gt; library that does some plumbing of self-hosted cljs infrastructure.&lt;/li&gt;
+&lt;li&gt;If you have problems, ask on ClojureScript mailing list. There are many experienced people (e.g Mike) who&amp;#39;re willing to help.&lt;/li&gt;
+&lt;li&gt;If something doesn&amp;#39;t work as you expect - it might be a bug. There are still some rough edges in self-hosted cljs and you might stumble upon one. Try to prepare minimal reproducible example and send it to the mailing list.&lt;/li&gt;
+&lt;li&gt;Try reading and debugging &lt;a href=&quot;https://github.com/clojure/clojurescript/blob/master/src/main/cljs/cljs/js.cljs&quot;&gt;&lt;code&gt;js.cljs&lt;/code&gt;&lt;/a&gt; source code. It&amp;#39;s not easy but very useful if you get some issues with cljs compilation.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Have fun with self-hosted cljs!&lt;/p&gt;
+</description>
+      <pubDate>Fri, 11 Mar 2016 00:00:00 -0800</pubDate>
+      <link>http://nbeloglazov.com/2016/03/11/getting-started-with-self-hosted-cljs-part-3.html</link>
+      <guid isPermaLink="true">http://nbeloglazov.com/2016/03/11/getting-started-with-self-hosted-cljs-part-3.html</guid>
+    </item>
+    
+    <item>
       <title>Getting Started with Self-Hosted ClojureScript. Part 2.</title>
       <description>&lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html&quot;&gt;Part 1&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;Part 2&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;/2016/03/11/getting-started-with-self-hosted-cljs-part-3.html&quot;&gt;Part 3&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;In &lt;a href=&quot;/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html&quot;&gt;Part 1&lt;/a&gt; we learned how to compile simple cljs namespaces. Here is what we had at the end of the previous article:&lt;/p&gt;
@@ -192,7 +335,7 @@ Initially, I wanted to make this example more elegant by making &lt;code&gt;trip
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;This way the compiler doesn&amp;#39;t try to expand result as macro. But it doesn&amp;#39;t look clojurish and I decided to go with more clunky &lt;code&gt;triple-fn&lt;/code&gt; instead. I don&amp;#39;t know if there is a better way to do it.
 &lt;br&gt;&lt;br&gt;
-That&amp;#39;s all for today. We learned how to compile both regular cljs and macros in self-hosted cljs! In the next article, I&amp;#39;ll show how to optimize compilation using cache.&lt;/p&gt;
+That&amp;#39;s all for today. We learned how to compile both regular cljs and macros in self-hosted cljs! In the &lt;a href=&quot;/2016/03/11/getting-started-with-self-hosted-cljs-part-3.html&quot;&gt;next article&lt;/a&gt;, I&amp;#39;ll show how to optimize compilation using cache.&lt;/p&gt;
 </description>
       <pubDate>Mon, 07 Mar 2016 00:00:00 -0800</pubDate>
       <link>http://nbeloglazov.com/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html</link>
@@ -204,6 +347,7 @@ That&amp;#39;s all for today. We learned how to compile both regular cljs and ma
       <description>&lt;ul&gt;
 &lt;li&gt;Part 1&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;/2016/03/07/getting-started-with-self-hosted-cljs-part-2.html&quot;&gt;Part 2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;/2016/03/11/getting-started-with-self-hosted-cljs-part-3.html&quot;&gt;Part 3&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;ClojureScript is a compiler for Clojure that targets JavaScript. About &lt;a href=&quot;https://groups.google.com/forum/#!searchin/clojurescript/1.7.28/clojurescript/Z6xD9UthbvQ/gsLMbURGAgAJ&quot;&gt;7 months ago&lt;/a&gt; it got a nice feature that allows you to compile ClojureScript code using ClojureScript: self-hosting. That means that we can now compile ClojureScript fully in browser! That&amp;#39;s pretty cool for creating various interactive in-browser tutorials/repls/workspaces/whatever. I&amp;#39;ve been working on compiling Quil using self-hosted cljs (including macros) and decided to write basic tutorial of how to work with self-hosted cljs. This tutorial uses vanilla cljs without any additional libraries or features like reading files from disk, sending XHR so all you need is to understand basic ClojureScript syntax. In these articles I&amp;#39;ll be using latest ClojureScript currently available: 1.7.228.&lt;/p&gt;
@@ -759,79 +903,6 @@ Project: &lt;a href=&quot;http://www.google-melange.com/gsoc/project/details/goo
       <pubDate>Tue, 23 Sep 2014 00:00:00 -0700</pubDate>
       <link>http://nbeloglazov.com/2014/09/23/gsoc-results.html</link>
       <guid isPermaLink="true">http://nbeloglazov.com/2014/09/23/gsoc-results.html</guid>
-    </item>
-    
-    <item>
-      <title>Equilibrium</title>
-      <description>&lt;h3&gt;Let&amp;#39;s make chaos&lt;/h3&gt;
-
-&lt;p&gt;Today I want to show you a neat chaos simulation. Rules:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;n points on a plane.&lt;/li&gt;
-&lt;li&gt;Each point randomly selects two other points as its leaders.&lt;/li&gt;
-&lt;li&gt;Each points tries to get to a position equidistant from both leaders.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Here is an example for 4 points:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/images/equilibrium/screenshot.png&quot; alt=&quot;Simulation screenshot&quot;&gt;&lt;/p&gt;
-
-&lt;p&gt;Green point has 2 leaders - red points. Red line is equidistance line. Green point&amp;#39;s goal is to get and stay on that line. All points have different leaders so movements appear pretty chaotic. Everything stabilizes after a while and we get equilibrium. Now the question: what will happen if you slightly move some point? How long will it take the system to get back into the equilibrium state?&lt;/p&gt;
-
-&lt;p&gt;I&amp;#39;m not so profficient in math to describe the system in sophisticated way, but I&amp;#39;m a programmer, so let&amp;#39;s write a simulation using Quil! Quil supports ClojureScript now so sketches can be embedded directly into the page. There will be no source code in this post, only playing with ready-to-use sketches. Link to the source code will be provided at the end of the post. Sketches are desktop-oriented so they probably won&amp;#39;t work propertly on mobiles.&lt;/p&gt;
-
-&lt;h3&gt;First sketch&lt;/h3&gt;
-
-&lt;p&gt;&lt;canvas id=&quot;first_sketch&quot; style=&quot;width: 500px; height: 500px;&quot;&gt;&lt;/canvas&gt;&lt;/p&gt;
-
-&lt;p&gt;Hover th mouse over a point to see it leaders. You also can move a point by dragging it using mouse. Supported keybindings:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;space - pause/continue;&lt;/li&gt;
-&lt;li&gt;r - regenerate points;&lt;/li&gt;
-&lt;li&gt;up and down arrows - increase/decrease number of points and regenerate points;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Don&amp;#39;t forget to empirically get answers to the questions posed earlier. Also check how a configuration consisting only of 3 points always converges to a equilater triangle. Quite nice.&lt;/p&gt;
-
-&lt;h3&gt;Second sketch&lt;/h3&gt;
-
-&lt;p&gt;After a while the sketch becomes boring. To make it more dynamic we introduce constant velocity: each point, besides moving towards the equidistance line, also moves constantly in some direction. The direction is chosen randomly and speed is also random. Another change is to make the plane toroidal: if a point goes beyound the left boundary - it will appear on the right, beyound the bottom boundary - will appear on the top. Here is the second sketch that implements all these changes:&lt;/p&gt;
-
-&lt;p&gt;&lt;canvas id=&quot;second_sketch&quot; style=&quot;width: 500px; height: 500px;&quot;&gt;&lt;/canvas&gt;&lt;/p&gt;
-
-&lt;p&gt;Now we see eternal chaos: points moving around in futile attempt to achieve equilibrium.&lt;/p&gt;
-
-&lt;h3&gt;Third sketch&lt;/h3&gt;
-
-&lt;p&gt;Up to to now we&amp;#39;ve seen only points, dull black circles. How about adding tales for points? A tail is a k last positions of a point. And let&amp;#39;s make them colourful because black worms crowling chaotically around the screen is a depressing view. It is worms time:&lt;/p&gt;
-
-&lt;p&gt;&lt;canvas id=&quot;third_sketch&quot; style=&quot;width: 500px; height: 500px;&quot;&gt;&lt;/canvas&gt;&lt;/p&gt;
-
-&lt;p&gt;Use left and right arrows to change k - the number of points in tails. These keys work in previous skethes too, so you can turn points into worms there.&lt;/p&gt;
-
-&lt;h3&gt;Where did the simulation come from?&lt;/h3&gt;
-
-&lt;p&gt;I saw this simulation on a lecture about artificial intelligence. The simulation was performed on the audience: n people gathered in the center of the room, choosed leaders and started moving. After few minutes everyone finally stopped. Then the lecturer moved one person and everyone had to readjust their positions. It took another few minutes. The lecturer wanted to demonstrate that environment behaves in the same way: if you disbalance some part of it - the whole system will turn into unpredictable chaos. But our simulation shows the opposite: if you try to move a point - it comes back to original position pretty fast while all other points don’t move much. So in ideal conditions the equilibrium is pretty stable.&lt;/p&gt;
-
-&lt;h3&gt;Implementation details&lt;/h3&gt;
-
-&lt;p&gt;The implementation uses functional-mode middleware and all state updates are handled by Quil (look mom, no atoms!) Another nice thing is that the sketch is fully Clojure and ClojureScript compatible: if you name file equilibrium.clj - you can run in Clojure, rename to equilibrium.cljs, compile and it runs in browser, no change needed! But it&amp;#39;s not ideal. I like to work on a sketch in clojure, which supports live reloading and allows you to change parts of sketch without closing it, but in the end I target ClojureScript (so I can share it in post). It becomes tedious to constantly copy clj to cljs when you change anything and want to check it in browser. I ended up having weird combination of linux &lt;code&gt;watch&lt;/code&gt; command that copies clj to cljs every second and cljsbuild that autocompiles cljs to js. It works but looks ugly and scary. I wonder if it is possible to have a single file which is recognized by Clojure and ClojureScript. I know that I could use cljx for that, but seems quite heavy for such simple task. Or may be I just need to properly setup emacs/cider + cljx integration.&lt;/p&gt;
-
-&lt;p&gt;Source code is available on &lt;a href=&quot;https://github.com/nbeloglazov/blog-projects/tree/master/equilibrium&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
-
-&lt;script src=&quot;/scripts/equilibrium.js&quot;&gt;&lt;/script&gt;
-
-&lt;script&gt;
-    equilibrium.sketch({&quot;host&quot;: &quot;first_sketch&quot;, &quot;tail-size&quot;: 0});
-    equilibrium.sketch({&quot;host&quot;: &quot;second_sketch&quot;, &quot;tail-size&quot;: 0, &quot;constant-velocity?&quot;: true, &quot;toroidal-board?&quot;: true});
-    equilibrium.sketch({&quot;host&quot;: &quot;third_sketch&quot;, &quot;tail-size&quot;: 15, &quot;colourful?&quot;: true});
-&lt;/script&gt;
-</description>
-      <pubDate>Tue, 09 Sep 2014 00:00:00 -0700</pubDate>
-      <link>http://nbeloglazov.com/2014/09/09/equilibrium.html</link>
-      <guid isPermaLink="true">http://nbeloglazov.com/2014/09/09/equilibrium.html</guid>
     </item>
     
   </channel>
