@@ -7,6 +7,7 @@ single_language: true
 
  * [Part 1](/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html)
  * Part 2
+ * [Part 3](/2016/03/11/getting-started-with-self-hosted-cljs-part-3.html)
 
 In [Part 1](/2016/03/05/getting-started-with-self-hosted-cljs-part-1.html) we learned how to compile simple cljs namespaces. Here is what we had at the end of the previous article:
 
@@ -225,4 +226,4 @@ But the problem here that when compiler processes `(my.math/triple five)` - it t
 
 This way the compiler doesn't try to expand result as macro. But it doesn't look clojurish and I decided to go with more clunky `triple-fn` instead. I don't know if there is a better way to do it.
 <br><br>
-That's all for today. We learned how to compile both regular cljs and macros in self-hosted cljs! In the next article, I'll show how to optimize compilation using cache.
+That's all for today. We learned how to compile both regular cljs and macros in self-hosted cljs! In the [next article](/2016/03/11/getting-started-with-self-hosted-cljs-part-3.html), I'll show how to optimize compilation using cache.
