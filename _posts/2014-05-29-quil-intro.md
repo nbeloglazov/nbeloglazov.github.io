@@ -11,8 +11,8 @@ project.clj
 
 ```clojure
 (defproject quil-intro "0.1.0-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [quil "2.3.0"]])
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [quil "2.5.0"]])
 ```
 
 quil_intro.clj:
