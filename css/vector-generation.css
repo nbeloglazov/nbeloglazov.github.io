@@ -1,0 +1,10 @@
+.example-host > * {
+    display: block;
+    margin: auto;
+}
+
+.example-host button {
+    margin-top: 10px;
+    padding: 10px;
+    text-transform: uppercase;
+}
