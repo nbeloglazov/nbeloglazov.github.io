@@ -115,7 +115,7 @@ Visulization:
   <button>animate</button>
 </div>
 
-Unfortunately my visualization sucks. I couldn't come up with a better technique to draw vectors in 3D. Red/green/blue lines are X/Y/Z axis. It's kinda hard to see if the vectors uniformly distributed or not. Let's try other approaches. I'll skip code for the second approach (it's equivalent to 2D), here is the visulaization:
+Unfortunately my visualization sucks. I couldn't come up with a better technique to draw vectors in 3D. Red/green/blue lines are X/Y/Z axis. It's kinda hard to see if the vectors uniformly distributed or not. Let's try other approaches. I'll skip code for the second approach (it's equivalent to 2D), here is the visualization:
 
 <div id="vectors-3d-v2" class="example-host">
   <img src="{{page.images}}/vectors_3d_v2.png" style="display: block;"></img>
@@ -166,7 +166,7 @@ Also while working on article I found embarrassing things:
   <img src="{{page.images}}/vectors_bug.png" style="display: block;"></img>
 </div>
 
-If you want to play with generation and animation you can use Quil sketch editor for Clojurescript: [2D sketch](http://quil.info/sketches/local/d3d44f33838a8bccd9a37f97654d843cd3b979092926fe5e8bbf4bb599844f23) and [3D sketch](http://quil.info/sketches/local/eba306543806c6952e5ede349e75dcbe8dc7d33cfd8a0c229a87e970d982a802). If you prefer Clojure - checkout this [project](https://github.com/nbeloglazov/blog-projects/tree/master/vector-generation).
+If you want to play with generation and animation you can use Quil sketch editor for Clojurescript: [2D sketch](http://quil.info/sketches/show/-KhLDgDNaWefS_AJF0YB) and [3D sketch](http://quil.info/sketches/show/-KhLDmUbrARfacc4hQe-). If you prefer Clojure - checkout this [project](https://github.com/nbeloglazov/blog-projects/tree/master/vector-generation).
 
 
 <script>window.generationFrameRate=5;</script>
