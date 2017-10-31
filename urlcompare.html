@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>URL comparator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+
+    <div class="container">
+      <form class="form-horizontal" action="javascript:void(0);">
+        <div class="form-group">
+          <label for="url1" class="col-sm-1 control-label">Url #1</label>
+          <div class="col-sm-11">
+            <input id="url1" class="form-control" placeholder="http://example.com/index.html?a=123&b=345">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="url2" class="col-sm-1 control-label">Url #2</label>
+          <div class="col-sm-11">
+            <input id="url2" class="form-control" placeholder="http://example.com/index.html?a=123&c=567">
+          </div>
+        </div>
+        <button id="compare" class="btn btn-default">Compare</button>
+      </form>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Param</th>
+            <th>Url #1</th>
+            <th>Url #2</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+
+      <template id="row-template">
+        <tr>
+          <th class="name col-sm-2"></th>
+        </tr>
+      </template>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.17.1/URI.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+      function toArray(collection) {
+        return Array.prototype.slice.call(collection);
+      }
+      function queryParams(url) {
+        return URI.parseQuery(URI(url).query());
+      }
+      function allValuesEqual(key, params) {
+        const firstValue = String(params[0][key]);
+        return params.every(
+                function(params) { return params[key] == firstValue; });
+      }
+      function compare() {
+        document.querySelector('table tbody').innerHTML = '';
+        var params = toArray(document.querySelectorAll('input'))
+                .map(function(input) { return queryParams(input.value) });
+        var allKeys = Object.keys(params
+                .reduce(function(a, b) { return Object.assign(a, b); },  {}));
+        allKeys.sort();
+        allKeys.forEach(function (key) {
+          const row = document.importNode(
+                  document.querySelector('#row-template').content, true);
+          row.querySelector('.name').textContent = key;
+          params.forEach(function(params) {
+            const valueNode = document.createElement('td');
+            valueNode.textContent = params[key] || '';
+            valueNode.classList.add('value', 'col-sm-5');
+            row.querySelector('tr').appendChild(valueNode);
+          });
+          if (!allValuesEqual(key, params)) {
+            row.querySelector('tr').classList.add('warning');
+          }
+          document.querySelector('table tbody').appendChild(row);
+        });
+      }
+      document.querySelector('#compare').addEventListener('click', compare);
+    </script>
+  </body>
+</html>
