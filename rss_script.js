@@ -32,11 +32,16 @@ function main() {
         document.querySelector('#items-container').innerHTML = ''; 
     });
 
+    const editor = CodeMirror.fromTextArea(textArea, {
+      lineNumbers: true,
+      mode:  'xml',
+      lineWrapping: true,
+    });
     document.querySelector('#nav-xml-tab').addEventListener('show.bs.tab', () => {
-        syncParsedToXml();
+        syncParsedToXml(editor);
     });
     document.querySelector('#nav-parsed-tab').addEventListener('show.bs.tab', () => {
-        syncXmlToParsed();
+        syncXmlToParsed(editor);
     });
 }
 
@@ -211,8 +216,8 @@ function addFilesClick(itemsContainer) {
     fileElement.click();
 }
 
-function syncXmlToParsed() {
-    const xml = document.querySelector('#rss-content').value;
+function syncXmlToParsed(editor) {
+    const xml = editor.getValue();
     const rss = new DOMParser().parseFromString(xml, "application/xml");
 
     const fieldsContainer = document.querySelector('#fields-container');
@@ -232,9 +237,8 @@ function syncXmlToParsed() {
     }
 }
 
-function syncParsedToXml() {
-    const textArea = document.querySelector('#rss-content');
-    const xml = textArea.value;
+function syncParsedToXml(editor) {
+    const xml = editor.getValue();
     const rss = new DOMParser().parseFromString(xml, "application/xml");
     for (const childNode of Array.from(rss.querySelector('channel').childNodes)) {
         if (childNode.nodeType === 3) {
@@ -293,11 +297,15 @@ function syncParsedToXml() {
         rss.querySelector('channel').appendChild(xmlItem);
     }
 
-    textArea.value = html_beautify(new XMLSerializer().serializeToString(rss))
+    const value = html_beautify(new XMLSerializer().serializeToString(rss))
         .replaceAll(' xmlns="http://www.w3.org/1999/xhtml"', '')
         .replaceAll('ispermalink=', 'isPermalink=')
         .replaceAll('pubdate>', 'pubDate>');
-    localStorage.setItem('rss', textArea.value);
+    editor.setValue(value);
+    setTimeout(function() {
+        editor.refresh();
+    }, 300);
+    localStorage.setItem('rss', value);
 }
 
 window.addEventListener('load', () => { main(); });

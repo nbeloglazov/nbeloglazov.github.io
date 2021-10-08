@@ -23,3 +23,8 @@ input[type=checkbox]
 .bi {
     cursor: pointer;
 }
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
+}
