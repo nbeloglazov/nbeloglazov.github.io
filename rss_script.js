@@ -1,7 +1,14 @@
 function main() {
-    const textArea = document.querySelector('textarea');
+
+    const editor = CodeMirror.fromTextArea(document.querySelector('textarea'), {
+      lineNumbers: true,
+      mode:  'xml',
+      lineWrapping: true,
+    });
+    editor.setValue(localStorage.getItem('rss') || template);
     document.querySelector('#beautify').addEventListener('click', () => {
-        textArea.value = html_beautify(textArea.value);
+        editor.setValue(html_beautify(editor.getValue()));
+        setTimeout(() => editor.refresh(), 1);
     });
     const rssFileEl = document.querySelector('#rss-file');
     document.querySelector('#open-file').addEventListener('click', () => {
@@ -9,7 +16,7 @@ function main() {
     });
     document.querySelector('#download').addEventListener('click', () => {
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([textArea.value], {type: 'application/xml'}));
+        a.href = URL.createObjectURL(new Blob([editor.getValue()], {type: 'application/xml'}));
         a.download = 'rss.xml';
         document.body.appendChild(a);
         a.click();
@@ -17,25 +24,20 @@ function main() {
     });
     document.querySelector('#reset').addEventListener('click', () => {
         localStorage.removeItem('rss');
-        textArea.value = template;
+        editor.setValue(template);
+        setTimeout(() => editor.refresh(), 1);
     });
     document.querySelector('#rss-file').addEventListener('change', async () => { 
         const content = await rssFileEl.files[0].text();
-        textArea.value = content;
+        editor.setValue(content);
+        setTimeout(() => editor.refresh(), 1);
         rssFileEl.value = '';
     });
-    textArea.value = localStorage.getItem('rss') || template;
     document.querySelector('#add-files').addEventListener('click', () => { 
         addFilesClick(document.querySelector('#items-container')); 
     });
     document.querySelector('#remove-files').addEventListener('click', () => { 
         document.querySelector('#items-container').innerHTML = ''; 
-    });
-
-    const editor = CodeMirror.fromTextArea(textArea, {
-      lineNumbers: true,
-      mode:  'xml',
-      lineWrapping: true,
     });
     document.querySelector('#nav-xml-tab').addEventListener('show.bs.tab', () => {
         syncParsedToXml(editor);
