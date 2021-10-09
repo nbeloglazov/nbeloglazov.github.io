@@ -168,14 +168,13 @@ function formatDuration(duration) {
 }
 
 async function getDurationOfFile(file) {
-    const key = `cached_duration_${file.name}_${file.size}`;
-    if (localStorage.getItem(key) != null) {
-        return Number(localStorage.getItem(key));
-    }
-    const data = await file.arrayBuffer();
-    const duration = (await new AudioContext().decodeAudioData(data)).duration;
-    localStorage.setItem(key, duration);
-    return duration;
+    const audio = document.querySelector('audio');
+    await new Promise(resolve => {
+        audio.onloadeddata = resolve;
+        audio.src = URL.createObjectURL(file);
+        audio.load();
+    });
+    return audio.duration;
 }
 
 function addFilesClick(itemsContainer) {
