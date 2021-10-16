@@ -177,6 +177,26 @@ async function getDurationOfFile(file) {
     return audio.duration;
 }
 
+function trasnlit(word) {
+    let result = '';
+    for (const letter of word.toLowerCase()) {
+        const latin = CYRILLIC_TO_LATIN[letter];
+        if (latin) {
+            result += latin;
+            continue;
+        }
+        if (letter === ' ') {
+            result += '_';
+        }
+        if (letter >= '0' && letter <= '9') {
+            result += latin;
+        }
+    }
+    return result;
+}
+
+const GENERATE_ME = 'GENERATE_ME';
+
 function addFilesClick(itemsContainer) {
     const fileElement = document.querySelector('#audio-files');
     const changed = async () => { 
@@ -192,7 +212,7 @@ function addFilesClick(itemsContainer) {
             const duration = await getDurationOfFile(file);
             const title = file.name.substring(0, file.name.lastIndexOf('.'));
             items.push({
-                guid: title,
+                guid: GENERATE_ME,
                 title: title,
                 url: file.name,
                 bytes: file.size,
@@ -269,14 +289,17 @@ function syncParsedToXml(editor) {
     const items = Array.from(document.querySelectorAll('#items-container .item'));
     const filePrefix = document.querySelector('#file-prefix').value;
     const baseTime = Date.now();
+    const title = rss.querySelector('title').textContent;
+    const author = rss.getElementsByTagName('itunes:author')[0].textContent;
+    const guidPrefix = `${trasnlit(author)}_${trasnlit(title)}_`;
     const oneDay = 1000 * 60 * 60 * 24;
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const fields = item.querySelector('.fields');
         const xmlItem = document.createElement('item');
         const guid = document.createElement('guid');
-        guid.setAttribute('isPermalink', 'false');
-        guid.textContent = fields.dataset.guid;
+        guid.setAttribute('isPermaLink', 'false');
+        guid.textContent = fields.dataset.guid === GENERATE_ME ? (guidPrefix + i) : fields.dataset.guid;
         xmlItem.appendChild(guid);
         const title = document.createElement('title');
         title.textContent = fields.querySelector('.title input').value;
@@ -311,8 +334,21 @@ function syncParsedToXml(editor) {
 
 window.addEventListener('load', () => { main(); });
 
+const CYRILLIC_TO_LATIN = (() => {
+    const cyrillic = 'а, б, в, г, д, е, ё, ж, з, и, й, к, л, м, н, о, п, р, с, т, у, ф, х, ц, ч, ш, щ, ъ, ы, ь, э, ю, я, і, ў'.split(', ');
+    const latin = 'a, b, v, g, d, e, jo, zh, z, i, j, k, l, m, n, o, p, r, s, t, u, f, h, c, ch, sh, shh, , y, , je, ju, ja, i, u'.split(', ');
+    if (cyrillic.length !== latin.length) {
+        throw new Error('different number of letters in alphabets');
+    }
+    const result = {};
+    for (let i = 0; i < cyrillic.length; i++) {
+        result[cyrillic[i]] = latin[i];
+    }
+    return result;
+})();
 
-var template = `<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+
+const template = `<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
         <title>Сем камянёў</title>
         <link>http://shein.by</link>
