@@ -113,6 +113,17 @@ function renderField(container, rss, field) {
     const row = createInput(field.type ?? 'text', id, field.text, value);
     row.querySelector(`#${id}`).dataset.tag = field.tag;
     container.appendChild(row);
+    if (field.type === 'textarea') {
+        const textarea = row.querySelector('textarea');
+        // Update text area height to match content once it becomes available.
+        const id = setInterval(() => {
+            if (textarea.scrollHeight === 0) {
+                return;
+            }
+            clearInterval(id);
+            textarea.style.height = (textarea.scrollHeight + 10) + 'px';
+        }, 10);
+    }
 }
 
 function createIcon(icon) {
@@ -321,7 +332,8 @@ function syncParsedToXml(editor) {
         rss.querySelector('channel').appendChild(xmlItem);
     }
 
-    const value = html_beautify(new XMLSerializer().serializeToString(rss))
+    const value = html_beautify(new XMLSerializer().serializeToString(rss),
+        {content_unformatted: ['description', 'itunes:summary']})
         .replaceAll(' xmlns="http://www.w3.org/1999/xhtml"', '')
         .replaceAll('ispermalink=', 'isPermalink=')
         .replaceAll('pubdate>', 'pubDate>');
