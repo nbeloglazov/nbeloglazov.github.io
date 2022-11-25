@@ -45,6 +45,13 @@ function main() {
     document.querySelector('#nav-parsed-tab').addEventListener('show.bs.tab', () => {
         syncXmlToParsed(editor);
     });
+    document.querySelector('#set-chapters').addEventListener('click', () => {
+        const chapters = document.querySelector('#chapter-names').value.split('\n');
+        const inputs = document.querySelectorAll('#items-container .title input');
+        for (let i = 0; i < chapters.length; i++) {
+            inputs[i].value = chapters[i];
+        }
+    });
 }
 
 const FIELDS = [{

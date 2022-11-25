@@ -35,10 +35,12 @@
             <input type="file" id="audio-files" style="display:none" accept=".mp3" multiple>
             <button type="button" id="add-files" class="btn btn-primary ms-3">Add files</button>
             <button type="button" id="remove-files" class="btn btn-primary ms-3">Remove all files</button>
+            <button type="button" id="set-chapters" class="btn btn-primary ms-3">Set chapters</button>
             <div class="progress mt-1 invisible">
                 <div class="progress-bar progress-bar-striped progress-bar-animated0" id="file-progress" role="progressbar" style="width: 0%"></div>
             </div>
           </div>
+          <textarea id="chapter-names"></textarea>
           <div id="items-container" class="row">
           </div>
       </div>
